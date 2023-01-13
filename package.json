@@ -1,0 +1,49 @@
+{
+   "name": "fluidclient",
+   "version": "0.0.0",
+   "description": "FluidClient",
+   "main": "src\\AppEntry.tsx",
+   "author": {
+      "name": "TXP Co Ltd"
+   },
+   "scripts": {
+      "build-package": "webpack-cli --config webpack-config.js && copy dist\\client-bundle.* ..\\Mprc\\WebView\\public\\assets\\js",
+      "build": "tsc --build",
+      "clean": "tsc --build --clean",
+      "test": "mocha --debug-brk --require ts-node/register",
+      "cover": "tsc && nyc mocha"
+   },
+   "devDependencies": {
+      "@types/chai": "^4.3.4",
+      "@types/mocha": "^10.0.1",
+      "@types/node": "^18.11.18",
+      "@types/react": "18.0.26",
+      "@types/react-dom": "18.0.9",
+      "@types/react-router-dom": "^5.3.3",
+      "npm-check-updates": "^16.6.0",
+      "ts-loader": "^9.2.6",
+      "typescript": "^4.5.2",
+      "webpack": "^5.65.0",
+      "webpack-cli": "^5.0.1"
+   },
+   "dependencies": {
+      "chai": "^4.3.7",
+      "mocha": "^10.2.0",
+      "react": "^18.0",
+      "react-dom": "^18.0",
+      "react-router-dom": "^6.0.2",
+      "ts-node": "^10.9.1"
+   },
+   "nyc": {
+      "include": [],
+      "extension": [
+         ".ts"
+      ],
+      "reporter": [
+         "text-summary",
+         "html"
+      ],
+      "sourceMap": true,
+      "instrument": true
+   }
+}

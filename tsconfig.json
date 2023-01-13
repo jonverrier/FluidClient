@@ -1,0 +1,33 @@
+{
+   "compilerOptions": {
+      "lib": [ "es6", "dom" ],
+      "strict": false,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "noImplicitAny": false,
+      "module": "CommonJS",
+      "noEmitOnError": true,
+      "removeComments": false,
+      "sourceMap": true,
+      "target": "es6",
+      "jsx": "react",
+      "resolveJsonModule": true
+   },
+   "include": [
+      "./src/**/*.ts",
+      "./src/**/*.tsx",
+      "./test/**/*.ts"
+   ],
+   "exclude": [
+      "node_modules"
+   ],
+   "awesomeTypescriptLoaderOptions": {
+      "useCache": true,
+      "useBabel": true
+   },
+   "strictPropertyInitialization": true,
+   "ts-node": {
+      "esm": true
+   }
+}
