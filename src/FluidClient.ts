@@ -2,6 +2,7 @@
 
 // FluidClient
 import { MSerialisable } from './SerialisationFramework';
+import { Persona } from './Persona';
 
 export interface IClientProps {
 
@@ -10,7 +11,8 @@ export interface IClientProps {
 
 export class FluidClient extends MSerialisable {
 
-   private _registeredUsers: Array<String>;
+   private _remoteUsers: Array<Persona>;
+   private _localUser: Persona;
 
    // constructor(props: IClientProps) {
 
@@ -20,7 +22,8 @@ export class FluidClient extends MSerialisable {
 
       // Initial status is the user not logged in, no others are known either
 
-      this._registeredUsers = new Array<String>();
+      this._remoteUsers = new Array<Persona>();
+      this._localUser = Persona.notLoggedIn();
    }
 
    equals(rhs: FluidClient): boolean {
@@ -28,33 +31,51 @@ export class FluidClient extends MSerialisable {
       if (this === rhs)
          return true;
 
-      return (this._registeredUsers.length === rhs._registeredUsers.length &&
-         this._registeredUsers.every((val, index) => val === rhs._registeredUsers[index]));
+      // Different if local users are different
+      if (!(this._localUser.equals(rhs._localUser)))
+         return false;
+
+      // final case - same of remoteUsers are the same, else differen
+      return (this._remoteUsers.length === rhs._remoteUsers.length &&
+         this._remoteUsers.every((val, index) => val.equals (rhs._remoteUsers[index])));
    } 
 
    streamToJSON(): string {
 
-      return JSON.stringify (this._registeredUsers);
+      return JSON.stringify({ localUser: this._localUser, remoteUsers: this._remoteUsers});
    }
 
    streamFromJSON(stream: string): void {
 
-      var _this: FluidClient = this;
+      const obj = JSON.parse(stream);
 
-      _this._registeredUsers = new Array<string>();
+      this._localUser = new Persona (obj.localUser);
 
-      JSON.parse(stream, function (key, value) {
-         if (key)
-            _this._registeredUsers[key] = value
-      });
+      this._remoteUsers = new Array<Persona>();
+
+      for (var i in obj.remoteUsers) {
+         this._remoteUsers.push(new Persona(obj.remoteUsers[i]));         
+      }
    }
 
-   registerUser(user: string): void {
+   /**
+    * set of 'getters' for private variables
+    */
 
-      this._registeredUsers.push(user);
+   get localUser(): Persona {
+      return this._localUser;
    }
 
-   registeredUsers(): Array<String> {
-      return this._registeredUsers;
+   get remoteUsers(): Array<Persona> {
+      return this._remoteUsers;
+   }
+
+   set localUser(localUser_: Persona) {
+      this._localUser = localUser_;
+   }
+
+   // Used for debug purpises only - normally must pick this up from Fluid relay
+   addRemoteUser(remoteUser_: Persona): void {
+      this._remoteUsers.push(remoteUser_);
    }
 }

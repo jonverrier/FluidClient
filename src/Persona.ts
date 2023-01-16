@@ -34,6 +34,12 @@ export class Persona extends MSerialisable {
     */
    public constructor(id_: string, name_: string, thumbNailB64_: string, lastSeenAt_: Date);
 
+   /**
+    * Create a Persona object
+    * @param persona - object to copy from - should work for JSON format and for real constructed objects
+    */
+   public constructor(persona: Persona);
+
    public constructor(...arr: any[])
    {
 
@@ -42,20 +48,38 @@ export class Persona extends MSerialisable {
       if (arr.length === 0)
          return;
 
-      if (!Persona.isValidId(arr[0])) {
-         throw new InvalidParameterError("Name:" + arr[0] + '.');
+      var localId: string;
+      var localName: string;
+      var localThumbNailB64: string;
+      var localLastSeenAt: Date;
+
+      if (arr.length === 1) {
+         localId = arr[0]._id
+         localName = arr[0]._name;
+         localThumbNailB64 = arr[0]._thumbnailB64;
+         localLastSeenAt = new Date(arr[0]._lastSeenAt);
       }
-      if (!Persona.isValidName(arr[1])) {
-         throw new InvalidParameterError("Name:" + arr[1] + '.');
-      }
-      if (!Persona.isValidThumbnailB64(arr[2])) {
-         throw new InvalidParameterError("Thumbnail:" + arr[2] + '.');
+      else { 
+         localId = arr[0];
+         localName = arr[1];
+         localThumbNailB64 = arr[2];
+         localLastSeenAt = arr[3];
       }
 
-      this._id = arr[0];
-      this._name = arr[1];
-      this._thumbnailB64 = arr[2];
-      this._lastSeenAt = arr[3];
+      if (!Persona.isValidId(localId)) {
+         throw new InvalidParameterError("Id:" + localId + '.');
+      }
+      if (!Persona.isValidName(localName)) {
+         throw new InvalidParameterError("Name:" + localName + '.');
+      }
+      if (!Persona.isValidThumbnailB64(localThumbNailB64)) {
+         throw new InvalidParameterError("Thumbnail:" + localThumbNailB64 + '.');
+      }
+
+      this._id = localId;
+      this._name = localName;
+      this._thumbnailB64 = localThumbNailB64;
+      this._lastSeenAt = localLastSeenAt;
    }
 
    streamToJSON(): string {
@@ -125,7 +149,8 @@ export class Persona extends MSerialisable {
     */
    equals(rhs: Persona): boolean {
       Persona
-      return ((this._name === rhs._name) &&
+      return ((this._id === rhs._id) &&
+         (this._name === rhs._name) &&
          (this._thumbnailB64 === rhs._thumbnailB64) &&
          (this._lastSeenAt.getTime() === rhs._lastSeenAt.getTime()));
    }
@@ -135,6 +160,7 @@ export class Persona extends MSerialisable {
     * @param rhs - the object to assign this one from.  
     */
    assign(rhs: Persona): Persona {
+      this._id = rhs._id;
       this._name = rhs._name;
       this._thumbnailB64 = rhs._thumbnailB64;
       this._lastSeenAt = rhs._lastSeenAt;
