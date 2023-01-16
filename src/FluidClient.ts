@@ -1,4 +1,4 @@
-/*! Copyright TXPCo, 2022 */
+// Copyright (c) 2023 TXPCo Ltd
 
 // FluidClient
 import { MSerialisable } from './SerialisationFramework';
