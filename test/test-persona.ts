@@ -24,6 +24,13 @@ describe("Persona", function () {
 
    persona2 = new Persona(someoneElsesId, someoneElsesName, someoneElsesThumbnail, someoneElsesLastSeenAt);
 
+   it("Needs to construct an empty object", function () {
+
+      var personaEmpty = new Persona();
+
+      expect(personaEmpty.id).to.equal(null);
+   });
+
    it("Needs to detect invalid id", function () {
 
       var caught: boolean = false;
@@ -85,7 +92,19 @@ describe("Persona", function () {
       expect(persona2.equals (personaNew)).to.equal(true);
    });
 
-   it("Needs to catch errors on change name attributes", function () {
+   it("Needs to catch errors on change id attributes", function () {
+
+      var caught: boolean = false;
+      try {
+         persona1.id = 1 as unknown as string;
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).to.equal(true);
+
+   });
+
+   it("Needs to throw errors on change name attribute", function () {
 
       var caught: boolean = false;
       try {
@@ -97,11 +116,35 @@ describe("Persona", function () {
 
    });
 
-   it("Needs to catch errors on change thumbnail attributes", function () {
+   it("Needs to throw errors on change thumbnail attribute", function () {
 
       var caught: boolean = false;
       try {
          persona1.thumbnailB64 = "";
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).to.equal(true);
+
+   });
+
+   it("Needs to fall back to browser shim thumbnail attribute ", function () {
+
+      var caught: boolean = false;
+      try {
+         persona1.setThumbnailB64 ("abcdefgh", true);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).to.equal(false);
+
+   });
+
+   it("Needs to throw errors when falling back to browser shim thumbnail attribute ", function () {
+
+      var caught: boolean = false;
+      try {
+         persona1.setThumbnailB64(1 as unknown as string, true);
       } catch (e) {
          caught = true;
       }

@@ -35,7 +35,7 @@ export class FluidClient extends MSerialisable {
       if (!(this._localUser.equals(rhs._localUser)))
          return false;
 
-      // final case - same of remoteUsers are the same, else differen
+      // final case - same of remoteUsers are the same, else different
       return (this._remoteUsers.length === rhs._remoteUsers.length &&
          this._remoteUsers.every((val, index) => val.equals (rhs._remoteUsers[index])));
    } 
