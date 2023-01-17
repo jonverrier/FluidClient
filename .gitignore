@@ -10,6 +10,7 @@ src/*.js
 src/*.js.map
 test/*.js
 test/*.js.map
+dist/*
 dist/*.js
 dist/*.js.map
 coverage/*

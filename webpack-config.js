@@ -4,7 +4,7 @@ module.exports = {
    mode: "development",
    target: 'node',
    output: {
-      filename: "client-bundle.js",
+      filename: "fluidwhiteboard.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
