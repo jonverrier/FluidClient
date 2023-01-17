@@ -94,10 +94,10 @@ export const Whiteboard = () => {
                   <Tooltip withArrow content="Draw a box" relationship="label">
                      <ToolbarButton aria-label="Box" icon={<Square24Regular />} />
                   </Tooltip>
-                  <Tooltip withArrow content="Draw a line or arrow" relationship="label">
+                  <Tooltip withArrow content="Draw a line or an arrow" relationship="label">
                      <ToolbarButton aria-label="Box" icon={<Line24Regular />} />
                   </Tooltip>
-                  <Tooltip withArrow content="Draw a circle or ellipse" relationship="label">
+                  <Tooltip withArrow content="Draw a circle or an ellipse" relationship="label">
                      <ToolbarButton aria-label="Ellipse" icon={<Circle24Regular />} />
                   </Tooltip>
                   <Tooltip withArrow content="Draw a text" relationship="label">
