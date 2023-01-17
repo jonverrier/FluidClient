@@ -218,12 +218,12 @@ export class Persona extends MSerialisable {
 
       if (thumbNailB64_ && thumbNailB64_.length > 0) { 
 
-         var decoded;
+         var decoded = null;
 
          try {
             decoded = callAtob(thumbNailB64_, forceShim_);
          } catch (e) {
-            return false;
+            // OK to fall through after supressing exception as decoded will be null.             
          }
          if (!decoded)
             return false;

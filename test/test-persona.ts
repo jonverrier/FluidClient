@@ -116,7 +116,7 @@ describe("Persona", function () {
 
    });
 
-   it("Needs to throw errors on change thumbnail attribute", function () {
+   it("Needs to throw errors on change thumbnail attribute using null", function () {
 
       var caught: boolean = false;
       try {
@@ -126,6 +126,17 @@ describe("Persona", function () {
       }
       expect(caught).to.equal(true);
 
+   });
+
+   it("Needs to throw errors on change thumbnail attribute using invalid B64 string", function () {
+
+      var caught: boolean = false;
+      try {
+         persona1.thumbnailB64 = "abcde";
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).to.equal(true);
    });
 
    it("Needs to fall back to browser shim thumbnail attribute ", function () {
