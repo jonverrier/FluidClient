@@ -3,6 +3,7 @@
 // FluidClient
 import { MSerialisable } from './SerialisationFramework';
 import { Persona } from './Persona';
+//import { FluidConnection, IConnectionProps } from './FluidConnection';
 
 export interface IClientProps {
 
@@ -13,6 +14,7 @@ export class FluidClient extends MSerialisable {
 
    private _remoteUsers: Array<Persona>;
    private _localUser: Persona;
+   //private _connection: FluidConnection;
 
    // constructor(props: IClientProps) {
 
@@ -24,6 +26,7 @@ export class FluidClient extends MSerialisable {
 
       this._remoteUsers = new Array<Persona>();
       this._localUser = Persona.notLoggedIn();
+      //this._connection = new FluidConnection({});
    }
 
    equals(rhs: FluidClient): boolean {
@@ -83,5 +86,8 @@ export class FluidClient extends MSerialisable {
    refreshLocalUser(date_: Date): void {
 
       this._localUser.lastSeenAt = date_;
+   }
+
+   connect(): void {
    }
 }
