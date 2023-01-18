@@ -5,7 +5,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { createRoot } from "react-dom/client";
 
-import { FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip, Avatar } from '@fluentui/react-components';
+import { FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip, Avatar, AvatarGroup, AvatarGroupPopover, AvatarGroupItem, partitionAvatarGroupItems, AvatarGroupProps, AvatarSizes } from '@fluentui/react-components';
 import { Toolbar, ToolbarButton } from '@fluentui/react-components/unstable';
 import { Home24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular } from '@fluentui/react-icons';
 
@@ -80,6 +80,8 @@ export const Whiteboard = () => {
    const leftColumnClasses = leftColumnStyles();
    const midColumnClasses = midColumnStyles();
    const rightColumnClasses = rightColumnStyles();
+   const names = ['Jon Verrier', 'Someone Else'];
+   const {inlineItems,  overflowItems} = partitionAvatarGroupItems({items: names});
 
    return (
       <FluentProvider theme={teamsLightTheme}>
@@ -100,18 +102,26 @@ export const Whiteboard = () => {
                   <Tooltip withArrow content="Draw a circle or an ellipse" relationship="label">
                      <ToolbarButton aria-label="Ellipse" icon={<Circle24Regular />} />
                   </Tooltip>
-                  <Tooltip withArrow content="Draw a text" relationship="label">
+                  <Tooltip withArrow content="Write text" relationship="label">
                      <ToolbarButton aria-label="Text" icon={<DrawText24Regular />} />
                   </Tooltip>
                </Toolbar>
             </div>
             <div className={rightColumnClasses.root}>
-               <Tooltip withArrow content="Jon Verrier" relationship="label">
-                  <Avatar
-                     name="Jon Verrier"
-                     shape="square"
-                     />
-               </Tooltip>
+               <AvatarGroup size={24}>
+                  {inlineItems.map(name => (
+                     <Tooltip withArrow content={name} relationship="label">
+                        <AvatarGroupItem name={name} key={name} />
+                     </Tooltip>
+                  ))}
+                  {overflowItems && (
+                     <AvatarGroupPopover>
+                        {overflowItems.map(name => (
+                           <AvatarGroupItem name={name} key={name} />
+                        ))}
+                     </AvatarGroupPopover>
+                  )}
+               </AvatarGroup>
             </div>
          </div>
       </FluentProvider>

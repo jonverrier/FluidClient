@@ -78,4 +78,10 @@ export class FluidClient extends MSerialisable {
    addRemoteUser(remoteUser_: Persona): void {
       this._remoteUsers.push(remoteUser_);
    }
+
+   // Update timestamp on local user. Pass it in to provide better testability (can read back what you passed in)
+   refreshLocalUser(date_: Date): void {
+
+      this._localUser.lastSeenAt = date_;
+   }
 }

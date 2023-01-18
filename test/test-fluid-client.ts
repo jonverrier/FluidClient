@@ -68,7 +68,18 @@ describe("FluidClient", function () {
       var found: Persona = fluidClient1.remoteUsers.find(function (element: Persona): boolean { return element.equals (persona2) } );
       expect(found.equals(persona2)).to.equal(true);
    });
-   
+
+   it("Needs to correctly store refreshed lastSeenAt attribute", function () {
+
+      var fluidClient1: FluidClient = new FluidClient();
+      fluidClient1.localUser = persona1;
+
+      var date_ = new Date();
+      fluidClient1.refreshLocalUser(date_);
+
+      // Local user is persona1
+      expect(fluidClient1.localUser.lastSeenAt.getTime()).to.equal(date_.getTime());
+   });
 
    it("Needs to convert to and from JSON", function () {
 
