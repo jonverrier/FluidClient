@@ -5,9 +5,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { createRoot } from "react-dom/client";
 
-import { FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip, Avatar, AvatarGroup, AvatarGroupPopover, AvatarGroupItem, partitionAvatarGroupItems, AvatarGroupProps, AvatarSizes } from '@fluentui/react-components';
+import { FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip, Text, AvatarGroup, AvatarGroupPopover, AvatarGroupItem, partitionAvatarGroupItems, useId, Input, Popover, PopoverTrigger, PopoverSurface } from '@fluentui/react-components';
 import { Toolbar, ToolbarButton } from '@fluentui/react-components/unstable';
-import { Home24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular } from '@fluentui/react-icons';
+import { Share24Regular, Person24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular } from '@fluentui/react-icons';
 
 // FluidClient
 import { FluidClient } from './FluidClient';
@@ -29,7 +29,6 @@ const headerStyles = makeStyles({
 
 const leftColumnStyles = makeStyles({
    root: {
-      display: 'flex',
       flexDirection: 'column',
       alignSelf: 'left',
       marginLeft: '0',
@@ -39,7 +38,6 @@ const leftColumnStyles = makeStyles({
 
 const midColumnStyles = makeStyles({
    root: {
-      display: 'flex',
       flexDirection: 'column',
       alignSelf: 'center',
       marginLeft: 'auto',
@@ -49,7 +47,6 @@ const midColumnStyles = makeStyles({
 
 const rightColumnStyles = makeStyles({
    root: {
-      display: 'flex',
       flexDirection: 'column',
       alignSelf: 'right',
       marginLeft: 'auto',
@@ -82,14 +79,25 @@ export const Whiteboard = () => {
    const rightColumnClasses = rightColumnStyles();
    const names = ['Jon Verrier', 'Someone Else'];
    const {inlineItems,  overflowItems} = partitionAvatarGroupItems({items: names});
+   const inputId = useId('joinAs');
 
    return (
       <FluentProvider theme={teamsLightTheme}>
          <div className={headerClasses.root}>
             <div className={leftColumnClasses.root}>
-               <Tooltip withArrow content="Navigate to Home" relationship="label">
-                  <Button icon={<Home24Regular />} />
-               </Tooltip>
+               <Popover>
+                  <PopoverTrigger disableButtonEnhancement>
+                     <Tooltip withArrow content="Share Whiteboard. Enter your name on the right to enable this button." relationship="label">
+                        <Button icon={<Share24Regular />} />
+                     </Tooltip>
+                  </PopoverTrigger>
+
+                  <PopoverSurface>
+                     <b>Share the link below with others so they can access this Whiteboard</b>
+                     <br />
+                     <p>https://xxxx.yyyy.zzz.com</p>
+                  </PopoverSurface>
+               </Popover>
             </div>
             <div className={midColumnClasses.root}>
                <Toolbar>
@@ -108,6 +116,12 @@ export const Whiteboard = () => {
                </Toolbar>
             </div>
             <div className={rightColumnClasses.root}>
+               <Tooltip withArrow content="Enter your name or initials to share this Whiteboard" relationship="label">
+                  <Input id={inputId} aria-label="Join As (Name/Initials)"
+                     contentBefore={<Person24Regular />}
+                     placeholder="Join As..." />
+               </Tooltip>
+               &nbsp;
                <AvatarGroup size={24}>
                   {inlineItems.map(name => (
                      <Tooltip withArrow content={name} relationship="label">
