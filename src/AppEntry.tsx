@@ -140,7 +140,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
          const data = {
             ...prevState,
             joinAs: newJoinAs,
-            enableShare: enableShareFromJoinAs(newJoinAs),
+            enableShare: (newFluidId === null) && (enableShareFromJoinAs(newJoinAs)),
             sharePrompt: sharePromptFromJoinAs(newJoinAs),
             fluidId: newFluidId
          }
