@@ -268,5 +268,12 @@ export class Persona extends MSerialisable {
       return (persona === Persona._unknown) ||
          (persona && persona.equals(Persona._unknown));
    }
+
+   /**
+    * return persona details for 'unknown'
+    */
+   static unknownImage(): string {
+      return unknownImageB64;
+   }
 }
 
