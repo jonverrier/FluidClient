@@ -2,7 +2,6 @@
 import { SharedMap } from "fluid-framework";
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 
-// FluidConnection
 import { Persona } from './Persona';
 
 export interface IConnectionProps {
@@ -26,7 +25,9 @@ export class FluidConnection  {
       this.client = new TinyliciousClient();
    }
 
-   async createNewSession(localUser: Persona): Promise<string> {
+   async createNew(localUser: Persona): Promise<string> {
+
+      return "MadeUpIDXX";
 
       const { container, services } = await this.client.createContainer(containerSchema);
 

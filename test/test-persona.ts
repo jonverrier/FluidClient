@@ -179,6 +179,7 @@ describe("Persona", function () {
 
       expect(Persona.isUnknown(unknown)).to.equal(true);
       expect(Persona.isUnknown(unknown2)).to.equal(true);
+      expect(Persona.unknownImage().length > 0).to.equal(true);
    });
 
    it("Needs to convert to and from JSON()", function () {
