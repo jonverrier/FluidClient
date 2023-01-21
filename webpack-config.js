@@ -2,7 +2,7 @@ module.exports = {
    devtool: 'source-map',
    entry: "./Src/AppEntry.tsx",
    mode: "development",
-   target: 'node',
+   target: 'web',
    output: {
       filename: "fluidwhiteboard.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix

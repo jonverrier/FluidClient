@@ -27,6 +27,8 @@ export class FluidConnection  {
 
    async createNew(localUser: Persona): Promise<string> {
 
+      return "MadeUpIDXX";
+
       const { container, services } = await this.client.createContainer(containerSchema);
 
       // Set default data

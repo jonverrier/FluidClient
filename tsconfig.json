@@ -1,5 +1,6 @@
 {
    "compilerOptions": {
+      "target": "es6",
       "lib": [ "es6", "dom" ],
       "strict": false,
       "esModuleInterop": true,
@@ -10,9 +11,10 @@
       "noEmitOnError": true,
       "removeComments": false,
       "sourceMap": true,
-      "target": "es6",
       "jsx": "react",
-      "resolveJsonModule": true
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "isolatedModules": true
    },
    "include": [
       "./src/**/*.ts",
