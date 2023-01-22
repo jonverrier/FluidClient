@@ -2,10 +2,10 @@
 
 // React
 import React, { ChangeEvent } from 'react';
-import { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { useState } from 'react';
 import { createRoot } from "react-dom/client";
 
+// Fluent
 import {
    FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip,
    AvatarGroup, AvatarGroupPopover, AvatarGroupItem, partitionAvatarGroupItems,
@@ -13,9 +13,11 @@ import {
    InputOnChangeData
 } from '@fluentui/react-components';
 
-import { Toolbar, ToolbarButton } from '@fluentui/react-components/unstable';
-import { Share24Regular, Copy24Regular, Person24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular } from '@fluentui/react-icons';
+import { Share24Regular, Copy24Regular, Person24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular, DismissCircle24Regular } from '@fluentui/react-icons';
 
+import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstable';
+
+// Local
 import { Persona } from './Persona';
 import { FluidConnection } from './FluidConnection';
 import { uuid } from './Uuid';
@@ -75,6 +77,11 @@ const linkStyles = makeStyles({
    },
 });
 
+const alertStyles = makeStyles({
+   root: {
+      display: 'flex'
+   },
+});
 
 export class App extends React.Component<IAppProps, AppState> {
 
@@ -106,6 +113,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const midColumnClasses = midColumnStyles();
    const rightColumnClasses = rightColumnStyles();
    const linkClasses = linkStyles();
+   const alertClasses = alertStyles();
 
    const inputId = useId('joinAs');
 
@@ -133,7 +141,8 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       joinAs: props.initialUser.name,
       enableShare: enableShareFromJoinAs(props.initialUser.name),
       sharePrompt: sharePromptFromJoinAs(props.initialUser.name),
-      fluidId: null
+      fluidId: null,
+      alertMessage: null
    });
 
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
@@ -149,7 +158,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             joinAs: newJoinAs,
             enableShare: (newFluidId === null) && (enableShareFromJoinAs(newJoinAs)),
             sharePrompt: sharePromptFromJoinAs(newJoinAs),
-            fluidId: newFluidId
+            fluidId: newFluidId,
          }
          return data
       })
@@ -168,8 +177,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
          .then((id: string) => {
             uiStateSet(uiState.joinAs, id);
          })
-         .catch(() => {
-             // TODO - Error processing
+         .catch((e: Error) => {
+            if (e.message)
+               uiState.alertMessage = "Sorry, we encountered an error connection to the data service. The error was \'" + e.message + "\'.";
+            else
+               uiState.alertMessage = "Sorry, we encountered an error connection to the data service.";
+
+            uiStateSet(uiState.joinAs, uiState.fluidId);
          });      
    }
 
@@ -240,6 +254,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                   )}
                </AvatarGroup>
             </div>
+         </div>
+         <div className={alertClasses.root}>
+            {uiState.alertMessage
+               ? <Alert action={{
+                  icon: <DismissCircle24Regular />,
+               }}>{uiState.alertMessage}</Alert>
+            : <div></div>}
          </div>
       </FluentProvider>
    );
