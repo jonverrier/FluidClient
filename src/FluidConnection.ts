@@ -3,7 +3,7 @@ import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 
 import { Persona } from './Persona';
-import { InvalidOperationError } from './Errors';
+import { ConnectionError, InvalidOperationError } from './Errors';
 
 export interface IConnectionProps {
    onRemoteChange: (remoteUsers: Persona[]) => void;
@@ -29,38 +29,52 @@ export class FluidConnection  {
 
    async createNew(localUser: Persona): Promise<string> {
 
-      this.localUser = localUser;
+      try {
+         this.localUser = localUser;
 
-      const { container, services } = await this.client.createContainer(containerSchema);
-      this.container = container;
+         const { container, services } = await this.client.createContainer(containerSchema);
+         this.container = container;
 
-      // Set default data as our user ID
-      var storedVal: string = localUser.streamToJSON();
+         // Set default data as our user ID
+         var storedVal: string = localUser.streamToJSON();
 
-      (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
+         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
 
-      // Attach container to service and return assigned ID
-      const id = container.attach();
-      this.watchForChanges();
+         // Attach container to service and return assigned ID
+         const id = await container.attach();
+         await container.connect();
 
-      return id;
+         this.watchForChanges();
+
+         return id;
+      }
+      catch (e: any) {
+         throw new ConnectionError ("Error connecting new container to remote data service.")
+      }
    }
 
    async attachToExisting (id: string, localUser: Persona): Promise<string> {
 
-      this.localUser = localUser;
+      try {
+         this.localUser = localUser;
 
-      const { container, services } = await this.client.getContainer(id, containerSchema);
-      this.container = container;
+         const { container, services } = await this.client.getContainer(id, containerSchema);
+         this.container = container;
+         await container.connect();
 
-      // Add our User ID to the shared data 
-      var storedVal: string = localUser.streamToJSON();
+         // Add our User ID to the shared data 
+         // TODO - not if already stored !! 
+         var storedVal: string = localUser.streamToJSON();
 
-      (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-      this.watchForChanges();
-      this.bubbleUp();
+         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
+         this.watchForChanges();
+         this.bubbleUp();
 
-      return id;
+         return id;
+      }
+      catch (e: any) {
+         throw new ConnectionError("Error attaching existing new container to remote data service.")
+      }
    }
 
    canDisconnect(): boolean {
@@ -68,7 +82,9 @@ export class FluidConnection  {
       if (!this.container)
          return false;
 
-      if (this.container.connectionState !== ConnectionState.Connected)
+      var state = this.container.connectionState; 
+
+      if (state !== ConnectionState.Connected)
          return false;
 
       return !this.container.isDirty;
@@ -76,17 +92,8 @@ export class FluidConnection  {
 
    async disconnect(): Promise<boolean> {
 
-      if (this.container.connectionState === ConnectionState.Connected) {
-         //  enumerate members of the sharedMap, remove ourselves from it
-         (this.container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
-            var temp: Persona = new Persona();
-
-            temp.streamFromJSON(value);
-
-            if (temp.id === this.localUser.id) {
-               (this.container.initialObjects.participantMap as any).delete(key);
-            }
-         });
+      if (this.canDisconnect()) {
+         this.container.disconnect();
 
          return true;
       }

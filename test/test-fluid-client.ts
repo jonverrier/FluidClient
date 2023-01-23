@@ -3,8 +3,8 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { FluidClient } from '../src/FluidClient';
 import { Persona } from '../src/Persona';
+import { FluidClient } from '../src/FluidClient';
 
 var myId: string = "1234";
 var myName: string = "Jon";
