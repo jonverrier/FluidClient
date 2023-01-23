@@ -63,10 +63,11 @@ export class FluidConnection  {
          await container.connect();
 
          // Add our User ID to the shared data 
-         // TODO - not if already stored !! 
-         var storedVal: string = localUser.streamToJSON();
+         if (!this.containsMe()) {
+            var storedVal: string = localUser.streamToJSON();
+            (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
+         }
 
-         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
          this.watchForChanges();
          this.bubbleUp();
 
@@ -107,14 +108,9 @@ export class FluidConnection  {
 
          this.bubbleUp();
       });
-
-      (this.container.initialObjects.participantMap as any).on("valueChanged", () => {
-
-         this.bubbleUp();
-      });
    }
 
-   bubbleUp(): void {
+   private bubbleUp(): void {
       this.remoteUsers = new Array<Persona>();
 
       //  enumerate members of the sharedMap
@@ -129,5 +125,20 @@ export class FluidConnection  {
       });
 
       this.props.onRemoteChange(this.remoteUsers);
+   }
+
+   private containsMe(): boolean {
+
+      //  enumerate members of the sharedMap
+      (this.container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
+         var temp: Persona = new Persona();
+
+         temp.streamFromJSON(value);
+
+         if (temp.id === this.localUser.id) {
+            return true;
+         }
+      });
+      return false;
    }
 }

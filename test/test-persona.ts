@@ -31,7 +31,18 @@ describe("Persona", function () {
       expect(personaEmpty.id).to.equal(null);
    });
 
-   it("Needs to detect invalid id", function () {
+   it("Needs to allow null ID", function () {
+
+      var caught: boolean = false;
+      try {
+         var personaErr: Persona = new Persona(null, myId, myThumbnail, myLastSeenAt);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).to.equal(false);
+   });
+
+   it("Needs to detect invalid ID", function () {
 
       var caught: boolean = false;
       try {
