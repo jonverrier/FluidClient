@@ -1,11 +1,11 @@
 /*! Copyright TXPCo 2022 */
 
 // React
-import React, { ChangeEvent } from 'react';
-import { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import React, { ChangeEvent, MouseEvent, MouseEventHandler } from 'react';
+import { useState } from 'react';
 import { createRoot } from "react-dom/client";
 
+// Fluent
 import {
    FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip,
    AvatarGroup, AvatarGroupPopover, AvatarGroupItem, partitionAvatarGroupItems,
@@ -13,21 +13,14 @@ import {
    InputOnChangeData
 } from '@fluentui/react-components';
 
-import { Toolbar, ToolbarButton } from '@fluentui/react-components/unstable';
-import { Share24Regular, Copy24Regular, Person24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular } from '@fluentui/react-icons';
+import { Share24Regular, Copy24Regular, Person24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular, DismissCircle24Regular } from '@fluentui/react-icons';
 
+import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstable';
+
+// Local
 import { Persona } from './Persona';
 import { FluidConnection } from './FluidConnection';
 import { uuid } from './Uuid';
-
-export interface IAppProps {
-
-}
-
-class AppState {
-   localUser: Persona;
-   fluidConnection: FluidConnection;
-}
 
 const headerStyles = makeStyles({
    root: {
@@ -75,6 +68,21 @@ const linkStyles = makeStyles({
    },
 });
 
+const alertStyles = makeStyles({
+   root: {
+      display: 'flex'
+   },
+});
+
+export interface IAppProps {
+
+}
+
+class AppState {
+   localUser: Persona;
+   remoteUsers: Persona[];
+   fluidConnection: FluidConnection;
+}
 
 export class App extends React.Component<IAppProps, AppState> {
 
@@ -82,13 +90,21 @@ export class App extends React.Component<IAppProps, AppState> {
 
       super(props);
 
-      this.state = { fluidConnection: new FluidConnection({}), localUser: Persona.unknown()};
+      this.state = {
+         fluidConnection: new FluidConnection({ onRemoteChange: this.onRemoteChange.bind(this) }),
+         localUser: Persona.unknown(),
+         remoteUsers: new Array<Persona> ()
+      };
    }
 
+   onRemoteChange(remoteUsers: Persona[]): void {
+      this.setState({ remoteUsers: remoteUsers });
+      this.forceUpdate(); // Need to push new properties down to the Header component
+   }
 
    render() {
       return (
-         <WhiteboardToolsHeader fluidConnection={this.state.fluidConnection} initialUser={this.state.localUser}  />
+         <WhiteboardToolsHeader fluidConnection={this.state.fluidConnection} initialUser={this.state.localUser} remoteUsers={this.state.remoteUsers} />
       );
    }
 }
@@ -97,7 +113,7 @@ export interface IWhiteboardToolsHeaderProps {
 
    fluidConnection: FluidConnection;
    initialUser: Persona;
-   // onConnect(name: string): void;
+   remoteUsers: Persona[];
 }
 
 export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
@@ -106,12 +122,26 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const midColumnClasses = midColumnStyles();
    const rightColumnClasses = rightColumnStyles();
    const linkClasses = linkStyles();
+   const alertClasses = alertStyles();
 
    const inputId = useId('joinAs');
 
+   function isJoiningExisting(): boolean {
+      return location.hash ? true : false;
+   }
+
+   function existingWhiteboardId(): string {
+      if (isJoiningExisting()) {
+         return location.hash.substring(1);
+      }
+
+      return null;
+   }
+
    // Control UI for share enable/disable
-   const sharePromptDisabled: string = "Share Whiteboard. Enter your name or initials on the right to enable this button.";
-   const sharePromptEnabled: string = "Share Whiteboard.";
+   const sharePromptDisabled: string = isJoiningExisting() ? "Join existing Whiteboard. Enter your name or initials on the right to enable this button." : "Share Whiteboard. Enter your name or initials on the right to enable this button.";
+   const sharePromptEnabled: string = isJoiningExisting() ? "Join existing Whiteboard." : "Share Whiteboard.";
+   const joinAsPrompt: string = isJoiningExisting() ? "Enter your name or initials to join this Whiteboard." : "Enter your name or initials to share this Whiteboard.";
 
    function enableShareFromJoinAs(joinAs: string): boolean {
       if (joinAs.length >= 2) {
@@ -133,23 +163,36 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       joinAs: props.initialUser.name,
       enableShare: enableShareFromJoinAs(props.initialUser.name),
       sharePrompt: sharePromptFromJoinAs(props.initialUser.name),
-      fluidId: null
+      fluidId: null,
+      alertMessage: null,
+      connecting: false
    });
 
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
    const urlToSharePromptEnabled: string = fullConnectionString(uiState.fluidId);
 
-   const names = [uiState.joinAs];
+   const names = makeAvatarNames(uiState.joinAs, props.remoteUsers);
    const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: names });
 
-   const uiStateSet = (newJoinAs: string, newFluidId: string) => {
+   function makeAvatarNames(joinAs: string, remoteUsers: Persona[]) {
+      var names: Array<string> = new Array<string>();
+
+      names.push(joinAs);
+
+      remoteUsers.forEach((item, index) => {
+         names.push(item.name);
+      });
+
+      return names;
+   }
+   const setState = (newJoinAs: string, newFluidId: string) => {
       setUiState((prevState) => {
          const data = {
             ...prevState,
             joinAs: newJoinAs,
             enableShare: (newFluidId === null) && (enableShareFromJoinAs(newJoinAs)),
             sharePrompt: sharePromptFromJoinAs(newJoinAs),
-            fluidId: newFluidId
+            fluidId: newFluidId,
          }
          return data
       })
@@ -157,20 +200,64 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      uiStateSet(data.value, uiState.fluidId);
+      setState(data.value, uiState.fluidId);
    }
 
-   function onShareConnection(): void {
+   function onConnect(): void {
       var newPersona: Persona = new Persona(uuid(), uiState.joinAs, Persona.unknownImage(), new Date());
 
+      if (isJoiningExisting()) {
+         attachToExistingConnection(existingWhiteboardId(), newPersona);
+      }
+      else {
+         createNewConnection(newPersona);
+      }
+   }
+
+   function createNewConnection (localUser: Persona): void {
       var id: string;
-      props.fluidConnection.createNew(newPersona)
+
+      recordConnectionStarted();
+
+      props.fluidConnection.createNew(localUser)
          .then((id: string) => {
-            uiStateSet(uiState.joinAs, id);
+            recordConnectionEnded();
+            setState(uiState.joinAs, id);
          })
-         .catch(() => {
-             // TODO - Error processing
-         });      
+         .catch((e: Error) => {
+            recordConnectionEnded();
+            var alert: string;
+
+            if (e.message)
+               alert = "Sorry, we encountered an error connecting to the data service. The error was \'" + e.message + "\'.";
+            else
+               alert = "Sorry, we encountered an error connecting to the data service.";
+
+            showAlert(alert);
+         });
+   }
+
+   function attachToExistingConnection(id: string, localUser: Persona): void {
+      var id: string;
+
+      recordConnectionStarted();
+
+      props.fluidConnection.attachToExisting(id, localUser)
+         .then((id: string) => {
+            recordConnectionEnded();
+            setState(uiState.joinAs, id);
+         })
+         .catch((e: Error) => {
+            recordConnectionEnded();
+            var alert: string;
+
+            if (e.message)
+               alert = "Sorry, we encountered an error connecting to the data service. The error was \'" + e.message + "\'.";
+            else
+               alert = "Sorry, we encountered an error connecting to the data service.";
+
+            showAlert(alert);
+         });
    }
 
    function fullConnectionString(id: string): string {
@@ -184,7 +271,31 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function urlToShare() {
       return (uiState.fluidId === null
          ? (<p className={linkClasses.root}>{urlToSharePromptDisabled}</p>)
-         : (<div>Link for others to use this Whiteboard:<b></b><p className={linkClasses.root}>{urlToSharePromptEnabled}</p></div>));
+         : (<div><b>Link for others to use this Whiteboard:</b><p className={linkClasses.root}>{urlToSharePromptEnabled}</p></div>));
+   }
+
+   function showAlert(alert: string): void {
+      uiState.alertMessage = alert;
+      setState(uiState.joinAs, uiState.fluidId);
+   }
+
+   function hideAlert(ev: MouseEvent): void {
+      uiState.alertMessage = null;
+      setState(uiState.joinAs, uiState.fluidId);
+   }
+
+   function recordConnectionStarted (): void {
+      uiState.connecting = true;
+      setState(uiState.joinAs, uiState.fluidId);
+   }
+
+   function recordConnectionEnded(): void {
+      uiState.connecting = false;
+      setState(uiState.joinAs, uiState.fluidId);
+   }
+
+   function isConnecting (): boolean {
+      return uiState.connecting;
    }
 
    return (
@@ -192,7 +303,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
          <div className={headerClasses.root}>
             <div className={leftColumnClasses.root}>
                <Tooltip withArrow content={uiState.sharePrompt} relationship="label">
-                  <Button icon={<Share24Regular />} disabled={!uiState.enableShare} onClick={onShareConnection} />
+                  <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || isConnecting()} onClick={onConnect} />
                </Tooltip>
                <Tooltip withArrow content={urlToShare()} relationship="label">
                   <Button icon={<Copy24Regular />} disabled={uiState.fluidId===null} onClick={onCopyConnectionString} />
@@ -215,7 +326,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                </Toolbar>
             </div>
             <div className={rightColumnClasses.root}>
-               <Tooltip withArrow content={"Enter your name or initials to share this Whiteboard."} relationship="label">
+               <Tooltip withArrow content={joinAsPrompt} relationship="label">
                   <Input id={inputId} aria-label="Join As (Name/Initials)"
                      value={uiState.joinAs}
                      contentBefore={<Person24Regular />}
@@ -240,6 +351,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                   )}
                </AvatarGroup>
             </div>
+         </div>
+         <div className={alertClasses.root}>
+            {uiState.alertMessage
+               ? <Alert action={{
+                  icon: <DismissCircle24Regular onClick={hideAlert} />
+               }}>{uiState.alertMessage}</Alert>
+            : <div></div>}
          </div>
       </FluentProvider>
    );
