@@ -1,15 +1,12 @@
 // Copyright (c) 2023 TXPCo Ltd
-import { IFluidContainer, SharedMap } from "fluid-framework";
+import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 
 import { Persona } from './Persona';
+import { InvalidOperationError } from './Errors';
 
 export interface IConnectionProps {
    onRemoteChange: (remoteUsers: Persona[]) => void;
-}
-
-class ConnectionState {
-
 }
 
 const containerSchema = {
@@ -66,7 +63,44 @@ export class FluidConnection  {
       return id;
    }
 
+   canDisconnect(): boolean {
+
+      if (!this.container)
+         return false;
+
+      if (this.container.connectionState !== ConnectionState.Connected)
+         return false;
+
+      return !this.container.isDirty;
+   }
+
+   async disconnect(): Promise<boolean> {
+
+      if (this.container.connectionState === ConnectionState.Connected) {
+         //  enumerate members of the sharedMap, remove ourselves from it
+         (this.container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
+            var temp: Persona = new Persona();
+
+            temp.streamFromJSON(value);
+
+            if (temp.id === this.localUser.id) {
+               (this.container.initialObjects.participantMap as any).delete(key);
+            }
+         });
+
+         return true;
+      }
+      else {
+         throw new InvalidOperationError ("The remote data service is not connected - please try again in a short while.")
+      }
+   }
+
    watchForChanges(): void {
+      (this.container.initialObjects.participantMap as any).on("valueChanged", () => {
+
+         this.bubbleUp();
+      });
+
       (this.container.initialObjects.participantMap as any).on("valueChanged", () => {
 
          this.bubbleUp();

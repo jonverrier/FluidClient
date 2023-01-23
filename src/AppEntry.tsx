@@ -9,11 +9,21 @@ import { createRoot } from "react-dom/client";
 import {
    FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip,
    AvatarGroup, AvatarGroupPopover, AvatarGroupItem, partitionAvatarGroupItems,
-   useId, Input, Popover, PopoverTrigger, PopoverSurface,
+   useId, Input, 
    InputOnChangeData
 } from '@fluentui/react-components';
 
-import { Share24Regular, Copy24Regular, Person24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular, DismissCircle24Regular } from '@fluentui/react-icons';
+import {
+   Share24Regular,
+   Copy24Regular,
+   Person24Regular,
+   DrawText24Regular,
+   Square24Regular,
+   Circle24Regular,
+   Line24Regular,
+   DismissCircle24Regular,
+   SignOut24Regular
+} from '@fluentui/react-icons';
 
 import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstable';
 
@@ -90,9 +100,11 @@ export class App extends React.Component<IAppProps, AppState> {
 
       super(props);
 
+      var initialUser = Persona.unknown();
+
       this.state = {
          fluidConnection: new FluidConnection({ onRemoteChange: this.onRemoteChange.bind(this) }),
-         localUser: Persona.unknown(),
+         localUser: initialUser,
          remoteUsers: new Array<Persona> ()
       };
    }
@@ -144,7 +156,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const joinAsPrompt: string = isJoiningExisting() ? "Enter your name or initials to join this Whiteboard." : "Enter your name or initials to share this Whiteboard.";
 
    function enableShareFromJoinAs(joinAs: string): boolean {
-      if (joinAs.length >= 2) {
+      if (joinAs && joinAs.length >= 2) {
          return true;
       } else {
          return false;
@@ -152,7 +164,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    function sharePromptFromJoinAs(joinAs: string): string {
-      if (joinAs.length >= 2) {
+      if (joinAs && joinAs.length >= 2) {
          return sharePromptEnabled;
       } else {
          return sharePromptDisabled;
@@ -160,9 +172,9 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    const [uiState, setUiState] = useState({
-      joinAs: props.initialUser.name,
-      enableShare: enableShareFromJoinAs(props.initialUser.name),
-      sharePrompt: sharePromptFromJoinAs(props.initialUser.name),
+      joinAs: Persona.isUnknown(props.initialUser) ? "" : props.initialUser.name,
+      enableShare: enableShareFromJoinAs(Persona.isUnknown(props.initialUser) ? "" : props.initialUser.name),
+      sharePrompt: sharePromptFromJoinAs(Persona.isUnknown(props.initialUser) ? "" : props.initialUser.name),
       fluidId: null,
       alertMessage: null,
       connecting: false
@@ -268,6 +280,25 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       navigator.clipboard.writeText(fullConnectionString(uiState.fluidId));
    }
 
+   function onSignOut(): void {
+      try {
+
+         props.fluidConnection.disconnect();
+         setState("", null);
+
+      } catch (e: any) {
+
+         var alert: string;
+
+         if (e.message)
+            alert = "Sorry, we encountered an error with the remote data service. The error was \'" + e.message + "\'.";
+         else
+            alert = "Sorry, we encountered an error with the remote data service.";
+
+         showAlert(alert);
+      }
+   }
+
    function urlToShare() {
       return (uiState.fluidId === null
          ? (<p className={linkClasses.root}>{urlToSharePromptDisabled}</p>)
@@ -307,6 +338,9 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                </Tooltip>
                <Tooltip withArrow content={urlToShare()} relationship="label">
                   <Button icon={<Copy24Regular />} disabled={uiState.fluidId===null} onClick={onCopyConnectionString} />
+               </Tooltip>
+               <Tooltip withArrow content={"Sign out."} relationship="label">
+                  <Button icon={<SignOut24Regular />} disabled={uiState.fluidId === null || (!props.fluidConnection.canDisconnect())} onClick={onSignOut} />
                </Tooltip>
             </div>
             <div className={midColumnClasses.root}>
