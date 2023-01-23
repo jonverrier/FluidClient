@@ -1,7 +1,7 @@
 /*! Copyright TXPCo 2022 */
 
 // React
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, MouseEvent, MouseEventHandler } from 'react';
 import { useState } from 'react';
 import { createRoot } from "react-dom/client";
 
@@ -151,7 +151,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const names = [uiState.joinAs];
    const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: names });
 
-   const uiStateSet = (newJoinAs: string, newFluidId: string) => {
+   const setState = (newJoinAs: string, newFluidId: string) => {
       setUiState((prevState) => {
          const data = {
             ...prevState,
@@ -166,7 +166,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      uiStateSet(data.value, uiState.fluidId);
+      setState(data.value, uiState.fluidId);
    }
 
    function onShareConnection(): void {
@@ -175,15 +175,17 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       var id: string;
       props.fluidConnection.createNew(newPersona)
          .then((id: string) => {
-            uiStateSet(uiState.joinAs, id);
+            setState(uiState.joinAs, id);
          })
          .catch((e: Error) => {
-            if (e.message)
-               uiState.alertMessage = "Sorry, we encountered an error connection to the data service. The error was \'" + e.message + "\'.";
-            else
-               uiState.alertMessage = "Sorry, we encountered an error connection to the data service.";
+            var alert: string;
 
-            uiStateSet(uiState.joinAs, uiState.fluidId);
+            if (e.message)
+               alert = "Sorry, we encountered an error connection to the data service. The error was \'" + e.message + "\'.";
+            else
+               alert = "Sorry, we encountered an error connection to the data service.";
+
+            showAlert(alert); 
          });      
    }
 
@@ -198,7 +200,17 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function urlToShare() {
       return (uiState.fluidId === null
          ? (<p className={linkClasses.root}>{urlToSharePromptDisabled}</p>)
-         : (<div>Link for others to use this Whiteboard:<b></b><p className={linkClasses.root}>{urlToSharePromptEnabled}</p></div>));
+         : (<div><b>Link for others to use this Whiteboard:</b><p className={linkClasses.root}>{urlToSharePromptEnabled}</p></div>));
+   }
+
+   function showAlert(alert: string): void {
+      uiState.alertMessage = alert;
+      setState(uiState.joinAs, uiState.fluidId);
+   }
+
+   function hideAlert(ev: MouseEvent): void {
+      uiState.alertMessage = null;
+      setState(uiState.joinAs, uiState.fluidId);
    }
 
    return (
@@ -258,7 +270,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
          <div className={alertClasses.root}>
             {uiState.alertMessage
                ? <Alert action={{
-                  icon: <DismissCircle24Regular />,
+                  icon: <DismissCircle24Regular onClick={hideAlert} />
                }}>{uiState.alertMessage}</Alert>
             : <div></div>}
          </div>
