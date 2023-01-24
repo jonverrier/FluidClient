@@ -6,7 +6,6 @@ import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 
 var alwaysWaitAfterConnectFor: number = 1000;
-var populateLocalUserRetryInterval: number = 500;
 
 export interface IConnectionProps {
    onRemoteChange: (remoteUsers: Persona[]) => void;
@@ -66,19 +65,9 @@ export class FluidConnection  {
          await container.connect();
          await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
-         // Add our User ID to the shared data if not there already 
-         // Need to wait until _container is clean before we test local membership
-         var interval = setInterval(() => {
-            if (!this._container.isDirty) {
-
-               if (!this.containsMe()) {
-                  var storedVal: string = localUser.streamToJSON();
-                  (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-               }
-
-               clearInterval(interval);
-            }
-         }, populateLocalUserRetryInterval);
+         // Add our User ID to the shared data - unconditional write as we have stable UUIDs
+         var storedVal: string = localUser.streamToJSON();
+         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
 
          this.watchForChanges();
          this.bubbleUp();
@@ -139,23 +128,5 @@ export class FluidConnection  {
       });
 
       this._props.onRemoteChange(_remoteUsers);
-   }
-
-   private containsMe(): boolean {
-
-      var found: boolean = false;
-
-      //  enumerate members of the sharedMap
-      (this._container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
-         var temp: Persona = new Persona();
-
-         temp.streamFromJSON(value);
-
-         if (temp.id === this._localUser.id) {
-            found = true;
-         }
-      });
-
-      return found;
    }
 }
