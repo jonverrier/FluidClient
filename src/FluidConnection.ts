@@ -5,6 +5,8 @@ import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 
+var alwaysWaitFor: number = 1000;
+
 export interface IConnectionProps {
    onRemoteChange: (remoteUsers: Persona[]) => void;
 }
@@ -43,6 +45,7 @@ export class FluidConnection  {
          // Attach container to service and return assigned ID
          const id = await container.attach();
          await container.connect();
+         await new Promise(resolve => setTimeout(resolve, alwaysWaitFor)); // Always wait - reduces chance of stale UI
 
          this.watchForChanges();
 
@@ -61,8 +64,9 @@ export class FluidConnection  {
          const { container, services } = await this.client.getContainer(id, containerSchema);
          this.container = container;
          await container.connect();
+         await new Promise(resolve => setTimeout(resolve, alwaysWaitFor)); // Always wait - reduces chance of stale UI
 
-         // Add our User ID to the shared data 
+         // Add our User ID to the shared data if not there already 
          if (!this.containsMe()) {
             var storedVal: string = localUser.streamToJSON();
             (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
@@ -88,7 +92,9 @@ export class FluidConnection  {
       if (state !== ConnectionState.Connected)
          return false;
 
-      return !this.container.isDirty;
+      // TODO - should we check this.container.isDirty;
+
+      return true; 
    }
 
    async disconnect(): Promise<boolean> {

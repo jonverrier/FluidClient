@@ -172,12 +172,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    const [uiState, setUiState] = useState({
-      joinAs: Persona.isUnknown(props.initialUser) ? "" : props.initialUser.name,
-      enableShare: enableShareFromJoinAs(Persona.isUnknown(props.initialUser) ? "" : props.initialUser.name),
-      sharePrompt: sharePromptFromJoinAs(Persona.isUnknown(props.initialUser) ? "" : props.initialUser.name),
+      joinAs: props.initialUser.name,
+      enableShare: enableShareFromJoinAs(props.initialUser.name),
+      sharePrompt: sharePromptFromJoinAs(props.initialUser.name),
       fluidId: null,
       alertMessage: null,
-      connecting: false
+      connecting: false,
+      canSignOut: false
    });
 
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
@@ -197,7 +198,8 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
       return names;
    }
-   const setState = (newJoinAs: string, newFluidId: string) => {
+
+   const setState = (newJoinAs: string, newFluidId: string, canSignOut: boolean) => {
       setUiState((prevState) => {
          const data = {
             ...prevState,
@@ -205,6 +207,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             enableShare: (newFluidId === null) && (enableShareFromJoinAs(newJoinAs)),
             sharePrompt: sharePromptFromJoinAs(newJoinAs),
             fluidId: newFluidId,
+            canSignOut: canSignOut
          }
          return data
       })
@@ -212,7 +215,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      setState(data.value, uiState.fluidId);
+      setState(data.value, uiState.fluidId, uiState.canSignOut);
    }
 
    function onConnect(): void {
@@ -229,15 +232,14 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function createNewConnection (localUser: Persona): void {
       var id: string;
 
-      recordConnectionStarted();
+      onConnectionStarting();
 
       props.fluidConnection.createNew(localUser)
          .then((id: string) => {
-            recordConnectionEnded();
-            setState(uiState.joinAs, id);
+            setState(uiState.joinAs, id, onConnectionEnding());
          })
          .catch((e: Error) => {
-            recordConnectionEnded();
+            onConnectionEnding();
             var alert: string;
 
             if (e.message)
@@ -252,15 +254,14 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function attachToExistingConnection(id: string, localUser: Persona): void {
       var id: string;
 
-      recordConnectionStarted();
+      onConnectionStarting();
 
       props.fluidConnection.attachToExisting(id, localUser)
          .then((id: string) => {
-            recordConnectionEnded();
-            setState(uiState.joinAs, id);
+            setState(uiState.joinAs, id, onConnectionEnding());
          })
          .catch((e: Error) => {
-            recordConnectionEnded();
+            onConnectionEnding();
             var alert: string;
 
             if (e.message)
@@ -283,8 +284,10 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function onSignOut(): void {
       try {
 
-         props.fluidConnection.disconnect();
-         setState("", null);
+         props.fluidConnection.disconnect().then(() => {
+            setState(uiState.joinAs, null, false);
+         });
+         
 
       } catch (e: any) {
 
@@ -307,26 +310,24 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    function showAlert(alert: string): void {
       uiState.alertMessage = alert;
-      setState(uiState.joinAs, uiState.fluidId);
+      setState(uiState.joinAs, uiState.fluidId, uiState.canSignOut);
    }
 
    function hideAlert(ev: MouseEvent): void {
       uiState.alertMessage = null;
-      setState(uiState.joinAs, uiState.fluidId);
+      setState(uiState.joinAs, uiState.fluidId, uiState.canSignOut);
    }
 
-   function recordConnectionStarted (): void {
+   function onConnectionStarting (): void {
       uiState.connecting = true;
-      setState(uiState.joinAs, uiState.fluidId);
+      uiState.canSignOut = false;
    }
 
-   function recordConnectionEnded(): void {
+   function onConnectionEnding(): boolean {
       uiState.connecting = false;
-      setState(uiState.joinAs, uiState.fluidId);
-   }
+      uiState.canSignOut = props.fluidConnection.canDisconnect();
 
-   function isConnecting (): boolean {
-      return uiState.connecting;
+      return uiState.canSignOut;
    }
 
    return (
@@ -334,13 +335,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
          <div className={headerClasses.root}>
             <div className={leftColumnClasses.root}>
                <Tooltip withArrow content={uiState.sharePrompt} relationship="label">
-                  <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || isConnecting()} onClick={onConnect} />
+                  <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || uiState.connecting} onClick={onConnect} />
                </Tooltip>
                <Tooltip withArrow content={urlToShare()} relationship="label">
                   <Button icon={<Copy24Regular />} disabled={uiState.fluidId===null} onClick={onCopyConnectionString} />
                </Tooltip>
                <Tooltip withArrow content={"Sign out."} relationship="label">
-                  <Button icon={<SignOut24Regular />} disabled={uiState.fluidId === null || (!props.fluidConnection.canDisconnect())} onClick={onSignOut} />
+                  <Button icon={<SignOut24Regular />} disabled={!(uiState.canSignOut)} onClick={onSignOut} />
                </Tooltip>
             </div>
             <div className={midColumnClasses.root}>
