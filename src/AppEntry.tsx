@@ -121,6 +121,18 @@ export class App extends React.Component<IAppProps, AppState> {
    }
 }
 
+class NameKeyPair {
+
+   public name: string;
+   public key: string;
+
+   constructor(name_: string, key_: string) {
+      this.name = name_;
+      this.key = key_;
+   }
+
+}
+
 export interface IWhiteboardToolsHeaderProps {
 
    fluidConnection: FluidConnection;
@@ -184,19 +196,19 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
    const urlToSharePromptEnabled: string = fullConnectionString(uiState.fluidId);
 
-   const names = makeAvatarNames(uiState.joinAs, props.remoteUsers);
-   const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: names });
+   const avatarNames = makeAvatarNames(uiState.joinAs, props.initialUser, props.remoteUsers);
+   const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: avatarNames, maxInlineItems: 3 });
 
-   function makeAvatarNames(joinAs: string, remoteUsers: Persona[]) {
-      var names: Array<string> = new Array<string>();
+   function makeAvatarNames(joinAs: string, localUser: Persona, remoteUsers: Persona[]): Array<NameKeyPair> {
+      var avatarNameKeyPair: Array<NameKeyPair> = new Array<NameKeyPair>();
 
-      names.push(joinAs);
+      avatarNameKeyPair.push({ name: joinAs, key: localUser.id });
 
       remoteUsers.forEach((item, index) => {
-         names.push(item.name);
+         avatarNameKeyPair.push({ name: item.name, key: item.id });
       });
 
-      return names;
+      return avatarNameKeyPair;
    }
 
    const setState = (newJoinAs: string, newFluidId: string, canSignOut: boolean) => {
@@ -372,15 +384,15 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                </Tooltip>
                &nbsp;
                <AvatarGroup size={24}>
-                  {inlineItems.map(name => (
-                     <Tooltip withArrow content={name} relationship="label" key={name}>
-                        <AvatarGroupItem name={name} key={name} />
+                  {inlineItems.map(nameKeyPair => (
+                     <Tooltip withArrow content={nameKeyPair.name} relationship="label" key={nameKeyPair.key}>
+                        <AvatarGroupItem name={nameKeyPair.name} key={nameKeyPair.key} />
                      </Tooltip>
                   ))}
                   {overflowItems && (
                      <AvatarGroupPopover>
-                        {overflowItems.map(name => (
-                           <AvatarGroupItem name={name} key={name} />
+                        {overflowItems.map(nameKeyPair => (
+                           <AvatarGroupItem name={nameKeyPair.name} key={nameKeyPair.key} />
                         ))}
                      </AvatarGroupPopover>
                   )}
