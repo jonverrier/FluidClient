@@ -28,9 +28,11 @@ import {
 import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstable';
 
 // Local
-import { Persona } from './Persona';
-import { FluidConnection } from './FluidConnection';
 import { uuid } from './Uuid';
+import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
+import { Persona } from './Persona';
+import { Participants } from './Participants';
+import { FluidConnection } from './FluidConnection';
 
 const headerStyles = makeStyles({
    root: {
@@ -89,34 +91,51 @@ export interface IAppProps {
 }
 
 class AppState {
-   localUser: Persona;
-   remoteUsers: Persona[];
+   participants: Participants;
    fluidConnection: FluidConnection;
 }
 
+function makeLocalUser(): Persona {
+
+   var localStore: IKeyValueStore = localKeyValueStore();
+
+   // Look up the UUID if it isstore, else create a new one and save it
+   var localUserUuid = localStore.getItem(KeyValueStoreKeys.localUserUuid);
+   if (!localUserUuid) {
+      localUserUuid = uuid();
+      localStore.setItem(KeyValueStoreKeys.localUserUuid, localUserUuid)
+   }
+
+   // Create 'unknown' users, but with stable UUID'
+   var unknown: Persona = Persona.unknown();
+
+   return new Persona(localUserUuid, unknown.name, unknown.thumbnailB64, unknown.lastSeenAt);
+
+}
 export class App extends React.Component<IAppProps, AppState> {
+
+   private initialUser_ : Persona;
 
    constructor(props: IAppProps) {
 
       super(props);
 
-      var initialUser = Persona.unknown();
+      this.initialUser_ = makeLocalUser();
 
       this.state = {
          fluidConnection: new FluidConnection({ onRemoteChange: this.onRemoteChange.bind(this) }),
-         localUser: initialUser,
-         remoteUsers: new Array<Persona> ()
+         participants: new Participants(this.initialUser_, new Array<Persona> ())
       };
    }
 
    onRemoteChange(remoteUsers: Persona[]): void {
-      this.setState({ remoteUsers: remoteUsers });
+      this.setState({ participants: new Participants(this.initialUser_, remoteUsers) });
       this.forceUpdate(); // Need to push new properties down to the Header component
    }
 
    render() {
       return (
-         <WhiteboardToolsHeader fluidConnection={this.state.fluidConnection} initialUser={this.state.localUser} remoteUsers={this.state.remoteUsers} />
+         <WhiteboardToolsHeader fluidConnection={this.state.fluidConnection} participants={this.state.participants} />
       );
    }
 }
@@ -135,9 +154,8 @@ class NameKeyPair {
 
 export interface IWhiteboardToolsHeaderProps {
 
+   participants: Participants;
    fluidConnection: FluidConnection;
-   initialUser: Persona;
-   remoteUsers: Persona[];
 }
 
 export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
@@ -184,9 +202,9 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    const [uiState, setUiState] = useState({
-      joinAs: props.initialUser.name,
-      enableShare: enableShareFromJoinAs(props.initialUser.name),
-      sharePrompt: sharePromptFromJoinAs(props.initialUser.name),
+      joinAs: props.participants.localUser.name,
+      enableShare: enableShareFromJoinAs(props.participants.localUser.name),
+      sharePrompt: sharePromptFromJoinAs(props.participants.localUser.name),
       fluidId: null,
       alertMessage: null,
       connecting: false,
@@ -196,7 +214,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
    const urlToSharePromptEnabled: string = fullConnectionString(uiState.fluidId);
 
-   const avatarNames = makeAvatarNames(uiState.joinAs, props.initialUser, props.remoteUsers);
+   const avatarNames = makeAvatarNames(uiState.joinAs, props.participants.localUser, props.participants.remoteUsers);
    const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: avatarNames, maxInlineItems: 3 });
 
    function makeAvatarNames(joinAs: string, localUser: Persona, remoteUsers: Persona[]): Array<NameKeyPair> {
@@ -231,7 +249,12 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    function onConnect(): void {
-      var newPersona: Persona = new Persona(uuid(), uiState.joinAs, Persona.unknownImage(), new Date());
+
+      // Create a new, freshly stamped user, with the stable UUID and the text the user typed in 
+      var newPersona: Persona = new Persona(props.participants.localUser.id,
+         uiState.joinAs,
+         props.participants.localUser.thumbnailB64,
+         new Date());
 
       if (isJoiningExisting()) {
          attachToExistingConnection(existingWhiteboardId(), newPersona);

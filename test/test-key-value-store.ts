@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { IKeyValueStore, sessionkeyValueStore } from '../src/KeyValueStore';
+import { IKeyValueStore, localKeyValueStore } from '../src/KeyValueStore';
 
 
 const key = "key";
@@ -38,7 +38,7 @@ describe("KeyValueStore", function () {
    var oldWindow: any = global.window;
 
    beforeEach(() => {
-      (global.window as any) = { sessionStorage: localStorageMock };
+      (global.window as any) = { localStorage: localStorageMock };
    });
 
    afterEach(() => {
@@ -47,7 +47,7 @@ describe("KeyValueStore", function () {
 
    it("Needs to create an item and retrieve it", function () {
 
-      var store: IKeyValueStore = sessionkeyValueStore();
+      var store: IKeyValueStore = localKeyValueStore();
 
       store.setItem(key, item);
 
@@ -56,7 +56,7 @@ describe("KeyValueStore", function () {
 
    it("Needs to create an item and remove it", function () {
 
-      var store: IKeyValueStore = sessionkeyValueStore();
+      var store: IKeyValueStore = localKeyValueStore();
 
       store.setItem(key, item);
       store.removeItem(key);

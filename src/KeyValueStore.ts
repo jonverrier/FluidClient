@@ -1,5 +1,11 @@
 // Copyright (c) 2023 TXPCo Ltd
 
+export class KeyValueStoreKeys {
+
+   public static localUserUuid: string = "LocalUserUuuid";
+
+}
+
 export interface IKeyValueStore {
 
    getItem(key: string) : string;
@@ -10,11 +16,11 @@ export interface IKeyValueStore {
 
 }
 
-export function sessionkeyValueStore(): IKeyValueStore {
-   return new SessionKeyValueStore;
+export function localKeyValueStore(): IKeyValueStore {
+   return new LocalKeyValueStore;
 }
 
-class SessionKeyValueStore implements IKeyValueStore {
+class LocalKeyValueStore implements IKeyValueStore {
 
    constructor() {
 
@@ -22,17 +28,17 @@ class SessionKeyValueStore implements IKeyValueStore {
 
    getItem(key: string): string {
 
-      return window.sessionStorage.getItem(key);
+      return window.localStorage.getItem(key);
    }
 
    setItem(key: string, value: string): void {
 
-      return window.sessionStorage.setItem(key, value);
+      return window.localStorage.setItem(key, value);
    }
 
    removeItem(key: string) {
 
-      return window.sessionStorage.removeItem(key);
+      return window.localStorage.removeItem(key);
    }
 
 }

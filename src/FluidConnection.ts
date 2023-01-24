@@ -5,7 +5,8 @@ import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 
-var alwaysWaitFor: number = 1000;
+var alwaysWaitAfterConnectFor: number = 1000;
+var populateLocalUserRetryInterval: number = 500;
 
 export interface IConnectionProps {
    onRemoteChange: (remoteUsers: Persona[]) => void;
@@ -17,60 +18,67 @@ const containerSchema = {
 
 export class FluidConnection  {
 
-   props: IConnectionProps;
-   localUser: Persona;
-   remoteUsers: Persona[];
-   client: TinyliciousClient; 
-   container: IFluidContainer; 
+   _props: IConnectionProps;
+   _localUser: Persona;
+   _client: TinyliciousClient; 
+   _container: IFluidContainer; 
 
    constructor(props: IConnectionProps) {
 
-      this.client = new TinyliciousClient();
-      this.props = props;
+      this._client = new TinyliciousClient();
+      this._props = props;
    }
 
    async createNew(localUser: Persona): Promise<string> {
 
       try {
-         this.localUser = localUser;
+         this._localUser = localUser;
 
-         const { container, services } = await this.client.createContainer(containerSchema);
-         this.container = container;
+         const { container, services } = await this._client.createContainer(containerSchema);
+         this._container = container;
 
          // Set default data as our user ID
          var storedVal: string = localUser.streamToJSON();
 
          (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
 
-         // Attach container to service and return assigned ID
+         // Attach _container to service and return assigned ID
          const id = await container.attach();
          await container.connect();
-         await new Promise(resolve => setTimeout(resolve, alwaysWaitFor)); // Always wait - reduces chance of stale UI
+         await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
          this.watchForChanges();
 
          return id;
       }
       catch (e: any) {
-         throw new ConnectionError ("Error connecting new container to remote data service.")
+         throw new ConnectionError ("Error connecting new _container to remote data service.")
       }
    }
 
    async attachToExisting (id: string, localUser: Persona): Promise<string> {
 
       try {
-         this.localUser = localUser;
+         this._localUser = localUser;
 
-         const { container, services } = await this.client.getContainer(id, containerSchema);
-         this.container = container;
+         const { container, services } = await this._client.getContainer(id, containerSchema);
+         this._container = container;
          await container.connect();
-         await new Promise(resolve => setTimeout(resolve, alwaysWaitFor)); // Always wait - reduces chance of stale UI
+         await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
          // Add our User ID to the shared data if not there already 
-         if (!this.containsMe()) {
-            var storedVal: string = localUser.streamToJSON();
-            (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-         }
+         // Need to wait until _container is clean before we test local membership
+         var interval = setInterval(() => {
+            if (!this._container.isDirty) {
+
+               if (!this.containsMe()) {
+                  var storedVal: string = localUser.streamToJSON();
+                  (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
+               }
+
+               clearInterval(interval);
+            }
+         }, populateLocalUserRetryInterval);
 
          this.watchForChanges();
          this.bubbleUp();
@@ -78,21 +86,21 @@ export class FluidConnection  {
          return id;
       }
       catch (e: any) {
-         throw new ConnectionError("Error attaching existing new container to remote data service.")
+         throw new ConnectionError("Error attaching existing new _container to remote data service.")
       }
    }
 
    canDisconnect(): boolean {
 
-      if (!this.container)
+      if (!this._container)
          return false;
 
-      var state = this.container.connectionState; 
+      var state = this._container.connectionState; 
 
       if (state !== ConnectionState.Connected)
          return false;
 
-      // TODO - should we check this.container.isDirty;
+      // TODO - should we check this._container.isDirty;
 
       return true; 
    }
@@ -100,7 +108,7 @@ export class FluidConnection  {
    async disconnect(): Promise<boolean> {
 
       if (this.canDisconnect()) {
-         this.container.disconnect();
+         this._container.disconnect();
 
          return true;
       }
@@ -110,41 +118,44 @@ export class FluidConnection  {
    }
 
    watchForChanges(): void {
-      (this.container.initialObjects.participantMap as any).on("valueChanged", () => {
+      (this._container.initialObjects.participantMap as any).on("valueChanged", () => {
 
          this.bubbleUp();
       });
    }
 
    private bubbleUp(): void {
-      this.remoteUsers = new Array<Persona>();
+      var _remoteUsers = new Array<Persona>();
 
       //  enumerate members of the sharedMap
-      (this.container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
+      (this._container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
          var temp: Persona = new Persona();
 
          temp.streamFromJSON(value);
 
-         if (temp.id !== this.localUser.id) {
-            this.remoteUsers.push(temp);
+         if (temp.id !== this._localUser.id) {
+            _remoteUsers.push(temp);
          }
       });
 
-      this.props.onRemoteChange(this.remoteUsers);
+      this._props.onRemoteChange(_remoteUsers);
    }
 
    private containsMe(): boolean {
 
+      var found: boolean = false;
+
       //  enumerate members of the sharedMap
-      (this.container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
+      (this._container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
          var temp: Persona = new Persona();
 
          temp.streamFromJSON(value);
 
-         if (temp.id === this.localUser.id) {
-            return true;
+         if (temp.id === this._localUser.id) {
+            found = true;
          }
       });
-      return false;
+
+      return found;
    }
 }
