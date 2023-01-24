@@ -9,18 +9,30 @@ import { createRoot } from "react-dom/client";
 import {
    FluentProvider, teamsLightTheme, makeStyles, Button, Tooltip,
    AvatarGroup, AvatarGroupPopover, AvatarGroupItem, partitionAvatarGroupItems,
-   useId, Input, Popover, PopoverTrigger, PopoverSurface,
+   useId, Input, 
    InputOnChangeData
 } from '@fluentui/react-components';
 
-import { Share24Regular, Copy24Regular, Person24Regular, DrawText24Regular, Square24Regular, Circle24Regular, Line24Regular, DismissCircle24Regular } from '@fluentui/react-icons';
+import {
+   Share24Regular,
+   Copy24Regular,
+   Person24Regular,
+   DrawText24Regular,
+   Square24Regular,
+   Circle24Regular,
+   Line24Regular,
+   DismissCircle24Regular,
+   SignOut24Regular
+} from '@fluentui/react-icons';
 
 import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstable';
 
 // Local
-import { Persona } from './Persona';
-import { FluidConnection } from './FluidConnection';
 import { uuid } from './Uuid';
+import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
+import { Persona } from './Persona';
+import { Participants } from './Participants';
+import { FluidConnection } from './FluidConnection';
 
 const headerStyles = makeStyles({
    root: {
@@ -79,41 +91,71 @@ export interface IAppProps {
 }
 
 class AppState {
-   localUser: Persona;
-   remoteUsers: Persona[];
+   participants: Participants;
    fluidConnection: FluidConnection;
 }
 
+function makeLocalUser(): Persona {
+
+   var localStore: IKeyValueStore = localKeyValueStore();
+
+   // Look up the UUID if it isstore, else create a new one and save it
+   var localUserUuid = localStore.getItem(KeyValueStoreKeys.localUserUuid);
+   if (!localUserUuid) {
+      localUserUuid = uuid();
+      localStore.setItem(KeyValueStoreKeys.localUserUuid, localUserUuid)
+   }
+
+   // Create 'unknown' users, but with stable UUID'
+   var unknown: Persona = Persona.unknown();
+
+   return new Persona(localUserUuid, unknown.name, unknown.thumbnailB64, unknown.lastSeenAt);
+
+}
 export class App extends React.Component<IAppProps, AppState> {
+
+   private initialUser_ : Persona;
 
    constructor(props: IAppProps) {
 
       super(props);
 
+      this.initialUser_ = makeLocalUser();
+
       this.state = {
          fluidConnection: new FluidConnection({ onRemoteChange: this.onRemoteChange.bind(this) }),
-         localUser: Persona.unknown(),
-         remoteUsers: new Array<Persona> ()
+         participants: new Participants(this.initialUser_, new Array<Persona> ())
       };
    }
 
    onRemoteChange(remoteUsers: Persona[]): void {
-      this.setState({ remoteUsers: remoteUsers });
+      this.setState({ participants: new Participants(this.initialUser_, remoteUsers) });
       this.forceUpdate(); // Need to push new properties down to the Header component
    }
 
    render() {
       return (
-         <WhiteboardToolsHeader fluidConnection={this.state.fluidConnection} initialUser={this.state.localUser} remoteUsers={this.state.remoteUsers} />
+         <WhiteboardToolsHeader fluidConnection={this.state.fluidConnection} participants={this.state.participants} />
       );
    }
 }
 
+class NameKeyPair {
+
+   public name: string;
+   public key: string;
+
+   constructor(name_: string, key_: string) {
+      this.name = name_;
+      this.key = key_;
+   }
+
+}
+
 export interface IWhiteboardToolsHeaderProps {
 
+   participants: Participants;
    fluidConnection: FluidConnection;
-   initialUser: Persona;
-   remoteUsers: Persona[];
 }
 
 export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
@@ -144,7 +186,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const joinAsPrompt: string = isJoiningExisting() ? "Enter your name or initials to join this Whiteboard." : "Enter your name or initials to share this Whiteboard.";
 
    function enableShareFromJoinAs(joinAs: string): boolean {
-      if (joinAs.length >= 2) {
+      if (joinAs && joinAs.length >= 2) {
          return true;
       } else {
          return false;
@@ -152,7 +194,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    function sharePromptFromJoinAs(joinAs: string): string {
-      if (joinAs.length >= 2) {
+      if (joinAs && joinAs.length >= 2) {
          return sharePromptEnabled;
       } else {
          return sharePromptDisabled;
@@ -160,32 +202,34 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    const [uiState, setUiState] = useState({
-      joinAs: props.initialUser.name,
-      enableShare: enableShareFromJoinAs(props.initialUser.name),
-      sharePrompt: sharePromptFromJoinAs(props.initialUser.name),
+      joinAs: props.participants.localUser.name,
+      enableShare: enableShareFromJoinAs(props.participants.localUser.name),
+      sharePrompt: sharePromptFromJoinAs(props.participants.localUser.name),
       fluidId: null,
       alertMessage: null,
-      connecting: false
+      connecting: false,
+      canSignOut: false
    });
 
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
    const urlToSharePromptEnabled: string = fullConnectionString(uiState.fluidId);
 
-   const names = makeAvatarNames(uiState.joinAs, props.remoteUsers);
-   const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: names });
+   const avatarNames = makeAvatarNames(uiState.joinAs, props.participants.localUser, props.participants.remoteUsers);
+   const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: avatarNames, maxInlineItems: 3 });
 
-   function makeAvatarNames(joinAs: string, remoteUsers: Persona[]) {
-      var names: Array<string> = new Array<string>();
+   function makeAvatarNames(joinAs: string, localUser: Persona, remoteUsers: Persona[]): Array<NameKeyPair> {
+      var avatarNameKeyPair: Array<NameKeyPair> = new Array<NameKeyPair>();
 
-      names.push(joinAs);
+      avatarNameKeyPair.push({ name: joinAs, key: localUser.id });
 
       remoteUsers.forEach((item, index) => {
-         names.push(item.name);
+         avatarNameKeyPair.push({ name: item.name, key: item.id });
       });
 
-      return names;
+      return avatarNameKeyPair;
    }
-   const setState = (newJoinAs: string, newFluidId: string) => {
+
+   const setState = (newJoinAs: string, newFluidId: string, canSignOut: boolean) => {
       setUiState((prevState) => {
          const data = {
             ...prevState,
@@ -193,6 +237,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             enableShare: (newFluidId === null) && (enableShareFromJoinAs(newJoinAs)),
             sharePrompt: sharePromptFromJoinAs(newJoinAs),
             fluidId: newFluidId,
+            canSignOut: canSignOut
          }
          return data
       })
@@ -200,11 +245,16 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      setState(data.value, uiState.fluidId);
+      setState(data.value, uiState.fluidId, uiState.canSignOut);
    }
 
    function onConnect(): void {
-      var newPersona: Persona = new Persona(uuid(), uiState.joinAs, Persona.unknownImage(), new Date());
+
+      // Create a new, freshly stamped user, with the stable UUID and the text the user typed in 
+      var newPersona: Persona = new Persona(props.participants.localUser.id,
+         uiState.joinAs,
+         props.participants.localUser.thumbnailB64,
+         new Date());
 
       if (isJoiningExisting()) {
          attachToExistingConnection(existingWhiteboardId(), newPersona);
@@ -217,15 +267,14 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function createNewConnection (localUser: Persona): void {
       var id: string;
 
-      recordConnectionStarted();
+      onConnectionStarting();
 
       props.fluidConnection.createNew(localUser)
          .then((id: string) => {
-            recordConnectionEnded();
-            setState(uiState.joinAs, id);
+            setState(uiState.joinAs, id, onConnectionEnding());
          })
          .catch((e: Error) => {
-            recordConnectionEnded();
+            onConnectionEnding();
             var alert: string;
 
             if (e.message)
@@ -240,15 +289,14 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function attachToExistingConnection(id: string, localUser: Persona): void {
       var id: string;
 
-      recordConnectionStarted();
+      onConnectionStarting();
 
       props.fluidConnection.attachToExisting(id, localUser)
          .then((id: string) => {
-            recordConnectionEnded();
-            setState(uiState.joinAs, id);
+            setState(uiState.joinAs, id, onConnectionEnding());
          })
          .catch((e: Error) => {
-            recordConnectionEnded();
+            onConnectionEnding();
             var alert: string;
 
             if (e.message)
@@ -268,6 +316,27 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       navigator.clipboard.writeText(fullConnectionString(uiState.fluidId));
    }
 
+   function onSignOut(): void {
+      try {
+
+         props.fluidConnection.disconnect().then(() => {
+            setState(uiState.joinAs, null, false);
+         });
+         
+
+      } catch (e: any) {
+
+         var alert: string;
+
+         if (e.message)
+            alert = "Sorry, we encountered an error with the remote data service. The error was \'" + e.message + "\'.";
+         else
+            alert = "Sorry, we encountered an error with the remote data service.";
+
+         showAlert(alert);
+      }
+   }
+
    function urlToShare() {
       return (uiState.fluidId === null
          ? (<p className={linkClasses.root}>{urlToSharePromptDisabled}</p>)
@@ -276,26 +345,24 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    function showAlert(alert: string): void {
       uiState.alertMessage = alert;
-      setState(uiState.joinAs, uiState.fluidId);
+      setState(uiState.joinAs, uiState.fluidId, uiState.canSignOut);
    }
 
    function hideAlert(ev: MouseEvent): void {
       uiState.alertMessage = null;
-      setState(uiState.joinAs, uiState.fluidId);
+      setState(uiState.joinAs, uiState.fluidId, uiState.canSignOut);
    }
 
-   function recordConnectionStarted (): void {
+   function onConnectionStarting (): void {
       uiState.connecting = true;
-      setState(uiState.joinAs, uiState.fluidId);
+      uiState.canSignOut = false;
    }
 
-   function recordConnectionEnded(): void {
+   function onConnectionEnding(): boolean {
       uiState.connecting = false;
-      setState(uiState.joinAs, uiState.fluidId);
-   }
+      uiState.canSignOut = props.fluidConnection.canDisconnect();
 
-   function isConnecting (): boolean {
-      return uiState.connecting;
+      return uiState.canSignOut;
    }
 
    return (
@@ -303,10 +370,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
          <div className={headerClasses.root}>
             <div className={leftColumnClasses.root}>
                <Tooltip withArrow content={uiState.sharePrompt} relationship="label">
-                  <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || isConnecting()} onClick={onConnect} />
+                  <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || uiState.connecting} onClick={onConnect} />
                </Tooltip>
                <Tooltip withArrow content={urlToShare()} relationship="label">
                   <Button icon={<Copy24Regular />} disabled={uiState.fluidId===null} onClick={onCopyConnectionString} />
+               </Tooltip>
+               <Tooltip withArrow content={"Sign out."} relationship="label">
+                  <Button icon={<SignOut24Regular />} disabled={!(uiState.canSignOut)} onClick={onSignOut} />
                </Tooltip>
             </div>
             <div className={midColumnClasses.root}>
@@ -337,15 +407,15 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                </Tooltip>
                &nbsp;
                <AvatarGroup size={24}>
-                  {inlineItems.map(name => (
-                     <Tooltip withArrow content={name} relationship="label" key={name}>
-                        <AvatarGroupItem name={name} key={name} />
+                  {inlineItems.map(nameKeyPair => (
+                     <Tooltip withArrow content={nameKeyPair.name} relationship="label" key={nameKeyPair.key}>
+                        <AvatarGroupItem name={nameKeyPair.name} key={nameKeyPair.key} />
                      </Tooltip>
                   ))}
                   {overflowItems && (
                      <AvatarGroupPopover>
-                        {overflowItems.map(name => (
-                           <AvatarGroupItem name={name} key={name} />
+                        {overflowItems.map(nameKeyPair => (
+                           <AvatarGroupItem name={nameKeyPair.name} key={nameKeyPair.key} />
                         ))}
                      </AvatarGroupPopover>
                   )}
