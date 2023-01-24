@@ -319,55 +319,8 @@ export class Observer {
 
 namespace Media {
 
-   // Utility function for comparing weak pointers
-   template <class T> T* weakAddress(const std::weak_ptr<T>& p) {
-      if (p.use_count() > 0) {
-         auto pShared = p.lock();
-         return pShared.get();
-      }
-      return nullptr;
-   }
-
-   typedef const wchar_t* NotificationId; // Notification events are string for ease of debugging
-
-   class Interest;
-   class Notification;
-   class ObserverInterest;
    class Notifier;
    class Observer;
-
-
-/// <summary>
-/// ObserverInterest -  an Observer plus an Interest 
-/// </summary>
-   class MEDIA_API ObserverInterest
-   {
-   public:
-
-      // Constructors
-      ObserverInterest(Interest& interest,
-                       std::weak_ptr<Observer> pObserver);
-      ObserverInterest(const ObserverInterest& rhs);
-      virtual ~ObserverInterest();
-
-      // Attributes
-      const Interest& interest() const;
-      std::weak_ptr<Observer>	observer() const;
-
-      // Operations
-      ObserverInterest& operator=(const ObserverInterest& rhs);
-      bool	operator==(const ObserverInterest& rhs) const;
-      bool  operator!=(const ObserverInterest& rhs) const;
-
-   protected:
-
-   private:
-#pragma warning (push)
-#pragma warning (disable: 4251) // Member is private anyway
-      Interest& m_interest;
-      std::weak_ptr<Observer> m_pObserver;
-#pragma warning (pop)
-   };
 
    
 

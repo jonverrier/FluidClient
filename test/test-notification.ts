@@ -91,13 +91,17 @@ describe("NotificationFramework", function () {
       var observerInterest1: ObserverInterest = new ObserverInterest (observer, interest1);
       var observerInterest2: ObserverInterest = new ObserverInterest (observer, interest2);
       var observerInterest3: ObserverInterest = new ObserverInterest (observerInterest1);
+      var observerInterest4: ObserverInterest = new ObserverInterest();
 
       expect(observerInterest1.equals(observerInterest1)).to.equal(true);
       expect(observerInterest1.equals(observerInterest2)).to.equal(false);
       expect(observerInterest1.equals(observerInterest3)).to.equal(true);
+      expect(observerInterest1.equals(observerInterest4)).to.equal(false);
       expect(observerInterest1.interest.equals(interest1)).to.equal(true);
       expect(observerInterest1.observer === observer).to.equal(true);
-   
+
+      observerInterest4.assign(observerInterest1);
+      expect(observerInterest1.equals(observerInterest4)).to.equal(true);
    });
 
 });
