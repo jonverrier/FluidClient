@@ -12,8 +12,8 @@ export class Interest {
 
    /**
     * Create a Interest object
-    * @param notifier_ - local User Persona 
-    * @param remoteUsers_ - array of personas for remote users 
+    * @param notifier_ - reference to the notifier in which the observer is interested
+    * @param notificationId_ - id of the notification 
     */
    constructor(notifier_: Notifier, notificationId_: string);
 
@@ -78,7 +78,231 @@ export class Interest {
 
 }
 
+/// <summary>
+/// Notification -  base class for all events. Base carries references to the notifcationId. derived classes add a data package via template class below.
+/// Value class - just holds reference to the data, is expected to exist only for the synchronous life of the notification.
+/// </summary>
+export class Notification {
+
+   private _notificationId: string;
+
+   private isText(data: any): boolean  {
+      return typeof data === 'string';
+};
+
+   /**
+    * Create a Notification object
+    * @param notificationId_ - id of the notification 
+    */
+   constructor(notificationId_: string);
+
+   /**
+    * Create a Notification object
+    * @param notification_ - object to copy from - should work for JSON format and for real constructed objects
+    */
+   public constructor(notification_: Notification);
+
+   /**
+    * Create an empty Interest object - required for particiation in serialisation framework
+    */
+   constructor();
+
+   constructor(...arr: any[]) {
+      if (arr.length === 0) {
+         this._notificationId = null;
+         return;
+      }
+      else {
+         if (this.isText(arr[0]))
+            this._notificationId = arr[0];
+         else
+            this._notificationId = arr[0]._notificationId;
+      }
+   }
+
+   /**
+   * set of 'getters' for private variables
+   */
+   get notificationId(): string {
+      return this._notificationId;
+   }
+
+   /**
+    * test for equality - checks all fields are the same. 
+    * NB must use field values, not identity bcs if objects are streamed to/from JSON, identities will be different. 
+    * @param rhs - the object to compare this one to.  
+    */
+   equals(rhs: Notification): boolean {
+
+      return ((this._notificationId === rhs._notificationId));
+   }
+
+   /**
+    * assignment operator 
+    * @param rhs - the object to assign this one from.  
+    */
+   assign(rhs: Notification): Notification {
+      this._notificationId = rhs._notificationId;
+
+      return this;
+   }
+
+}
+
+/// <summary>
+/// NotificationFor -  template to specialse Notification by adding an EventData class. 
+/// Value class - just holds reference to the data, is expected to exist only for the synchronous life of the notification. 
+/// If you want data to last longer, add a reference type and the observer will have to save it. 
+/// </summary>
+export class NotificationFor<EventData> extends Notification
+{
+   private _eventData: EventData;
+
+
+   /**
+    * Create an empty NotificationFor<EventData>  object - required for particiation in serialisation framework
+    */
+   constructor();
+
+   /**
+    * Create a NotificationFor<EventData> object
+    * @param notification_ - object to copy from - should work for JSON format and for real constructed objects
+    */
+   public constructor(notification_: NotificationFor<EventData>);
+
+   /**
+    * Create a Notification object
+    * @param notificationId_ - id of the notification 
+    * @param eventData_ - the data payload to send with it
+    */
+   constructor(notificationId_: string, eventData_: EventData) 
+
+   constructor(...arr: any[]) {
+      if (arr.length === 0) { // Construct empty
+         super();
+         this._eventData = null;
+         return;
+      }
+      else
+      if (arr.length === 1) { // Copy constructor
+         super (arr[0])
+         this._eventData = arr[0]._eventData;
+      }
+      else { // Individual arguments
+         super (arr[0])
+         this._eventData = arr[1];
+      }
+   }
+
+   /**
+   * set of 'getters' for private variables
+   */
+   get eventData(): EventData {
+      return this._eventData;
+   }
+
+   /**
+    * test for equality - checks all fields are the same. 
+    * Is a shallow compare if the payload is an object
+    * @param rhs - the object to compare this one to.  
+    */
+   equals(rhs: NotificationFor<EventData>): boolean {
+
+      return ((this._eventData === rhs._eventData));
+   }
+
+   /**
+    * assignment operator 
+    * @param rhs - the object to assign this one from.  
+    */
+   assign(rhs: NotificationFor<EventData>): NotificationFor<EventData> {
+      this._eventData = rhs._eventData;
+
+      return this;
+   }
+}
+
+/// <summary>
+/// ObserverInterest -  an Observer plus an Interest . Used by Notifieres to hold a list of things that observers are interested in so it can notify them. 
+/// </summary>
+export class ObserverInterest {
+
+   private _observer: Observer;
+   private _interest: Interest;
+
+   /**
+    * Create a Interest object
+    * @param observer_ - reference to the observer 
+    * @param interest_ - the thing it is interested in 
+    */
+   constructor(_observer: Observer, _interest: Interest);
+
+   /**
+    * Create a ObserverInterest object
+    * @param observerInterest - object to copy from - should work for JSON format and for real constructed objects
+    */
+   public constructor(observerInterest: ObserverInterest);
+
+   /**
+    * Create an empty Interest object - required for particiation in serialisation framework
+    */
+   constructor();
+
+   constructor(...arr: any[]) {
+      if (arr.length === 0) {
+         this._observer = null;
+         this._interest = null;
+         return;
+      }
+      if (arr.length === 1) {
+         this._observer = arr[0]._observer;
+         this._interest = arr[0]._interest;
+      }
+      else {
+         this._observer = arr[0];
+         this._interest = arr[1];
+      }
+   }
+
+   /**
+   * set of 'getters' for private variables
+   */
+   get observer(): Observer {
+      return this._observer;
+   }
+   get interest(): Interest {
+      return this._interest;
+   }
+
+   /**
+    * test for equality - checks all fields are the same. 
+    * Shallow compare
+    * @param rhs - the object to compare this one to.  
+    */
+   equals(rhs: ObserverInterest): boolean {
+
+      return ((this._observer === rhs._observer) && 
+         (this._interest === rhs._interest));
+   }
+
+   /**
+    * assignment operator 
+    * @param rhs - the object to assign this one from.  
+    */
+   assign(rhs: ObserverInterest): ObserverInterest {
+      this._observer = rhs._observer;
+      this._interest = rhs._interest;
+
+      return this;
+   }
+
+}
+
 export class Notifier {
+
+}
+
+export class Observer {
 
 }
 
@@ -112,77 +336,6 @@ namespace Media {
    class Notifier;
    class Observer;
 
-/// <summary>
-/// Notification -  base class for all events. Base carries references to the notifcationId. derived classes add a data package via template class below.
-/// Value class - just holds reference to the data, is expected to exist only for the synchronous life of the notification.
-/// </summary>
-   class MEDIA_API Notification  {
-
-   public:
-
-      // Constructors
-      Notification(const NotificationId& notificationIdIn);
-      Notification(const Notification& notification);
-      virtual ~Notification();
-
-      // Attributes
-      NotificationId	notificationId() const;
-
-      // Operations
-      Notification& operator= (const Notification& event);
-      bool	operator==(const Notification& rhs) const;
-      bool  operator!=(const Notification& rhs) const;
-
-   protected:
-
-   private:
-#pragma warning (push)
-#pragma warning (disable: 4251) // Member is private anyway
-      const NotificationId& m_notificationId;
-#pragma warning (pop)
-   }; // Notification
-
-   /// <summary>
-   /// NotificationFor -  template to specialse Notification by adding an EventData class. 
-   /// Value class - just holds reference to the data, is expected to exist only for the synchronous life of the notification. 
-   /// If you want data to last longer, add a pointer type and the observer will have to save it. 
-   /// </summary>
-   template <class EventData>
-   class NotificationFor : public Notification
-   {
-   public:
-
-      // Constructors
-      NotificationFor(NotificationId& notificationIdIn, const EventData& eventData)
-         : Notification(notificationIdIn), m_eventData(eventData) {
-      }
-
-      NotificationFor(const NotificationFor<EventData>& rhs)
-         : Notification(rhs), m_eventData(rhs.m_eventData) {
-      }
-
-      // Attributes
-      const EventData& eventData() const { 
-         return m_eventData; 
-      }
-
-      // Operations
-      NotificationFor<EventData>& operator=(const NotificationFor<EventData>& rhs) {
-         Notification::operator= (rhs);
-         m_eventData = rhs.m_eventData;
-      }
-      bool	operator==(const NotificationFor<EventData>& rhs) const {
-         return Notification::operator==(rhs) && m_eventData == rhs.m_eventData;
-      }
-
-      bool  operator!=(const NotificationFor<EventData>& rhs) const {
-         return Notification::operator!=(rhs) || m_eventData != rhs.m_eventData;
-      }
-
-   private:
-
-      const EventData& m_eventData;
-   };
 
 /// <summary>
 /// ObserverInterest -  an Observer plus an Interest 

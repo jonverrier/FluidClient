@@ -3,12 +3,19 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { Interest, Notifier } from '../src/NotificationFramework';
+import {
+   Interest,
+   Notification,
+   NotificationFor,
+   ObserverInterest,
+   Notifier,
+   Observer
+} from '../src/NotificationFramework';
 
 
 describe("NotificationFramework", function () {
 
-   it("Need to create, test & assign Interest", function () {
+   it("Needs to create, test & assign Interest", function () {
 
       var notifier = new Notifier();
       var notificationId1 : string = "Playing";
@@ -30,43 +37,72 @@ describe("NotificationFramework", function () {
       expect(interest1.equals(interest2)).to.equal(true);
    });
 
+   it("Needs to create, test & assign Notification", function () {
+
+      var notificationId1: string = "Playing";
+      var notificationId2: string = "Paused";
+
+      var notification1: Notification = new Notification(notificationId1);
+      var notification2: Notification = new Notification(notificationId2);
+      var notification3: Notification = new Notification(notification1);
+      var notification4: Notification = new Notification();
+
+      expect(notification1.equals(notification1)).to.equal(true);
+      expect(notification1.equals(notification2)).to.equal(false);
+      expect(notification1.equals(notification3)).to.equal(true);
+      expect(notification1.equals(notification4)).to.equal(false);
+      expect(notification1.notificationId === notificationId1).to.equal(true);
+
+      notification2.assign(notification1);
+      expect(notification1.equals(notification2)).to.equal(true);
+   });
+
+   it("Need to create, test & assign NotificationFor<EventData>", function () {
+
+      var notificationId1: string = "Playing";
+      var notificationId2: string = "Paused";
+
+      var notification1: NotificationFor<number> = new NotificationFor<number>(notificationId1, 1);
+      var notification2: NotificationFor<number> = new NotificationFor<number>(notificationId2, 2);
+      var notification3: NotificationFor<number> = new NotificationFor<number>(notification1);
+      var notification4: NotificationFor<number> = new NotificationFor<number>();
+
+      expect(notification1.equals(notification1)).to.equal(true);
+      expect(notification1.equals(notification2)).to.equal(false);
+      expect(notification1.equals(notification3)).to.equal(true);
+      expect(notification1.equals(notification4)).to.equal(false);
+      expect(notification1.notificationId === notificationId1).to.equal(true);
+      expect(notification1.eventData === 1).to.equal(true);
+
+      notification2.assign(notification1);
+      expect(notification1.equals(notification2)).to.equal(true);
+   });
+
+   it("Need to create, test & assign ObserverInterest", function () {
+
+      var notifier = new Notifier();
+      var observer = new Observer();
+      var notificationId1: string = "Playing";
+      var notificationId2: string = "Paused";
+
+      var interest1: Interest = new Interest(notifier, notificationId1);
+      var interest2: Interest = new Interest(notifier, notificationId2);
+
+      var observerInterest1: ObserverInterest = new ObserverInterest (observer, interest1);
+      var observerInterest2: ObserverInterest = new ObserverInterest (observer, interest2);
+      var observerInterest3: ObserverInterest = new ObserverInterest (observerInterest1);
+
+      expect(observerInterest1.equals(observerInterest1)).to.equal(true);
+      expect(observerInterest1.equals(observerInterest2)).to.equal(false);
+      expect(observerInterest1.equals(observerInterest3)).to.equal(true);
+      expect(observerInterest1.interest.equals(interest1)).to.equal(true);
+      expect(observerInterest1.observer === observer).to.equal(true);
    
+   });
+
 });
 
 /*
-TEST(MediaNotificationFramework, Notification) {
-
-   std:: shared_ptr < Media:: Notifier > pNotifier(new Media:: Notifier());
-
-   const wchar_t* notificationId1 = L"Playing";
-   const wchar_t* notificationId2 = L"Paused";
-
-   Media::Notification notification1(notificationId1);
-   Media::Notification notification2(notificationId2);
-   Media::Notification notification3(notification1);
-
-   EXPECT_EQ(notification1, notification1);
-   EXPECT_NE(notification1, notification2);
-   EXPECT_EQ(notification1, notification3);
-}
-
-TEST(MediaNotificationFramework, NotificationFor) {
-
-   std:: shared_ptr < Media:: Notifier > pNotifier(new Media:: Notifier());
-
-   const wchar_t* notificationId1 = L"Playing";
-   const wchar_t* notificationId2 = L"Paused";
-
-   Media:: NotificationFor < int > notification1(notificationId1, 1);
-   Media:: NotificationFor < int > notification2(notificationId2, 2);
-   Media:: NotificationFor < int > notification3(notification1);
-
-   EXPECT_EQ(notification1, notification1);
-   EXPECT_NE(notification1, notification2);
-   EXPECT_EQ(notification1, notification3);
-   EXPECT_EQ(notification1.eventData(), 1);
-   EXPECT_EQ(notification2.eventData(), 2);
-}
 
 TEST(MediaNotificationFramework, ObserverInterest) {
 
