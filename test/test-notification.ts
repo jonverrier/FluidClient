@@ -9,7 +9,8 @@ import {
    NotificationFor,
    ObserverInterest,
    Notifier,
-   IObserver
+   IObserver,
+   ObservationRouterFor
 } from '../src/NotificationFramework';
 
 class MockObserver implements IObserver {
@@ -19,7 +20,13 @@ class MockObserver implements IObserver {
    constructor() {
       this._lastNotification = null;
    }
+
    notify(interest_: Interest, notification_: Notification): void {
+
+      this._lastNotification = notification_;
+   };
+
+   notifyInt (interest_: Interest, notification_: NotificationFor<number>): void {
 
       this._lastNotification = notification_;
    };
@@ -29,12 +36,11 @@ describe("NotificationFramework", function () {
 
    it("Needs to create, test & assign Interest", function () {
 
-      var notifier = new Notifier();
       var notificationId1 : string = "Playing";
       var notificationId2: string = "Paused";
 
-      var interest1: Interest = new Interest(notifier, notificationId1);
-      var interest2: Interest = new Interest(notifier, notificationId2);
+      var interest1: Interest = new Interest(notificationId1);
+      var interest2: Interest = new Interest(notificationId2);
       var interest3: Interest = new Interest (interest1);
       var interest4: Interest = new Interest();
 
@@ -43,7 +49,6 @@ describe("NotificationFramework", function () {
       expect(interest1.equals(interest3)).to.equal(true);
       expect(interest1.equals(interest4)).to.equal(false);
       expect(interest1.notificationId === notificationId1).to.equal(true);
-      expect(interest1.notifier === notifier).to.equal(true);
 
       interest2.assign(interest1);
       expect(interest1.equals(interest2)).to.equal(true);
@@ -92,13 +97,12 @@ describe("NotificationFramework", function () {
 
    it("Need to create, test & assign ObserverInterest", function () {
 
-      var notifier = new Notifier();
       var observer = new MockObserver();
       var notificationId1: string = "Playing";
       var notificationId2: string = "Paused";
 
-      var interest1: Interest = new Interest(notifier, notificationId1);
-      var interest2: Interest = new Interest(notifier, notificationId2);
+      var interest1: Interest = new Interest(notificationId1);
+      var interest2: Interest = new Interest(notificationId2);
 
       var observerInterest1: ObserverInterest = new ObserverInterest (observer, interest1);
       var observerInterest2: ObserverInterest = new ObserverInterest (observer, interest2);
@@ -116,6 +120,26 @@ describe("NotificationFramework", function () {
       expect(observerInterest1.equals(observerInterest4)).to.equal(true);
    });
 
+   it("Need to create, test & assign ObservationRouterFor", function () {
+
+      var observer = new MockObserver();
+      var observer2 = new MockObserver();
+
+      var observationRouter1: ObservationRouterFor<number> = new ObservationRouterFor<number>(observer.notifyInt.bind(observer));
+      var observationRouter2: ObservationRouterFor<number> = new ObservationRouterFor<number>(observer.notifyInt.bind(observer2));
+      var observationRouter3: ObservationRouterFor<number> = new ObservationRouterFor<number>(observationRouter1);
+      var observationRouter4: ObservationRouterFor<number> = new ObservationRouterFor<number>();
+
+      expect(observationRouter1.equals(observationRouter1)).to.equal(true);
+      expect(observationRouter1.equals(observationRouter2)).to.equal(false);
+      expect(observationRouter1.equals(observationRouter3)).to.equal(true);
+      expect(observationRouter1.function !== null).to.equal(true);
+      expect(observationRouter4.function === null).to.equal(true);
+
+      observationRouter2.assign(observationRouter1);
+      expect(observationRouter1.equals(observationRouter2)).to.equal(true);
+   });
+
    it("Needs to flow notifications from Notifier to Observer", function () {
 
       var notifier = new Notifier();
@@ -125,8 +149,8 @@ describe("NotificationFramework", function () {
       var notificationId1: string = "Playing";
       var notificationId2: string = "Paused";
 
-      var interest1: Interest = new Interest(notifier, notificationId1);
-      var interest2: Interest = new Interest(notifier, notificationId2);
+      var interest1: Interest = new Interest(notificationId1);
+      var interest2: Interest = new Interest(notificationId2);
 
       var observerInterest1: ObserverInterest = new ObserverInterest(observerYes, interest1);
       var observerInterest2: ObserverInterest = new ObserverInterest(observerNo, interest2);
@@ -147,52 +171,23 @@ describe("NotificationFramework", function () {
       notifier.notifyObservers(interest1.notificationId, notificationForInt);
       expect(observerYes._lastNotification.equals(notificationForInt) === true).to.equal(true);
       expect((observerNo._lastNotification === null) === true).to.equal(true);
+
+      // Tidy
+      expect(notifier.removeObserver(observerInterest2) === true).to.equal(true);
+      expect(notifier.removeObserver(observerInterest2) === false).to.equal(true);
+      notifier.removeAllObservers();
+
+      // Call sequence 3 - routed & with a payload
+      var observationRouter: ObservationRouterFor<number> = new ObservationRouterFor<number>(observerYes.notifyInt.bind(observerYes));
+
+      var observerInterest3: ObserverInterest = new ObserverInterest(observationRouter, interest1);
+      notifier.addObserver(observerInterest3);
+
+      var notificationForInt2: NotificationFor<number> = new NotificationFor<number>(notificationId1, 2);
+      notifier.notifyObservers(interest1.notificationId, notificationForInt2);
+      expect(observerYes._lastNotification.equals(notificationForInt2) === true).to.equal(true);
+      expect((observerNo._lastNotification === null) === true).to.equal(true);
    });
 });
 
 
-
-/*
-   // Call sequence 2 - routed & with a payload
-   pNotifier -> removeAllObservers();
-
-   std:: shared_ptr < Media:: IObserver > pObserverRouter(new Media:: ObserverRouterFor<TestObserver, int>(pTestObserver, & TestObserver:: notifyInt));
-   Media::ObserverInterest observerInterest4(interest1, pObserverRouter);
-   pNotifier -> addObserver(observerInterest4);
-
-   Media:: NotificationFor < int > notificationInt(notificationId1, 2);
-   pNotifier -> notifyObservers(interest1.notificationId(), notificationInt);
-   EXPECT_EQ(pTestObserver.get() -> lastCall, pTestObserver.get() -> lastCallNInt);
-   */
-
-/*
-
-
-class TestObserver : public Media::IObserver {
-
-   public:
-   const wchar_t* lastCallN = L"notify";
-   const wchar_t* lastCallNInt = L"notifyInt";
-   const wchar_t* lastCall = NULL;
-
-   // Constructors
-   TestObserver() {
-   }
-
-   virtual
-   ~TestObserver() { }
-
-   virtual void notify(const Media:: Interest& interest, const Media:: Notification& notification) {
-      lastCall = lastCallN;
-   }
-
-   virtual void notifyInt(const Media:: Interest& interest, const Media:: NotificationFor<int>& notification) {
-      lastCall = lastCallNInt;
-   }
-
-
-};
-
-
-
-*/

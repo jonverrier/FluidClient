@@ -3,19 +3,17 @@
 /////////////////////////////////////////
 
 /// <summary>
-/// Interest -  encapsulates what is being observed - a specific notification Id from a specific Notifier
+/// Interest -  encapsulates what is being observed - a specific notificationId.
 /// </summary>
 export class Interest { 
 
    private _notificationId: string;
-   private _notifier: Notifier;
 
    /**
     * Create a Interest object
-    * @param notifier_ - reference to the notifier in which the observer is interested
     * @param notificationId_ - id of the notification 
     */
-   constructor(notifier_: Notifier, notificationId_: string);
+   constructor(notificationId_: string);
 
    /**
     * Create a Interest object
@@ -29,27 +27,27 @@ export class Interest {
    constructor ();
 
    constructor(...arr: any[]) { 
-      if (arr.length === 0) {
-         this._notifier = null;
+      if (arr.length === 0) { // Empty Constructor
          this._notificationId = null;
          return;
       }
-      if (arr.length === 1) {
-         this._notifier = arr[0]._notifier;
-         this._notificationId = arr[0]._notificationId;
-      }
       else {
-         this._notifier = arr[0];
-         this._notificationId = arr[1];
+         if (this.isMyType(arr[0])) { // Copy Constructor
+            this._notificationId = arr[0]._notificationId;
+         }
+         else { // Individual arguments
+            this._notificationId = arr[0];
+         }
       }
+   }
+
+   private isMyType(rhs: Interest): boolean {
+      return rhs.hasOwnProperty('_notificationId');
    }
 
    /**
    * set of 'getters' for private variables
    */
-   get notifier(): Notifier {
-      return this._notifier;
-   }
    get notificationId(): string {
       return this._notificationId;
    }
@@ -61,8 +59,7 @@ export class Interest {
     */
    equals(rhs: Interest): boolean {
       
-      return ((this._notifier === rhs._notifier) && // TODO - use Notfier.equals()
-         (this._notificationId === rhs._notificationId));
+      return (this._notificationId === rhs._notificationId);
    }
 
    /**
@@ -70,7 +67,6 @@ export class Interest {
     * @param rhs - the object to assign this one from.  
     */
    assign(rhs: Interest): Interest {
-      this._notifier = rhs._notifier;
       this._notificationId = rhs._notificationId;
 
       return this;
@@ -85,10 +81,6 @@ export class Interest {
 export class Notification {
 
    private _notificationId: string;
-
-   private isText(data: any): boolean  {
-      return typeof data === 'string';
-};
 
    /**
     * Create a Notification object
@@ -108,16 +100,22 @@ export class Notification {
    constructor();
 
    constructor(...arr: any[]) {
-      if (arr.length === 0) {
+      if (arr.length === 0) { // Empty Contrutructor
          this._notificationId = null;
          return;
       }
       else {
-         if (this.isText(arr[0]))
-            this._notificationId = arr[0];
-         else
+         if (this.isMyType(arr[0])) { // Copy Contrutructor
             this._notificationId = arr[0]._notificationId;
+         }
+         else { // Individual arguments
+            this._notificationId = arr[0];
+         }
       }
+   }
+
+   private isMyType(rhs: Notification): boolean {
+      return rhs.hasOwnProperty('_notificationId');
    }
 
    /**
@@ -129,7 +127,7 @@ export class Notification {
 
    /**
     * test for equality - checks all fields are the same. 
-    * NB must use field values, not identity bcs if objects are streamed to/from JSON, identities will be different. 
+    * Shallow check.
     * @param rhs - the object to compare this one to.  
     */
    equals(rhs: Notification): boolean {
@@ -183,7 +181,7 @@ export class NotificationFor<EventData> extends Notification
          this._eventData = null;
          return;
       }
-      else
+      else 
       if (arr.length === 1) { // Copy constructor
          super (arr[0])
          this._eventData = arr[0]._eventData;
@@ -251,16 +249,16 @@ export class ObserverInterest {
    constructor();
 
    constructor(...arr: any[]) {
-      if (arr.length === 0) {
+      if (arr.length === 0) { // Empty constructor
          this._observer = null;
          this._interest = null;
          return;
       }
-      if (arr.length === 1) {
+      if (arr.length === 1) { // Copy constructor
          this._observer = arr[0]._observer;
          this._interest = arr[0]._interest;
       }
-      else {
+      else { // Indivual arguments
          this._observer = arr[0];
          this._interest = arr[1];
       }
@@ -298,6 +296,87 @@ export class ObserverInterest {
       return this;
    }
 
+}
+
+/// <summary>
+/// ObservationRouterFor -  template to act as an intermediary, type-safe router that connects a specific function signature for the method that is called in a notification
+/// </summary>
+/// 
+type FunctionFor<EventData> = (interest: Interest, data: NotificationFor<EventData>) => void;
+
+
+export class ObservationRouterFor<EventData> implements IObserver
+{
+   private _function: FunctionFor<EventData>;
+
+   /**
+    * Create empty ObservationRouterFor object
+    */
+   constructor();
+
+   /**
+    * Create a ObservationRouterFor object
+    * @param interest_ - the thing it is interested in 
+    */
+   constructor(_function: FunctionFor<EventData>);
+
+   /**
+    * Create a ObserverRouterFor<AnObserver, EventData>  object
+    * @param observerInterest - object to copy from - should work for JSON format and for real constructed objects
+    */
+   public constructor(observerRouter: ObservationRouterFor<EventData>);
+
+   constructor(...arr: any[]) {
+      if (arr.length === 0) { // Construct empty
+         this._function = null;
+         return;
+      }
+      else {
+         if (this.isMyType (arr[0])) { // Copy constructor
+            this._function = arr[0]._function;
+         }
+         else { // Individual arguments
+            this._function = arr[0];
+         }
+      }
+   }
+
+   private isMyType(rhs: FunctionFor<EventData>): boolean {
+      return rhs.hasOwnProperty('_function');
+   }
+
+   /**
+   * set of 'getters' for private variables
+   */
+   get function(): FunctionFor<EventData> {
+      return this._function;
+   }
+
+   /**
+    * test for equality - checks all fields are the same. 
+    * Shallow compare
+    * @param rhs - the object to compare this one to.  
+    */
+   equals(rhs: ObservationRouterFor<EventData>): boolean {
+
+      return (this._function === rhs._function);
+   }
+
+   /**
+    * assignment operator 
+    * @param rhs - the object to assign this one from.  
+    */
+   assign(rhs: ObservationRouterFor<EventData>): ObservationRouterFor<EventData> {
+      this._function = rhs._function;
+
+      return this;
+   }
+
+   notify(interest_: Interest, notification_: NotificationFor<EventData>): void {
+
+      // pass on to the required method
+      this._function(interest_, notification_);
+   }
 }
 
 export interface IObserver {
@@ -342,12 +421,15 @@ export class Notifier {
 
    // Remove the supplied observer from the list of observers associated
    // with the supplied interest.
-   removeObserver(observerInterest_: ObserverInterest): void {
+   // returns TRUE if it was correctly found
+   removeObserver(observerInterest_: ObserverInterest): boolean {
 
       const index = this._observerInterests.indexOf(observerInterest_);
       if (index > -1) {
          this._observerInterests.splice(index, 1);
+         return true;
       }
+      return false;
    }
 
    removeAllObservers(): void {
@@ -357,120 +439,3 @@ export class Notifier {
 };  //Notifier
 
 
-
-/*
-
-#ifndef MEDIANOTIFICATIONFRAMSEWORK_INCLUDED
-#define MEDIANOTIFICATIONFRAMSEWORK_INCLUDED
-
-#include <string>
-#include <list>
-
-#include "Host.h"
-#include "Media.h"
-
-namespace Media {
-
-   class Notifier;
-   class IObserver;
-
-   
-
-
-
-   class MEDIA_API IObserver {
-
-   public:
-      // Constructors
-      IObserver();
-      virtual
-      ~IObserver(); 
-
-      virtual void notify (const Interest& interest, const Notification& notification);
-
-   protected:
-
-
-
-   private:
-
-   }; // IObserver
-
-   /// <summary>
-   /// ObserverRouterFor -  template to connect a specific function signature for the method that is called in a notification 
-   /// </summary>
-   /// 
-   template <class AnObserver, class EventData>
-   class ObserverRouterFor : public IObserver
-   {
-      typedef void (AnObserver::* PFunctionFor)(const Interest& interest, const NotificationFor<EventData>&);
-
-   public:
-      // Constructors
-      ObserverRouterFor(std::weak_ptr<AnObserver> pObserver,
-                        PFunctionFor pFunction)
-         : IObserver(), m_pObserver(pObserver), m_pFunction(pFunction) {
-      }
-
-      ObserverRouterFor(const ObserverRouterFor& rhs)
-         : m_pObserver(rhs.m_pObserver), m_pFunction(rhs.m_pFunction) {
-      }
-
-      ~ObserverRouterFor() {
-      }
-
-      // Attributes
-      PFunctionFor function() const {
-         return m_pFunction;
-      }
-      std::weak_ptr<AnObserver> observer() const {
-         return m_pObserver;
-      }
-
-      // Operations
-      ObserverRouterFor<AnObserver, EventData>& operator=(const ObserverRouterFor<AnObserver, EventData>& rhs) {
-         m_pObserver = rhs.m_pObserver;
-         m_pFunction = rhs.m_pFunction;
-
-         return *this;
-      }
-
-      bool	operator==(const ObserverRouterFor<AnObserver, EventData>& rhs) const {
-         return m_pObserver == rhs.m_pObserver &&
-            m_pFunction == rhs.m_pFunction;
-      }
-
-      bool  operator!=(const ObserverRouterFor<AnObserver, EventData>& rhs) const {
-         return m_pObserver != rhs.m_pObserver &&
-            m_pFunction != rhs.m_pFunction;
-      }
-
-      virtual void notify(const Interest& interest, const Notification& notification) {
-
-         // Force downcast to the rquired EventData
-         notify(interest, * static_cast<const NotificationFor<EventData> *> ( & notification));
-      }
-
-      virtual void notify(const Interest& interest, const NotificationFor<EventData> & notification) {
-
-         std::shared_ptr<AnObserver> pObs = m_pObserver.lock();
-         if (pObs.use_count() > 0) {
-            (*pObs.get().*m_pFunction) (interest, notification);
-         }
-
-      }
-
-   protected:
-
-   private:
-#pragma warning (push)
-#pragma warning (disable: 4251) // Member is private anyway
-      std::weak_ptr<AnObserver> m_pObserver;
-      PFunctionFor              m_pFunction;
-#pragma warning (pop)
-   };
-
-}
-
-#endif // MEDIANOTIFICATIONFRAMSEWORK_INCLUDED
-*/
