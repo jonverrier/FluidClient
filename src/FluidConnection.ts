@@ -2,27 +2,32 @@
 import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 
+import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 
 var alwaysWaitAfterConnectFor: number = 1000;
 
 export interface IConnectionProps {
-   onRemoteChange: (remoteUsers: Persona[]) => void;
 }
 
 const containerSchema = {
    initialObjects: { participantMap: SharedMap }
 };
 
-export class FluidConnection  {
+export class FluidConnection  extends Notifier {
 
    _props: IConnectionProps;
    _localUser: Persona;
    _client: TinyliciousClient; 
    _container: IFluidContainer; 
 
+   public static remoteUsersChangedNotificationId = "RemoteUsersChanged";
+   public static remoteUsersChangedInterest = new Interest(FluidConnection.remoteUsersChangedNotificationId);
+
    constructor(props: IConnectionProps) {
+
+      super();
 
       this._client = new TinyliciousClient();
       this._props = props;
@@ -127,6 +132,8 @@ export class FluidConnection  {
          }
       });
 
-      this._props.onRemoteChange(_remoteUsers);
+      var notificationData: NotificationFor<Array<Persona>> = new NotificationFor<Array<Persona>>(FluidConnection.remoteUsersChangedInterest, _remoteUsers);
+
+      this.notifyObservers(FluidConnection.remoteUsersChangedInterest, notificationData);
    }
 }

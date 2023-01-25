@@ -80,13 +80,13 @@ export class Interest {
 /// </summary>
 export class Notification {
 
-   private _notificationId: string;
+   private _interest: Interest;
 
    /**
     * Create a Notification object
-    * @param notificationId_ - id of the notification 
+    * @param interest_ - the Interest to identify the notification 
     */
-   constructor(notificationId_: string);
+   constructor(interest_: Interest);
 
    /**
     * Create a Notification object
@@ -101,28 +101,28 @@ export class Notification {
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Empty Contrutructor
-         this._notificationId = null;
+         this._interest = null;
          return;
       }
       else {
          if (this.isMyType(arr[0])) { // Copy Contrutructor
-            this._notificationId = arr[0]._notificationId;
+            this._interest = arr[0]._interest;
          }
          else { // Individual arguments
-            this._notificationId = arr[0];
+            this._interest = arr[0];
          }
       }
    }
 
    private isMyType(rhs: Notification): boolean {
-      return rhs.hasOwnProperty('_notificationId');
+      return rhs.hasOwnProperty('_interest');
    }
 
    /**
    * set of 'getters' for private variables
    */
-   get notificationId(): string {
-      return this._notificationId;
+   get interest (): Interest {
+      return this._interest;
    }
 
    /**
@@ -132,7 +132,8 @@ export class Notification {
     */
    equals(rhs: Notification): boolean {
 
-      return ((this._notificationId === rhs._notificationId));
+      return (this.interest === rhs.interest) ||
+         ((this._interest !== null) && (rhs.interest !== null) && (this._interest.equals(rhs._interest)));
    }
 
    /**
@@ -140,7 +141,7 @@ export class Notification {
     * @param rhs - the object to assign this one from.  
     */
    assign(rhs: Notification): Notification {
-      this._notificationId = rhs._notificationId;
+      this._interest = rhs._interest;
 
       return this;
    }
@@ -170,10 +171,10 @@ export class NotificationFor<EventData> extends Notification
 
    /**
     * Create a Notification object
-    * @param notificationId_ - id of the notification 
+    * @param interest_ - id of the notification 
     * @param eventData_ - the data payload to send with it
     */
-   constructor(notificationId_: string, eventData_: EventData) 
+   constructor(interest_: Interest, eventData_: EventData) 
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Construct empty
@@ -282,7 +283,8 @@ export class ObserverInterest {
    equals(rhs: ObserverInterest): boolean {
 
       return ((this._observer === rhs._observer) && 
-         (this._interest === rhs._interest));
+         ( (this.interest === rhs.interest) ||
+           ((this._interest !== null) && (rhs.interest !== null) && (this._interest.equals(rhs._interest)))));
    }
 
    /**
@@ -299,32 +301,31 @@ export class ObserverInterest {
 }
 
 /// <summary>
-/// ObservationRouterFor -  template to act as an intermediary, type-safe router that connects a specific function signature for the method that is called in a notification
+/// NotificationRouterFor -  template to act as an intermediary, type-safe router that connects a specific function signature for the method that is called in a notification
 /// </summary>
 /// 
 type FunctionFor<EventData> = (interest: Interest, data: NotificationFor<EventData>) => void;
 
-
-export class ObservationRouterFor<EventData> implements IObserver
+export class NotificationRouterFor<EventData> implements IObserver
 {
    private _function: FunctionFor<EventData>;
 
    /**
-    * Create empty ObservationRouterFor object
+    * Create empty NotificationRouterFor object
     */
    constructor();
 
    /**
-    * Create a ObservationRouterFor object
+    * Create a NotificationRouterFor object
     * @param interest_ - the thing it is interested in 
     */
    constructor(_function: FunctionFor<EventData>);
 
    /**
-    * Create a ObserverRouterFor<AnObserver, EventData>  object
+    * Create a NotificationRouterFor<EventData>  object
     * @param observerInterest - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(observerRouter: ObservationRouterFor<EventData>);
+   public constructor(observerRouter: NotificationRouterFor<EventData>);
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Construct empty
@@ -357,7 +358,7 @@ export class ObservationRouterFor<EventData> implements IObserver
     * Shallow compare
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: ObservationRouterFor<EventData>): boolean {
+   equals(rhs: NotificationRouterFor<EventData>): boolean {
 
       return (this._function === rhs._function);
    }
@@ -366,7 +367,7 @@ export class ObservationRouterFor<EventData> implements IObserver
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: ObservationRouterFor<EventData>): ObservationRouterFor<EventData> {
+   assign(rhs: NotificationRouterFor<EventData>): NotificationRouterFor<EventData> {
       this._function = rhs._function;
 
       return this;
@@ -398,11 +399,11 @@ export class Notifier {
    }
 
    // Operations
-   notifyObservers(notificationId_: string, event_: Notification): void {
+   notifyObservers(interest_: Interest, event_: Notification): void {
 
       this._observerInterests.forEach((observerInterest) => {
 
-         if (observerInterest.interest.notificationId == notificationId_) {
+         if (observerInterest.interest.equals (interest_)) {
 
             observerInterest.observer.notify(observerInterest.interest, event_);
          }
