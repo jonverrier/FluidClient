@@ -9,9 +9,21 @@ import {
    NotificationFor,
    ObserverInterest,
    Notifier,
-   Observer
+   IObserver
 } from '../src/NotificationFramework';
 
+class MockObserver implements IObserver {
+
+   _lastNotification: Notification;
+
+   constructor() {
+      this._lastNotification = null;
+   }
+   notify(interest_: Interest, notification_: Notification): void {
+
+      this._lastNotification = notification_;
+   };
+}
 
 describe("NotificationFramework", function () {
 
@@ -81,7 +93,7 @@ describe("NotificationFramework", function () {
    it("Need to create, test & assign ObserverInterest", function () {
 
       var notifier = new Notifier();
-      var observer = new Observer();
+      var observer = new MockObserver();
       var notificationId1: string = "Playing";
       var notificationId2: string = "Paused";
 
@@ -104,32 +116,59 @@ describe("NotificationFramework", function () {
       expect(observerInterest1.equals(observerInterest4)).to.equal(true);
    });
 
+   it("Needs to flow notifications from Notifier to Observer", function () {
+
+      var notifier = new Notifier();
+      var observerYes = new MockObserver();
+      var observerNo = new MockObserver();
+
+      var notificationId1: string = "Playing";
+      var notificationId2: string = "Paused";
+
+      var interest1: Interest = new Interest(notifier, notificationId1);
+      var interest2: Interest = new Interest(notifier, notificationId2);
+
+      var observerInterest1: ObserverInterest = new ObserverInterest(observerYes, interest1);
+      var observerInterest2: ObserverInterest = new ObserverInterest(observerNo, interest2);
+
+      notifier.addObserver(observerInterest1);
+      notifier.addObserver(observerInterest2);
+
+      // Call sequence 1 - simple notification
+      var notification: Notification = new Notification(notificationId1);
+
+      notifier.notifyObservers(interest1.notificationId, notification);
+      expect(observerYes._lastNotification.equals(notification) === true).to.equal(true);
+      expect((observerNo._lastNotification === null) === true).to.equal(true);
+
+      // Call sequence 2 - notification with Notification payload
+      var notificationForInt: NotificationFor<number> = new NotificationFor<number>(notificationId1, 1);
+
+      notifier.notifyObservers(interest1.notificationId, notificationForInt);
+      expect(observerYes._lastNotification.equals(notificationForInt) === true).to.equal(true);
+      expect((observerNo._lastNotification === null) === true).to.equal(true);
+   });
 });
+
+
+
+/*
+   // Call sequence 2 - routed & with a payload
+   pNotifier -> removeAllObservers();
+
+   std:: shared_ptr < Media:: IObserver > pObserverRouter(new Media:: ObserverRouterFor<TestObserver, int>(pTestObserver, & TestObserver:: notifyInt));
+   Media::ObserverInterest observerInterest4(interest1, pObserverRouter);
+   pNotifier -> addObserver(observerInterest4);
+
+   Media:: NotificationFor < int > notificationInt(notificationId1, 2);
+   pNotifier -> notifyObservers(interest1.notificationId(), notificationInt);
+   EXPECT_EQ(pTestObserver.get() -> lastCall, pTestObserver.get() -> lastCallNInt);
+   */
 
 /*
 
-TEST(MediaNotificationFramework, ObserverInterest) {
 
-   std:: shared_ptr < Media:: Notifier > pNotifier(new Media:: Notifier());
-
-   const wchar_t* notificationId1 = L"Playing";
-   const wchar_t* notificationId2 = L"Paused";
-
-   Media::Interest interest1(pNotifier, notificationId1);
-   Media::Interest interest2(pNotifier, notificationId2);
-
-   std:: shared_ptr < Media:: Observer > pObserver(new Media:: Observer());
-
-   Media::ObserverInterest observerInterest1(interest1, pObserver);
-   Media::ObserverInterest observerInterest2(interest2, pObserver);
-   Media::ObserverInterest observerInterest3(observerInterest1);
-
-   EXPECT_EQ(observerInterest1, observerInterest1);
-   EXPECT_NE(observerInterest1, observerInterest2);
-   EXPECT_EQ(observerInterest1, observerInterest3);
-}
-
-class TestObserver : public Media::Observer {
+class TestObserver : public Media::IObserver {
 
    public:
    const wchar_t* lastCallN = L"notify";
@@ -154,43 +193,6 @@ class TestObserver : public Media::Observer {
 
 };
 
-TEST(MediaNotificationFramework, FullFlow) {
 
-   std:: shared_ptr < Media:: Notifier > pNotifier(new Media:: Notifier());
-
-   const wchar_t* notificationId1 = L"Playing";
-   const wchar_t* notificationId2 = L"Paused";
-
-   Media::Interest interest1(pNotifier, notificationId1);
-   Media::Interest interest2(pNotifier, notificationId2);
-
-   std:: shared_ptr < TestObserver > pTestObserver(new TestObserver());
-   std:: shared_ptr < Media:: Observer > pObserver(pTestObserver);
-
-   Media::ObserverInterest observerInterest1(interest1, pObserver);
-   Media::ObserverInterest observerInterest2(interest2, pObserver);
-   Media::ObserverInterest observerInterest3(observerInterest1);
-
-   pNotifier -> addObserver(observerInterest1);
-   pNotifier -> addObserver(observerInterest2);
-
-   Media::Notification notification(notificationId1);
-
-   // Call sequence 2 - direct 
-   pNotifier -> notifyObservers(interest1.notificationId(), notification);
-   EXPECT_EQ(pTestObserver.get() -> lastCall, pTestObserver.get() -> lastCallN);
-
-
-   // Call sequence 2 - routed & with a payload
-   pNotifier -> removeAllObservers();
-
-   std:: shared_ptr < Media:: Observer > pObserverRouter(new Media:: ObserverRouterFor<TestObserver, int>(pTestObserver, & TestObserver:: notifyInt));
-   Media::ObserverInterest observerInterest4(interest1, pObserverRouter);
-   pNotifier -> addObserver(observerInterest4);
-
-   Media:: NotificationFor < int > notificationInt(notificationId1, 2);
-   pNotifier -> notifyObservers(interest1.notificationId(), notificationInt);
-   EXPECT_EQ(pTestObserver.get() -> lastCall, pTestObserver.get() -> lastCallNInt);
-}
 
 */

@@ -11,6 +11,7 @@
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register",
+      "test-mini": "mocha --debug-brk --require ts-node/register -g Notification",
       "cover": "tsc && nyc mocha"
    },
    "devDependencies": {

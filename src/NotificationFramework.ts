@@ -208,7 +208,8 @@ export class NotificationFor<EventData> extends Notification
     */
    equals(rhs: NotificationFor<EventData>): boolean {
 
-      return ((this._eventData === rhs._eventData));
+      return (super.equals(rhs) &&
+         (this._eventData === rhs._eventData));
    }
 
    /**
@@ -216,6 +217,7 @@ export class NotificationFor<EventData> extends Notification
     * @param rhs - the object to assign this one from.  
     */
    assign(rhs: NotificationFor<EventData>): NotificationFor<EventData> {
+      super.assign(rhs);
       this._eventData = rhs._eventData;
 
       return this;
@@ -223,11 +225,11 @@ export class NotificationFor<EventData> extends Notification
 }
 
 /// <summary>
-/// ObserverInterest -  an Observer plus an Interest . Used by Notifieres to hold a list of things that observers are interested in so it can notify them. 
+/// ObserverInterest -  an IObserver plus an Interest . Used by Notifieres to hold a list of things that observers are interested in so it can notify them. 
 /// </summary>
 export class ObserverInterest {
 
-   private _observer: Observer;
+   private _observer: IObserver;
    private _interest: Interest;
 
    /**
@@ -235,7 +237,7 @@ export class ObserverInterest {
     * @param observer_ - reference to the observer 
     * @param interest_ - the thing it is interested in 
     */
-   constructor(_observer: Observer, _interest: Interest);
+   constructor(_observer: IObserver, _interest: Interest);
 
    /**
     * Create a ObserverInterest object
@@ -267,7 +269,7 @@ export class ObserverInterest {
    /**
    * set of 'getters' for private variables
    */
-   get observer(): Observer {
+   get observer(): IObserver {
       return this._observer;
    }
    get interest(): Interest {
@@ -298,13 +300,63 @@ export class ObserverInterest {
 
 }
 
+export interface IObserver {
+   notify(interest_: Interest, notification_: Notification): void;
+}
+
+/// <summary>
+/// Notifier -  class that sends notifications when things change
+/// </summary>
 export class Notifier {
 
-}
+   private _observerInterests : Array<ObserverInterest>;
 
-export class Observer {
+   /**
+    * Create an empty Notifier object - required for particiation in serialisation framework
+    */
+   constructor() {
+      this._observerInterests = new Array<ObserverInterest>();
+   }
 
-}
+   // Operations
+   notifyObservers(notificationId_: string, event_: Notification): void {
+
+      this._observerInterests.forEach((observerInterest) => {
+
+         if (observerInterest.interest.notificationId == notificationId_) {
+
+            observerInterest.observer.notify(observerInterest.interest, event_);
+         }
+       });
+    }
+
+   // Add the supplied observer to the list of observers associated with
+   // the supplied interest. 
+   addObserver(observerInterest_: ObserverInterest): void {
+
+      const index = this._observerInterests.indexOf(observerInterest_);
+      if (index === -1) {
+         this._observerInterests.push(observerInterest_);
+      }
+   }
+
+   // Remove the supplied observer from the list of observers associated
+   // with the supplied interest.
+   removeObserver(observerInterest_: ObserverInterest): void {
+
+      const index = this._observerInterests.indexOf(observerInterest_);
+      if (index > -1) {
+         this._observerInterests.splice(index, 1);
+      }
+   }
+
+   removeAllObservers(): void {
+      this._observerInterests.length = 0
+   }
+
+};  //Notifier
+
+
 
 /*
 
@@ -320,55 +372,19 @@ export class Observer {
 namespace Media {
 
    class Notifier;
-   class Observer;
+   class IObserver;
 
    
 
-   /// <summary>
-   /// Notifier -  class that sends notifications when things change
-   /// </summary>
-   class MEDIA_API Notifier {
+
+
+   class MEDIA_API IObserver {
 
    public:
       // Constructors
-      Notifier();
-      virtual ~Notifier();
-
-      // Operations
-      void enableNotification(bool enable = true);
-      void disableNotification();
-      bool isEnabledForNotification() const;
-
-      void notifyObservers(const NotificationId& id, const Notification& event);
-
-      // Add the supplied observer to the list of observers associated with
-      // the supplied interest.
-      void addObserver(const ObserverInterest& observerFInterest);
-
-      // Remove the supplied observer from the list of observers associated
-      // with the supplied interest.
-      void removeObserver(const ObserverInterest& observerInterest);
-
-      void removeAllObservers();
-
-   protected:
-
-   private:
-#pragma warning (push)
-#pragma warning (disable: 4251) // Member is private anyway
-      bool m_isEnabled;
-      std::list< ObserverInterest > m_observers;
-#pragma warning (pop)
-
-   };  //Notifier
-
-   class MEDIA_API Observer {
-
-   public:
-      // Constructors
-      Observer();
+      IObserver();
       virtual
-      ~Observer(); 
+      ~IObserver(); 
 
       virtual void notify (const Interest& interest, const Notification& notification);
 
@@ -378,14 +394,14 @@ namespace Media {
 
    private:
 
-   }; // Observer
+   }; // IObserver
 
    /// <summary>
    /// ObserverRouterFor -  template to connect a specific function signature for the method that is called in a notification 
    /// </summary>
    /// 
    template <class AnObserver, class EventData>
-   class ObserverRouterFor : public Observer
+   class ObserverRouterFor : public IObserver
    {
       typedef void (AnObserver::* PFunctionFor)(const Interest& interest, const NotificationFor<EventData>&);
 
@@ -393,7 +409,7 @@ namespace Media {
       // Constructors
       ObserverRouterFor(std::weak_ptr<AnObserver> pObserver,
                         PFunctionFor pFunction)
-         : Observer(), m_pObserver(pObserver), m_pFunction(pFunction) {
+         : IObserver(), m_pObserver(pObserver), m_pFunction(pFunction) {
       }
 
       ObserverRouterFor(const ObserverRouterFor& rhs)
