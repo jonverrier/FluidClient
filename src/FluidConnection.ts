@@ -1,6 +1,8 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
-import { TinyliciousClient } from "@fluidframework/tinylicious-client";
+// import { TinyliciousClient } from "@fluidframework/tinylicious-client";
+import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
+import { AzureClient, AzureConnectionConfig, AzureLocalConnectionConfig, AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@fluidframework/azure-client";
 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
@@ -11,6 +13,43 @@ var alwaysWaitAfterConnectFor: number = 1000;
 export interface IConnectionProps {
 }
 
+/*
+const serviceConfig = {
+   connection: {
+      tenantId: "da0f095e-dcd3-4e55-ae55-23459e8474f8", // REPLACE WITH YOUR TENANT ID
+      tokenProvider: new InsecureTokenProvider("c4b2a77507054797634e915cc86360f2", 
+      { id: "userId" }),
+      endpoint: "https://eu.fluidrelay.azure.com", // REPLACE WITH YOUR SERVICE ENDPOINT
+      type: "remote",
+   }
+};
+*/
+
+class LocalConnection implements AzureRemoteConnectionConfig {
+   tokenProvider: ITokenProvider; 
+   endpoint: string;
+   type: any;
+   tenantId: string;
+
+   constructor() {
+      var user: any = { id: "123", name: "Test User" };
+      this.tenantId = "da0f095e-dcd3-4e55-ae55-23459e8474f8";
+      this.tokenProvider = new InsecureTokenProvider("c4b2a77507054797634e915cc86360f2", user);
+      this.endpoint = "https://eu.fluidrelay.azure.com";
+      this.type = "remote";
+   }
+};
+
+class LocalConfig implements AzureClientProps {
+   connection: LocalConnection;
+
+   constructor() {
+      this.connection = new LocalConnection();
+   }
+};
+
+var serviceConfig: LocalConfig = new LocalConfig();
+
 const containerSchema = {
    initialObjects: { participantMap: SharedMap }
 };
@@ -19,7 +58,7 @@ export class FluidConnection  extends Notifier {
 
    _props: IConnectionProps;
    _localUser: Persona;
-   _client: TinyliciousClient; 
+   _client: AzureClient; // TinyliciousClient; 
    _container: IFluidContainer; 
 
    public static remoteUsersChangedNotificationId = "RemoteUsersChanged";
@@ -29,7 +68,7 @@ export class FluidConnection  extends Notifier {
 
       super();
 
-      this._client = new TinyliciousClient();
+      this._client = new AzureClient(serviceConfig); // TinyliciousClient();
       this._props = props;
    }
 
@@ -56,7 +95,7 @@ export class FluidConnection  extends Notifier {
          return id;
       }
       catch (e: any) {
-         throw new ConnectionError ("Error connecting new _container to remote data service.")
+         throw new ConnectionError("Error connecting new container to remote data service:" + e.message);
       }
    }
 
@@ -80,7 +119,7 @@ export class FluidConnection  extends Notifier {
          return id;
       }
       catch (e: any) {
-         throw new ConnectionError("Error attaching existing new _container to remote data service.")
+         throw new ConnectionError("Error attaching existing new container to remote data service:" + e.message)
       }
    }
 
