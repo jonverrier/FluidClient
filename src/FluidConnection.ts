@@ -16,9 +16,9 @@ export interface IConnectionProps {
 /*
 const serviceConfig = {
    connection: {
-      tenantId: "da0f095e-dcd3-4e55-ae55-23459e8474f8", // REPLACE WITH YOUR TENANT ID
-      tokenProvider: new InsecureTokenProvider("c4b2a77507054797634e915cc86360f2", 
-      { id: "userId" }),
+      tenantId: "tenant id", 
+      tokenProvider: new InsecureTokenProvider("primary key", 
+      { id: "userId", name: "Test User" }),
       endpoint: "https://eu.fluidrelay.azure.com", // REPLACE WITH YOUR SERVICE ENDPOINT
       type: "remote",
    }
@@ -33,10 +33,11 @@ class LocalConnection implements AzureRemoteConnectionConfig {
 
    constructor() {
       var user: any = { id: "123", name: "Test User" };
-      this.tenantId = "da0f095e-dcd3-4e55-ae55-23459e8474f8";
-      this.tokenProvider = new InsecureTokenProvider("c4b2a77507054797634e915cc86360f2", user);
-      this.endpoint = "https://eu.fluidrelay.azure.com";
-      this.type = "remote";
+
+      this.tenantId = "tenant ID";
+      this.tokenProvider = new InsecureTokenProvider("primarykey", user);
+      this.endpoint = "http://localhost:7070";
+      this.type = "local";
    }
 };
 
