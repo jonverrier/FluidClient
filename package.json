@@ -12,7 +12,8 @@
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register",
       "test-mini": "mocha --debug-brk --require ts-node/register -g Fluid",
-      "cover": "tsc && nyc mocha"
+      "cover": "tsc && nyc mocha",
+      "local-server": "npx @fluidframework/azure-local-service@latest"
    },
    "devDependencies": {
       "@fluentui/react-components": "^9.10.0",
