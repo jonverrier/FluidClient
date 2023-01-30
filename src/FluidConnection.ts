@@ -44,7 +44,7 @@ class ConnectionConfig implements AzureRemoteConnectionConfig {
       this.documentId = documentUuid;
       var user: any = { id: documentUuid, name: "Whiteboard Application" };
 
-      if (true) {
+      if (false) {
          this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
          this.endpoint = "http://localhost:7070";
          this.type = "local";
