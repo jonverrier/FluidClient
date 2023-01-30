@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Persona } from '../src/Persona';
+import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from '../src/NotificationFramework';
 import { FluidConnection } from '../src/FluidConnection';
 import { uuid } from '../src/Uuid';
 
@@ -15,7 +16,7 @@ async function wait() {
    await new Promise(resolve => setTimeout(resolve, 500));
 }
 
-function onRemoteChange(remoteUsers: Persona[]) : void {
+function onRemoteChange(interest_: Interest, notification_: NotificationFor<Array<Persona>>) : void {
 
 }
 
@@ -25,14 +26,14 @@ describe("FluidConnection", function () {
 
       this.timeout(5000);
 
-      var newConnection: FluidConnection = new FluidConnection({ onRemoteChange: onRemoteChange });
+      var newConnection: FluidConnection = new FluidConnection({ });
 
       var persona: Persona = new Persona(myId, myName, myThumbnail, myLastSeenAt);
 
       const id = await newConnection.createNew(persona);
       await wait();
 
-      var attachConnection: FluidConnection = new FluidConnection({ onRemoteChange: onRemoteChange });
+      var attachConnection: FluidConnection = new FluidConnection({ });
 
       await attachConnection.attachToExisting(id, persona);
       await wait();
@@ -45,7 +46,7 @@ describe("FluidConnection", function () {
 
    it("Cannot disconnect if never connected", function () {
 
-      var newConnection: FluidConnection = new FluidConnection({ onRemoteChange: onRemoteChange });
+      var newConnection: FluidConnection = new FluidConnection({ });
 
       expect(newConnection.canDisconnect() === false).to.equal(true);
    });
@@ -54,7 +55,7 @@ describe("FluidConnection", function () {
 
       this.timeout(5000);
 
-      var newConnection: FluidConnection = new FluidConnection({ onRemoteChange: onRemoteChange });
+      var newConnection: FluidConnection = new FluidConnection({ });
 
       var persona: Persona = new Persona(myId, myName, myThumbnail, myLastSeenAt);
 
@@ -70,7 +71,7 @@ describe("FluidConnection", function () {
 
       this.timeout(5000);
 
-      var newConnection: FluidConnection = new FluidConnection({ onRemoteChange: onRemoteChange });
+      var newConnection: FluidConnection = new FluidConnection({ });
 
       var persona: Persona = new Persona(myId, myName, myThumbnail, myLastSeenAt);
 
@@ -99,7 +100,7 @@ describe("FluidConnection", function () {
 
       const id = uuid();
 
-      var attachConnection: FluidConnection = new FluidConnection({ onRemoteChange: onRemoteChange });
+      var attachConnection: FluidConnection = new FluidConnection({ });
 
       var caught: boolean = false;
 

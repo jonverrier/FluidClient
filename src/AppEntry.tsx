@@ -1,7 +1,7 @@
 /*! Copyright TXPCo 2022 */
 
 // React
-import React, { ChangeEvent, MouseEvent, MouseEventHandler } from 'react';
+import React, { ChangeEvent, MouseEvent } from 'react';
 import { useState } from 'react';
 import { createRoot } from "react-dom/client";
 
@@ -30,6 +30,7 @@ import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstab
 // Local
 import { uuid } from './Uuid';
 import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
+import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from './NotificationFramework';
 import { Persona } from './Persona';
 import { Participants } from './Participants';
 import { FluidConnection } from './FluidConnection';
@@ -114,22 +115,31 @@ function makeLocalUser(): Persona {
 }
 export class App extends React.Component<IAppProps, AppState> {
 
-   private initialUser_ : Persona;
+   private _initialUser: Persona;
+   private _router: NotificationRouterFor<Array<Persona>>;
+   private _interest: ObserverInterest;
 
    constructor(props: IAppProps) {
 
       super(props);
 
-      this.initialUser_ = makeLocalUser();
+      this._initialUser = makeLocalUser();
+      this._router = new NotificationRouterFor<Array<Persona>>(this.onRemoteChange.bind(this));
+      this._interest = new ObserverInterest(this._router, FluidConnection.remoteUsersChangedInterest);
+
+      var fluidConnection: FluidConnection = new FluidConnection({});
+      var participants: Participants = new Participants(this._initialUser, new Array<Persona>())
+      fluidConnection.addObserver(this._interest);
 
       this.state = {
-         fluidConnection: new FluidConnection({ onRemoteChange: this.onRemoteChange.bind(this) }),
-         participants: new Participants(this.initialUser_, new Array<Persona> ())
+         fluidConnection: fluidConnection,
+         participants: participants
       };
    }
 
-   onRemoteChange(remoteUsers: Persona[]): void {
-      this.setState({ participants: new Participants(this.initialUser_, remoteUsers) });
+   onRemoteChange(interest_: Interest, notification_: NotificationFor<Array<Persona>>): void {
+
+      this.setState({ participants: new Participants(this._initialUser, notification_.eventData) });
       this.forceUpdate(); // Need to push new properties down to the Header component
    }
 

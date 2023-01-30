@@ -1,31 +1,97 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
-import { TinyliciousClient } from "@fluidframework/tinylicious-client";
+import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
+import { AzureClient, AzureLocalConnectionConfig, AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@fluidframework/azure-client";
+import axios from "axios";
 
+import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 
+var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
 var alwaysWaitAfterConnectFor: number = 1000;
-var populateLocalUserRetryInterval: number = 500;
 
 export interface IConnectionProps {
-   onRemoteChange: (remoteUsers: Persona[]) => void;
 }
+
+class ConnectionConfig implements AzureRemoteConnectionConfig {
+
+   tokenProvider: ITokenProvider; 
+   endpoint: string;
+   type: any;
+   tenantId: string;
+   documentId: string;
+
+
+   private async getToken(tenantId_: string, documentId_: string | undefined, name_: string, id_: string): Promise<string> {
+
+      const response = await axios.get('api/key', {
+         params: {
+            tenantId_,
+            documentId_,
+            userId: id_,
+            userName: name_
+         },
+      });
+      return response.data as string;
+   }
+
+   constructor() {
+      this.documentId = documentUuid;
+      var user: any = { id: documentUuid, name: "Whiteboard Application" };
+
+      if (true) {
+         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
+         this.endpoint = "http://localhost:7070";
+         this.type = "local";
+         this.tokenProvider = new InsecureTokenProvider('testKey', user);
+      }
+      else {
+         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
+         this.endpoint = "https://eu.fluidrelay.azure.com";
+         this.type = "remote";
+
+         this.getToken(this.tenantId, this.documentId, user.name, user.id)
+            .then((key) => {
+               this.tokenProvider = new InsecureTokenProvider(key, user);
+            })
+            .catch(() => {
+               this.tokenProvider = null;
+            });
+      }
+   }
+};
+
+class ClientProps implements AzureClientProps {
+   connection: ConnectionConfig;
+
+   constructor() {
+      this.connection = new ConnectionConfig();
+   }
+};
+
+var clientProps: ClientProps = new ClientProps();
 
 const containerSchema = {
    initialObjects: { participantMap: SharedMap }
 };
 
-export class FluidConnection  {
+export class FluidConnection  extends Notifier {
 
    _props: IConnectionProps;
    _localUser: Persona;
-   _client: TinyliciousClient; 
+   _client: AzureClient; 
    _container: IFluidContainer; 
+
+   public static remoteUsersChangedNotificationId = "RemoteUsersChanged";
+   public static remoteUsersChangedInterest = new Interest(FluidConnection.remoteUsersChangedNotificationId);
 
    constructor(props: IConnectionProps) {
 
-      this._client = new TinyliciousClient();
+      super();
+
+      // TODO - wait for the asnc get to complete
+      this._client = new AzureClient(clientProps); 
       this._props = props;
    }
 
@@ -52,7 +118,7 @@ export class FluidConnection  {
          return id;
       }
       catch (e: any) {
-         throw new ConnectionError ("Error connecting new _container to remote data service.")
+         throw new ConnectionError("Error connecting new container to remote data service:" + e.message);
       }
    }
 
@@ -66,19 +132,9 @@ export class FluidConnection  {
          await container.connect();
          await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
-         // Add our User ID to the shared data if not there already 
-         // Need to wait until _container is clean before we test local membership
-         var interval = setInterval(() => {
-            if (!this._container.isDirty) {
-
-               if (!this.containsMe()) {
-                  var storedVal: string = localUser.streamToJSON();
-                  (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-               }
-
-               clearInterval(interval);
-            }
-         }, populateLocalUserRetryInterval);
+         // Add our User ID to the shared data - unconditional write as we have stable UUIDs
+         var storedVal: string = localUser.streamToJSON();
+         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
 
          this.watchForChanges();
          this.bubbleUp();
@@ -86,7 +142,7 @@ export class FluidConnection  {
          return id;
       }
       catch (e: any) {
-         throw new ConnectionError("Error attaching existing new _container to remote data service.")
+         throw new ConnectionError("Error attaching existing new container to remote data service:" + e.message)
       }
    }
 
@@ -138,24 +194,8 @@ export class FluidConnection  {
          }
       });
 
-      this._props.onRemoteChange(_remoteUsers);
-   }
+      var notificationData: NotificationFor<Array<Persona>> = new NotificationFor<Array<Persona>>(FluidConnection.remoteUsersChangedInterest, _remoteUsers);
 
-   private containsMe(): boolean {
-
-      var found: boolean = false;
-
-      //  enumerate members of the sharedMap
-      (this._container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
-         var temp: Persona = new Persona();
-
-         temp.streamFromJSON(value);
-
-         if (temp.id === this._localUser.id) {
-            found = true;
-         }
-      });
-
-      return found;
+      this.notifyObservers(FluidConnection.remoteUsersChangedInterest, notificationData);
    }
 }
