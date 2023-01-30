@@ -1,55 +1,76 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
-// import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
-import { AzureClient, AzureConnectionConfig, AzureLocalConnectionConfig, AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@fluidframework/azure-client";
+import { AzureClient, AzureLocalConnectionConfig, AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@fluidframework/azure-client";
+import axios from "axios";
 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 
+var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
 var alwaysWaitAfterConnectFor: number = 1000;
 
 export interface IConnectionProps {
 }
 
-/*
-const serviceConfig = {
-   connection: {
-      tenantId: "tenant id", 
-      tokenProvider: new InsecureTokenProvider("primary key", 
-      { id: "userId", name: "Test User" }),
-      endpoint: "https://eu.fluidrelay.azure.com", // REPLACE WITH YOUR SERVICE ENDPOINT
-      type: "remote",
-   }
-};
-*/
+class ConnectionConfig implements AzureRemoteConnectionConfig {
 
-class LocalConnection implements AzureRemoteConnectionConfig {
    tokenProvider: ITokenProvider; 
    endpoint: string;
    type: any;
    tenantId: string;
+   documentId: string;
+
+
+   private async getToken(tenantId_: string, documentId_: string | undefined, name_: string, id_: string): Promise<string> {
+
+      const response = await axios.get('api/key', {
+         params: {
+            tenantId_,
+            documentId_,
+            userId: id_,
+            userName: name_
+         },
+      });
+      return response.data as string;
+   }
 
    constructor() {
-      var user: any = { id: "123", name: "Test User" };
+      this.documentId = documentUuid;
+      var user: any = { id: documentUuid, name: "Whiteboard Application" };
 
-      this.tenantId = "tenant ID";
-      this.tokenProvider = new InsecureTokenProvider("primarykey", user);
-      this.endpoint = "http://localhost:7070";
-      this.type = "local";
+      if (true) {
+         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
+         this.endpoint = "http://localhost:7070";
+         this.type = "local";
+         this.tokenProvider = new InsecureTokenProvider('testKey', user);
+      }
+      else {
+         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
+         this.endpoint = "https://eu.fluidrelay.azure.com";
+         this.type = "remote";
+
+         this.getToken(this.tenantId, this.documentId, user.name, user.id)
+            .then((key) => {
+               this.tokenProvider = new InsecureTokenProvider(key, user);
+            })
+            .catch(() => {
+               this.tokenProvider = null;
+            });
+      }
    }
 };
 
-class LocalConfig implements AzureClientProps {
-   connection: LocalConnection;
+class ClientProps implements AzureClientProps {
+   connection: ConnectionConfig;
 
    constructor() {
-      this.connection = new LocalConnection();
+      this.connection = new ConnectionConfig();
    }
 };
 
-var serviceConfig: LocalConfig = new LocalConfig();
+var clientProps: ClientProps = new ClientProps();
 
 const containerSchema = {
    initialObjects: { participantMap: SharedMap }
@@ -59,7 +80,7 @@ export class FluidConnection  extends Notifier {
 
    _props: IConnectionProps;
    _localUser: Persona;
-   _client: AzureClient; // TinyliciousClient; 
+   _client: AzureClient; 
    _container: IFluidContainer; 
 
    public static remoteUsersChangedNotificationId = "RemoteUsersChanged";
@@ -69,7 +90,8 @@ export class FluidConnection  extends Notifier {
 
       super();
 
-      this._client = new AzureClient(serviceConfig); // TinyliciousClient();
+      // TODO - wait for the asnc get to complete
+      this._client = new AzureClient(clientProps); 
       this._props = props;
    }
 
