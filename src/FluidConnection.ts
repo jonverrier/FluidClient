@@ -25,7 +25,7 @@ class ConnectionConfig implements AzureRemoteConnectionConfig {
 
    private async getToken(tenantId_: string, documentId_: string | undefined, name_: string, id_: string): Promise<string> {
 
-      const response = await axios.get('api/key', {
+      const response = await axios.get('/api/key', {
          params: {
             tenantId_,
             documentId_,
@@ -33,6 +33,10 @@ class ConnectionConfig implements AzureRemoteConnectionConfig {
             userName: name_
          },
       });
+
+      if (!response.data)
+         throw new ConnectionError("Error connecting to remote data services for API token.");
+
       return response.data as string;
    }
 
