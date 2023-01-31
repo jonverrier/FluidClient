@@ -2,6 +2,8 @@
 // Copyright (c) 2023 TXPCo Ltd
 /////////////////////////////////////////
 
+import { log, tag } from 'missionlog';
+
 /// <summary>
 /// Interest -  encapsulates what is being observed - a specific notificationId.
 /// </summary>
@@ -400,6 +402,8 @@ export class Notifier {
 
    // Operations
    notifyObservers(interest_: Interest, event_: Notification): void {
+
+      log.debug (tag.notification, "Notification:" + interest_.notificationId);
 
       this._observerInterests.forEach((observerInterest) => {
 

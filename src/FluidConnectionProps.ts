@@ -44,25 +44,23 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
       var user: any = { id: documentUuid, name: "Whiteboard Application" };
 
-      if (false) {
+      if (true) {
          this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
          this.endpoint = "http://localhost:7070";
          this.type = "local";
          this.tokenProvider = new InsecureTokenProvider('testKey', user);
 
-         return (this_.tokenProvider);
+         return (this.tokenProvider);
       }
       else {
          this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
          this.endpoint = "https://eu.fluidrelay.azure.com";
          this.type = "remote";
 
-         var this_ = this;
-
          var key = await this.getToken(this.tenantId, this.documentId, user.name, user.id);
 
-         this_.tokenProvider = new InsecureTokenProvider(key, user);
-         return (this_.tokenProvider);
+         this.tokenProvider = new InsecureTokenProvider(key, user);
+         return (this.tokenProvider);
       }
    }
 };

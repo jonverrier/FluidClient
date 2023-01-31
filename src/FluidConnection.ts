@@ -1,14 +1,12 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
-import axios from "axios";
 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 import { ClientProps } from './FluidConnectionProps';
 
-var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
 var alwaysWaitAfterConnectFor: number = 1000;
 
 export interface IConnectionProps {
