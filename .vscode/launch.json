@@ -1,10 +1,9 @@
 {
 	"version": "0.1.0",
 	"configurations": [
+
 		{
 			"args": [
-				"-u",
-				"tdd",
 				"--timeout",
 				"999999",
 				"--colors",

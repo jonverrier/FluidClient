@@ -1,80 +1,18 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
-import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
-import { AzureClient, AzureLocalConnectionConfig, AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@fluidframework/azure-client";
+import { AzureClient } from "@fluidframework/azure-client";
 import axios from "axios";
 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
+import { ClientProps } from './FluidConnectionProps';
 
 var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
 var alwaysWaitAfterConnectFor: number = 1000;
 
 export interface IConnectionProps {
 }
-
-class ConnectionConfig implements AzureRemoteConnectionConfig {
-
-   tokenProvider: ITokenProvider; 
-   endpoint: string;
-   type: any;
-   tenantId: string;
-   documentId: string;
-
-
-   private async getToken(tenantId_: string, documentId_: string | undefined, name_: string, id_: string): Promise<string> {
-
-      const response = await axios.get('/api/key', {
-         params: {
-            tenantId_,
-            documentId_,
-            userId: id_,
-            userName: name_
-         },
-      });
-
-      if (!response.data)
-         throw new ConnectionError("Error connecting to remote data services for API token.");
-
-      return response.data as string;
-   }
-
-   constructor() {
-      this.documentId = documentUuid;
-      var user: any = { id: documentUuid, name: "Whiteboard Application" };
-
-      if (false) {
-         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
-         this.endpoint = "http://localhost:7070";
-         this.type = "local";
-         this.tokenProvider = new InsecureTokenProvider('testKey', user);
-      }
-      else {
-         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
-         this.endpoint = "https://eu.fluidrelay.azure.com";
-         this.type = "remote";
-
-         this.getToken(this.tenantId, this.documentId, user.name, user.id)
-            .then((key) => {
-               this.tokenProvider = new InsecureTokenProvider(key, user);
-            })
-            .catch(() => {
-               this.tokenProvider = null;
-            });
-      }
-   }
-};
-
-class ClientProps implements AzureClientProps {
-   connection: ConnectionConfig;
-
-   constructor() {
-      this.connection = new ConnectionConfig();
-   }
-};
-
-var clientProps: ClientProps = new ClientProps();
 
 const containerSchema = {
    initialObjects: { participantMap: SharedMap }
@@ -94,14 +32,21 @@ export class FluidConnection  extends Notifier {
 
       super();
 
-      // TODO - wait for the asnc get to complete
-      this._client = new AzureClient(clientProps); 
+      this._client = null; 
       this._props = props;
+      this._container = null;
+      this._localUser = null;
    }
 
    async createNew(localUser: Persona): Promise<string> {
 
       try {
+         var clientProps: ClientProps = new ClientProps();
+
+         await clientProps.connection.makeTokenProvider();
+
+         this._client = new AzureClient(clientProps); 
+
          this._localUser = localUser;
 
          const { container, services } = await this._client.createContainer(containerSchema);
@@ -129,6 +74,12 @@ export class FluidConnection  extends Notifier {
    async attachToExisting (id: string, localUser: Persona): Promise<string> {
 
       try {
+         var clientProps: ClientProps = new ClientProps();
+
+         await clientProps.connection.makeTokenProvider();
+
+         this._client = new AzureClient(clientProps); 
+
          this._localUser = localUser;
 
          const { container, services } = await this._client.getContainer(id, containerSchema);
