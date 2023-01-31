@@ -27,8 +27,7 @@ import {
 
 import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstable';
 
-import { log, LogLevel } from 'missionlog';
-import chalk from 'chalk';
+import { log, LogLevel, tag } from 'missionlog';
 
 // Local
 import { uuid } from './Uuid';
@@ -113,7 +112,7 @@ function makeLocalUser(): Persona {
    var localStore: IKeyValueStore = localKeyValueStore();
 
    // Look up the UUID if it isstore, else create a new one and save it
-   var localUserUuid = localStore.getItem(KeyValueStoreKeys.localUserUuid);
+   var localUserUuid: string = localStore.getItem(KeyValueStoreKeys.localUserUuid);
    if (!localUserUuid) {
       localUserUuid = uuid();
       localStore.setItem(KeyValueStoreKeys.localUserUuid, localUserUuid)
@@ -121,6 +120,7 @@ function makeLocalUser(): Persona {
 
    // Create 'unknown' users, but with stable UUID'
    var unknown: Persona = Persona.unknown();
+   log.debug(tag.application, "Local User UUID:" + localUserUuid);
 
    return new Persona(localUserUuid, unknown.name, unknown.thumbnailB64, unknown.lastSeenAt);
 
@@ -136,6 +136,11 @@ export class App extends React.Component<IAppProps, AppState> {
 
       super(props);
 
+      // Initialise logging
+      log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
+         logger[level as keyof typeof logger](tag, msg, params);
+      });
+
       this._initialUser = makeLocalUser();
       this._router = new NotificationRouterFor<Array<Persona>>(this.onRemoteChange.bind(this));
       this._interest = new ObserverInterest(this._router, FluidConnection.remoteUsersChangedInterest);
@@ -149,10 +154,6 @@ export class App extends React.Component<IAppProps, AppState> {
          participants: participants
       };
 
-      // Initialise logging
-      log.init({ application: 'ERROR', notification: 'DEBUG' }, (level, tag, msg, params) => {
-         logger[level as keyof typeof logger](tag, msg, params);
-      });
    }
 
    onRemoteChange(interest_: Interest, notification_: NotificationFor<Array<Persona>>): void {
