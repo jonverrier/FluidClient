@@ -119,7 +119,7 @@ function makeLocalUser(): Persona {
       localStore.setItem(KeyValueStoreKeys.localUserUuid, localUserUuid)
    }
 
-   // Create 'unknown' users, but with stable UUID'
+   // Create 'unknown' users, but with stable UUID
    var unknown: Persona = Persona.unknown();
 
    return new Persona(localUserUuid, unknown.name, unknown.thumbnailB64, unknown.lastSeenAt);
