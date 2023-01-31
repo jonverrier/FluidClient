@@ -7,7 +7,7 @@
       "name": "TXP Co Ltd"
    },
    "scripts": {
-      "build-package": "webpack-cli --config webpack-config.js && copy dist\\fluidwhiteboard.js ..\\BiogPage\\public\\assets\\js",
+      "build-package": "webpack-cli --config webpack-config.js && copy dist\\fluidwhiteboard.js ..\\BiogPage\\public\\assets\\js && copy dist\\fluidwhiteboard.js.map ..\\BiogPage\\public\\assets\\js",
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register",
