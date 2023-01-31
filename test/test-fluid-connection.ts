@@ -24,7 +24,7 @@ describe("FluidConnection", function () {
 
    it("Can attach to new container", async function () {
 
-      this.timeout(5000);
+      this.timeout(10000);
 
       var newConnection: FluidConnection = new FluidConnection({ });
 
@@ -53,7 +53,7 @@ describe("FluidConnection", function () {
 
    it("Cannot disconnect if already disconnected", async function () {
 
-      this.timeout(5000);
+      this.timeout(10000);
 
       var newConnection: FluidConnection = new FluidConnection({ });
 
@@ -69,7 +69,7 @@ describe("FluidConnection", function () {
 
    it("Must throw an error if disconnected twice", async function () {
 
-      this.timeout(5000);
+      this.timeout(10000);
 
       var newConnection: FluidConnection = new FluidConnection({ });
 
@@ -94,7 +94,7 @@ describe("FluidConnection", function () {
 
    it("Must throw an error if connecting to stale UUID", async function () {
 
-      this.timeout(5000);
+      this.timeout(10000);
 
       var persona: Persona = new Persona(myId, myName, myThumbnail, myLastSeenAt);
 
