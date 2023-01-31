@@ -27,6 +27,9 @@ import {
 
 import { Toolbar, ToolbarButton, Alert } from '@fluentui/react-components/unstable';
 
+import { log, LogLevel } from 'missionlog';
+import chalk from 'chalk';
+
 // Local
 import { uuid } from './Uuid';
 import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
@@ -34,6 +37,15 @@ import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } fr
 import { Persona } from './Persona';
 import { Participants } from './Participants';
 import { FluidConnection } from './FluidConnection';
+
+// Logging handler
+const logger = {
+   [LogLevel.ERROR]: (tag, msg, params) => console.error(msg, ...params),
+   [LogLevel.WARN]: (tag, msg, params) => console.warn(msg, ...params),
+   [LogLevel.INFO]: (tag, msg, params) => console.log(msg, ...params),
+   [LogLevel.TRACE]: (tag, msg, params) => console.log(msg, ...params),
+   [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
+} as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
 const headerStyles = makeStyles({
    root: {
@@ -113,6 +125,7 @@ function makeLocalUser(): Persona {
    return new Persona(localUserUuid, unknown.name, unknown.thumbnailB64, unknown.lastSeenAt);
 
 }
+
 export class App extends React.Component<IAppProps, AppState> {
 
    private _initialUser: Persona;
@@ -135,6 +148,11 @@ export class App extends React.Component<IAppProps, AppState> {
          fluidConnection: fluidConnection,
          participants: participants
       };
+
+      // Initialise logging
+      log.init({ application: 'ERROR', notification: 'DEBUG' }, (level, tag, msg, params) => {
+         logger[level as keyof typeof logger](tag, msg, params);
+      });
    }
 
    onRemoteChange(interest_: Interest, notification_: NotificationFor<Array<Persona>>): void {
