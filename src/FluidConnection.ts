@@ -1,6 +1,8 @@
 // Copyright (c) 2023 TXPCo Ltd
-import { IFluidContainer, ConnectionState, SharedMap} from "fluid-framework";
+import { IFluidContainer, ConnectionState, SharedMap, IValueChanged } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
+
+import { log, tag } from 'missionlog';
 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
@@ -16,12 +18,12 @@ const containerSchema = {
    initialObjects: { participantMap: SharedMap }
 };
 
-export class FluidConnection  extends Notifier {
+export class FluidConnection extends Notifier {
 
    _props: IConnectionProps;
    _localUser: Persona;
-   _client: AzureClient; 
-   _container: IFluidContainer; 
+   _client: AzureClient;
+   _container: IFluidContainer;
 
    public static remoteUsersChangedNotificationId = "RemoteUsersChanged";
    public static remoteUsersChangedInterest = new Interest(FluidConnection.remoteUsersChangedNotificationId);
@@ -30,7 +32,7 @@ export class FluidConnection  extends Notifier {
 
       super();
 
-      this._client = null; 
+      this._client = null;
       this._props = props;
       this._container = null;
       this._localUser = null;
@@ -43,7 +45,7 @@ export class FluidConnection  extends Notifier {
 
          await clientProps.connection.makeTokenProvider();
 
-         this._client = new AzureClient(clientProps); 
+         this._client = new AzureClient(clientProps);
 
          this._localUser = localUser;
 
@@ -69,14 +71,14 @@ export class FluidConnection  extends Notifier {
       }
    }
 
-   async attachToExisting (id: string, localUser: Persona): Promise<string> {
+   async attachToExisting(id: string, localUser: Persona): Promise<string> {
 
       try {
          var clientProps: ClientProps = new ClientProps();
 
          await clientProps.connection.makeTokenProvider();
 
-         this._client = new AzureClient(clientProps); 
+         this._client = new AzureClient(clientProps);
 
          this._localUser = localUser;
 
@@ -104,14 +106,14 @@ export class FluidConnection  extends Notifier {
       if (!this._container)
          return false;
 
-      var state = this._container.connectionState; 
+      var state = this._container.connectionState;
 
       if (state !== ConnectionState.Connected)
          return false;
 
       // TODO - should we check this._container.isDirty;
 
-      return true; 
+      return true;
    }
 
    async disconnect(): Promise<boolean> {
@@ -122,12 +124,14 @@ export class FluidConnection  extends Notifier {
          return true;
       }
       else {
-         throw new InvalidOperationError ("The remote data service is not connected - please try again in a short while.")
+         throw new InvalidOperationError("The remote data service is not connected - please try again in a short while.")
       }
    }
 
    watchForChanges(): void {
-      (this._container.initialObjects.participantMap as any).on("valueChanged", () => {
+      (this._container.initialObjects.participantMap as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
+
+         log.debug(tag.notification, "valueChanged:" + JSON.stringify(changed));
 
          this.bubbleUp();
       });
