@@ -403,7 +403,7 @@ export class Notifier {
    // Operations
    notifyObservers(interest_: Interest, event_: Notification): void {
 
-      log.debug (tag.notification, "Notification:" + interest_.notificationId);
+      log.debug(tag.notification, "Notification:" + interest_.notificationId + ": " + JSON.stringify (event_));
 
       this._observerInterests.forEach((observerInterest) => {
 
