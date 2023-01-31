@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { InvalidParameterError, InvalidOperationError, ConnectionError } from '../src/Errors';
+import { InvalidParameterError, InvalidOperationError, ConnectionError, EnvironmentError } from '../src/Errors';
 
 var message = "What";
 
@@ -24,6 +24,12 @@ describe("Errors", function () {
    it("Needs to create ConnectionError", function () {
 
       var error: ConnectionError = new ConnectionError(message);
+      expect(error.message === message).to.equal(true);
+   });
+
+   it("Needs to create EnvironmentError", function () {
+
+      var error: EnvironmentError = new EnvironmentError(message);
       expect(error.message === message).to.equal(true);
    });
 });
