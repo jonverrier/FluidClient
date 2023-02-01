@@ -17,6 +17,7 @@ import {
    Share24Regular,
    Copy24Regular,
    Person24Regular,
+   Cursor24Regular,
    DrawText24Regular,
    Square24Regular,
    Circle24Regular,
@@ -396,7 +397,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    return (
       <FluentProvider theme={teamsLightTheme}>
-         <div className={headerClasses.root}>
+         <div className={headerClasses.root}>  {/* Top row for controls to setup a sharing session */}
             <div className={leftColumnClasses.root}>
                <Tooltip withArrow content={uiState.sharePrompt} relationship="label">
                   <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || uiState.connecting} onClick={onConnect} />
@@ -407,22 +408,6 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                <Tooltip withArrow content={"Sign out."} relationship="label">
                   <Button icon={<SignOut24Regular />} disabled={!(uiState.canSignOut)} onClick={onSignOut} />
                </Tooltip>
-            </div>
-            <div className={midColumnClasses.root}>
-               <Toolbar>
-                  <Tooltip withArrow content="Draw a box." relationship="label" key="1">
-                     <ToolbarButton aria-label="Box" icon={<Square24Regular />} />
-                  </Tooltip>
-                  <Tooltip withArrow content="Draw a line or an arrow." relationship="label" key="2">
-                     <ToolbarButton aria-label="Box" icon={<Line24Regular />} />
-                  </Tooltip>
-                  <Tooltip withArrow content="Draw a circle or an ellipse." relationship="label" key="3">
-                     <ToolbarButton aria-label="Ellipse" icon={<Circle24Regular />} />
-                  </Tooltip>
-                  <Tooltip withArrow content="Write text." relationship="label" key="4">
-                     <ToolbarButton aria-label="Text" icon={<DrawText24Regular />} />
-                  </Tooltip>
-               </Toolbar>
             </div>
             <div className={rightColumnClasses.root}>
                <Tooltip withArrow content={joinAsPrompt} relationship="label">
@@ -450,6 +435,29 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                   )}
                </AvatarGroup>
             </div>
+         </div>
+
+         <div className={headerClasses.root}> {/* Next row for Whiteboard controls */}
+            <div className={midColumnClasses.root}>
+               <Toolbar>
+                  <Tooltip withArrow content="Select." relationship="label" key="1">
+                     <ToolbarButton aria-label="Select" icon={<Cursor24Regular />} />
+                  </Tooltip>
+                  <Tooltip withArrow content="Draw a box." relationship="label" key="1">
+                     <ToolbarButton aria-label="Box" icon={<Square24Regular />} />
+                  </Tooltip>
+                  <Tooltip withArrow content="Draw a line or an arrow." relationship="label" key="2">
+                     <ToolbarButton aria-label="Box" icon={<Line24Regular />} />
+                  </Tooltip>
+                  <Tooltip withArrow content="Draw a circle or an ellipse." relationship="label" key="3">
+                     <ToolbarButton aria-label="Ellipse" icon={<Circle24Regular />} />
+                  </Tooltip>
+                  <Tooltip withArrow content="Write text." relationship="label" key="4">
+                     <ToolbarButton aria-label="Text" icon={<DrawText24Regular />} />
+                  </Tooltip>
+               </Toolbar>
+            </div>
+
          </div>
          <div className={alertClasses.root}>
             {uiState.alertMessage
