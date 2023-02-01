@@ -112,7 +112,7 @@ function makeLocalUser(): Persona {
 
    var localStore: IKeyValueStore = localKeyValueStore();
 
-   // Look up the UUID if it isstore, else create a new one and save it
+   // Look up the UUID if it is stored, else create a new one and save it
    var localUserUuid: string = localStore.getItem(KeyValueStoreKeys.localUserUuid);
    if (!localUserUuid) {
       localUserUuid = uuid();
@@ -124,7 +124,25 @@ function makeLocalUser(): Persona {
    log.debug(tag.application, "Local User UUID:" + localUserUuid);
 
    return new Persona(localUserUuid, unknown.name, unknown.thumbnailB64, unknown.lastSeenAt);
+}
 
+function navigateToLastBoard(id: string): void {
+
+   if (id) {
+      log.debug(tag.application, "Navigating to:" + id);
+      window.location.hash = '#' + id;
+   }
+}
+
+function checkNavigateToLastBoard(): void {
+
+   var localStore: IKeyValueStore = localKeyValueStore();
+
+   // Look up the UUID if it is stored, else create a new one and save it
+   var localWhiteboardUuid: string = localStore.getItem(KeyValueStoreKeys.localWhiteboardUuid);
+   if (localWhiteboardUuid) {
+      navigateToLastBoard(localWhiteboardUuid);
+   }
 }
 
 export class App extends React.Component<IAppProps, AppState> {
@@ -141,6 +159,8 @@ export class App extends React.Component<IAppProps, AppState> {
       log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
          logger[level as keyof typeof logger](tag, msg, params);
       });
+
+      checkNavigateToLastBoard();
 
       this._initialUser = makeLocalUser();
       this._router = new NotificationRouterFor<Array<Persona>>(this.onRemoteChange.bind(this));
@@ -302,6 +322,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       props.fluidConnection.createNew(localUser)
          .then((id: string) => {
             setState(uiState.joinAs, id, onConnectionEnding());
+
+            // Store the ID of the new whiteboard so we can return to it later
+            var localStore: IKeyValueStore = localKeyValueStore();
+            localStore.setItem(KeyValueStoreKeys.localWhiteboardUuid, id);
+
+            // Navigate so the # is in the URL
+            navigateToLastBoard(id);
          })
          .catch((e: Error) => {
             onConnectionEnding();
@@ -399,13 +426,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       <FluentProvider theme={teamsLightTheme}>
          <div className={headerClasses.root}>  {/* Top row for controls to setup a sharing session */}
             <div className={leftColumnClasses.root}>
-               <Tooltip withArrow content={uiState.sharePrompt} relationship="label">
+               <Tooltip withArrow content={uiState.sharePrompt} relationship="label" key="share">
                   <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || uiState.connecting} onClick={onConnect} />
                </Tooltip>
-               <Tooltip withArrow content={urlToShare()} relationship="label">
+               <Tooltip withArrow content={urlToShare()} relationship="label" key="copy">
                   <Button icon={<Copy24Regular />} disabled={uiState.fluidId===null} onClick={onCopyConnectionString} />
                </Tooltip>
-               <Tooltip withArrow content={"Sign out."} relationship="label">
+               <Tooltip withArrow content={"Sign out."} relationship="label" key="signout">
                   <Button icon={<SignOut24Regular />} disabled={!(uiState.canSignOut)} onClick={onSignOut} />
                </Tooltip>
             </div>
@@ -443,16 +470,16 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                   <Tooltip withArrow content="Select." relationship="label" key="1">
                      <ToolbarButton aria-label="Select" icon={<Cursor24Regular />} />
                   </Tooltip>
-                  <Tooltip withArrow content="Draw a box." relationship="label" key="1">
+                  <Tooltip withArrow content="Draw a box." relationship="label" key="2">
                      <ToolbarButton aria-label="Box" icon={<Square24Regular />} />
                   </Tooltip>
-                  <Tooltip withArrow content="Draw a line or an arrow." relationship="label" key="2">
+                  <Tooltip withArrow content="Draw a line or an arrow." relationship="label" key="3">
                      <ToolbarButton aria-label="Box" icon={<Line24Regular />} />
                   </Tooltip>
-                  <Tooltip withArrow content="Draw a circle or an ellipse." relationship="label" key="3">
+                  <Tooltip withArrow content="Draw a circle or an ellipse." relationship="label" key="4">
                      <ToolbarButton aria-label="Ellipse" icon={<Circle24Regular />} />
                   </Tooltip>
-                  <Tooltip withArrow content="Write text." relationship="label" key="4">
+                  <Tooltip withArrow content="Write text." relationship="label" key="5">
                      <ToolbarButton aria-label="Text" icon={<DrawText24Regular />} />
                   </Tooltip>
                </Toolbar>
