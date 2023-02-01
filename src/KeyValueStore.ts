@@ -2,7 +2,8 @@
 
 export class KeyValueStoreKeys {
 
-   public static localUserUuid: string = "LocalUserUuuid";
+   public static localUserUuid: string = "LocalUserUuid";
+   public static localWhiteboardUuid: string = "LocalWhiteboardUuid";
 
 }
 
