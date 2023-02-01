@@ -238,7 +238,7 @@ export class Persona extends MSerialisable {
    }
 
    private static _notSignedIn: Persona = new Persona(notSignedInUuid, "Not signed in", unknownImageB64, new Date(0));
-   private static _unknown: Persona = new Persona(unknowUuid, "Unknown", unknownImageB64, new Date(0));
+   private static _unknown: Persona = new Persona(unknowUuid, "Guest", unknownImageB64, new Date(0));
 
    /**
     * return persona details for 'not logged in'
