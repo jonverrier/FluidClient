@@ -87,7 +87,7 @@ export class FluidConnection extends Notifier {
          await container.connect();
          await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
-         // Add our User ID to the shared data - unconditional write as we have stable UUIDs
+         // Add our User ID to the shared data - unconditional write so we have stable UUIDs
          var storedVal: string = localUser.streamToJSON();
          (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
 
