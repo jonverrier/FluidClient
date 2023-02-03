@@ -102,6 +102,11 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const inputId = useId('joinAs');
 
    function isJoiningExisting(): boolean {
+      return false;
+
+      if (location.protocol === 'file') //  Dont attempt to rejoin local Whiteboard as they are ephemeral
+         return false;
+
       return location.hash ? true : false;
    }
 

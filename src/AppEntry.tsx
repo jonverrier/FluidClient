@@ -4,6 +4,7 @@
 import React from 'react';
 import { createRoot } from "react-dom/client";
 
+// Other 3rd party imports
 import { log, LogLevel, tag } from 'missionlog';
 
 // Local
@@ -54,6 +55,9 @@ function makeLocalUser(): Persona {
 
 function navigateToHash(id: string): void {
 
+   if (location.protocol === 'file') //  Don't attempt to rejoin local Whiteboard as they are ephemeral
+      return;
+
    if (id) {
       log.debug(tag.application, "Navigating to:" + id);
       window.location.hash = '#' + id;
@@ -64,7 +68,7 @@ function checkNavigateToLastBoard(): void {
 
    var localStore: IKeyValueStore = localKeyValueStore();
 
-   // Look up the UUID if it is stored, else create a new one and save it
+   // Look up the UUID for last Whiteboard if it is stored
    var localWhiteboardUuid: string = localStore.getItem(KeyValueStoreKeys.localWhiteboardUuid);
    if (localWhiteboardUuid) {
       navigateToHash(localWhiteboardUuid);

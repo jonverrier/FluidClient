@@ -3,6 +3,9 @@
 // React
 import React, { MouseEvent, useState, useRef, useEffect } from 'react';
 
+// Other 3rd party imports
+import { log, tag } from 'missionlog';
+
 export interface ICanvasProps {
 
 }
@@ -13,19 +16,37 @@ const SVG_PATH = new Path2D(heartSVG);
 
 // Scaling Constants for Canvas
 const SCALE = 0.1;
-const OFFSET = 0;
-const canvasWidth = window.innerWidth * .5;
-const canvasHeight = window.innerHeight * .5;
+const OFFSETX = 100;
+const OFFSETY = 200;
+const canvasWidth = 1920; 
+const canvasHeight = 1080;
 
-function draw(ctx, location: Coordinate) {
-   console.log("attempting to draw");
+function drawBackground (ctx: CanvasRenderingContext2D): Promise<void> {
+
+   let img = new Image(512, 384);
+   img.src = 'assets/img/board-512x384.png';
+
+   // tesselate with backround image top to bottom, left to right
+   img.onload = () => {
+      for (var j = 0; j < ctx.canvas.height; j += img.height) {
+         for (var i = 0; i < ctx.canvas.width; i += img.width) {
+            ctx.drawImage(img, i, j);
+         }
+      }
+   }
+
+   return;
+};
+
+function draw(ctx: CanvasRenderingContext2D, location: Coordinate) : void {
+
    ctx.fillStyle = 'red';
    ctx.shadowColor = 'blue';
    ctx.shadowBlur = 15;
 
    ctx.save();
    ctx.scale(SCALE, SCALE);
-   ctx.translate(location.x / SCALE - OFFSET, location.y / SCALE - OFFSET);
+   ctx.translate(location.x / SCALE - OFFSETX, location.y / SCALE - OFFSETY);
    ctx.rotate(225 * Math.PI / 180);
    ctx.fill(SVG_PATH);
    ctx.restore();
@@ -42,37 +63,52 @@ class Coordinate {
    }
 }
 
-function useCanvas() {
+class CanvasState {
 
-   const canvasRef = useRef(null);
-   const [coordinates, setCoordinates] = useState(Array<Coordinate>);
+   width: number;
+   height: number;
+   coords: Array<Coordinate>;
+
+   constructor(coords_: Array<Coordinate>, width_: number, height_: number) {
+      this.coords = coords_;
+      this.width = width_;
+      this.height = height_;
+   }
+}
+
+function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
+
+   const [canvasState, setCanvasState] = useState<CanvasState> (new CanvasState(new Array<Coordinate>, canvasWidth, canvasHeight));
 
    useEffect(() => {
-      const canvasObj = canvasRef.current;
+      const canvasObj = ref.current;
       const ctx = canvasObj.getContext('2d');
 
-      // clear the canvas area before rendering the coordinates held in state
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      // draw background first
+      drawBackground(ctx);
 
       // draw all coordinates held in state
-      coordinates.forEach((coordinate: Coordinate) => { draw(ctx, coordinate) });
+      // canvasState.coords.forEach((coordinate: Coordinate) => { draw(ctx, coordinate) });
    });
 
-   return [coordinates, setCoordinates, canvasRef, canvasWidth, canvasHeight];
+   return [canvasState, setCanvasState];
 }
 
 export const Canvas = (props: ICanvasProps) => {
 
-   const [coordinates, setCoordinates, canvasRef, canvasWidth, canvasHeight] = useCanvas();
+   const canvasRef = useRef(null);
+   const [canvasState, setCanvasState] = useCanvas(canvasRef);
 
    const handleCanvasClick = (event: MouseEvent) : void => {
 
       // on each click get current mouse location & append
-      const currentCoord = { x: event.clientX, y: event.clientY };
-      const newCoordinates = new Array<Coordinate>(coordinates as any);
-      newCoordinates.push(currentCoord);
+      const newCoord = { x: event.clientX, y: event.clientY };
 
-      (setCoordinates as React.Dispatch<Array<Coordinate>>) (newCoordinates);
+      var newCoordinates = new Array<Coordinate>();
+      newCoordinates = canvasState.coords.splice(0);
+      newCoordinates.push(newCoord);
+
+      setCanvasState ({ coords: newCoordinates, width: canvasState.width, height: canvasState.height });
    };
 
    return (<canvas
