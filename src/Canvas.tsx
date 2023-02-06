@@ -3,28 +3,9 @@
 // React
 import React, { MouseEvent, useState, useRef, useEffect } from 'react';
 
-// Other 3rd party imports
-import { log, tag } from 'missionlog';
-
-class Coordinate {
-
-   x: number;
-   y: number;
-
-   constructor(x_: number, y_: number) {
-      this.x = x_;
-      this.y = y_;
-   }
-}
-
-// Path2D for a Heart SVG
-const heartSVG = "M0 200 v-200 h200 a100,100 90 0,1 0,200 a100,100 90 0,1 -200,0 z"
-const SVG_PATH = new Path2D(heartSVG);
+import { GPoint } from './Geometry';
 
 // Scaling Constants for Canvas
-const SCALE = 0.1;
-const OFFSETX = 100;
-const OFFSETY = 200;
 const canvasWidth = 1920; 
 const canvasHeight = 1080;
 
@@ -55,7 +36,7 @@ function drawBackground (ctx: CanvasRenderingContext2D): Promise<void> {
 };
 
 function drawSelectionRect(ctx: CanvasRenderingContext2D,
-   selectionStart: Coordinate, selectionEnd: Coordinate)
+   selectionStart: GPoint, selectionEnd: GPoint)
    : Promise<void> {
    var promise: Promise<void>;
 
@@ -99,15 +80,15 @@ class CanvasState {
    _width: number;
    _height: number;
    _inSelect: boolean;
-   _selectionStart: Coordinate;
-   _selectionEnd: Coordinate;
+   _selectionStart: GPoint;
+   _selectionEnd: GPoint;
 
    constructor(width_: number, height_: number) {
       this._width = width_;
       this._height = height_;
       this._inSelect = false;
-      this._selectionStart = new Coordinate(0, 0);
-      this._selectionEnd = new Coordinate(0, 0);
+      this._selectionStart = new GPoint(0, 0);
+      this._selectionEnd = new GPoint(0, 0);
    }
 }
 
@@ -152,13 +133,13 @@ export const Canvas = (props: ICanvasProps) => {
       return target;
    }
 
-   function getMousePosition(canvas: HTMLCanvasElement, event: MouseEvent): Coordinate {
+   function getMousePosition(canvas: HTMLCanvasElement, event: MouseEvent): GPoint {
 
       let rect = canvas.getBoundingClientRect();
       let x = event.clientX - rect.left;
       let y = event.clientY - rect.top;
 
-      return new Coordinate(x, y);
+      return new GPoint(x, y);
    }
 
    const handleCanvasClick = (event: MouseEvent) : void => {
@@ -171,7 +152,7 @@ export const Canvas = (props: ICanvasProps) => {
       event.preventDefault();
       event.stopPropagation();
 
-      var coord: Coordinate = getMousePosition(getCanvas(event), event);
+      var coord: GPoint = getMousePosition(getCanvas(event), event);
 
       setCanvasState({
          _inSelect: true, _selectionStart: coord, _selectionEnd: coord,
@@ -186,7 +167,7 @@ export const Canvas = (props: ICanvasProps) => {
       event.stopPropagation();
 
       if (canvasState._inSelect) {
-         var coord: Coordinate = getMousePosition(getCanvas(event), event);
+         var coord: GPoint = getMousePosition(getCanvas(event), event);
 
          setCanvasState({
             _inSelect: true, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
@@ -201,7 +182,7 @@ export const Canvas = (props: ICanvasProps) => {
       event.stopPropagation();
 
       if (canvasState._inSelect) {
-         var coord: Coordinate = getMousePosition(getCanvas(event), event);
+         var coord: GPoint = getMousePosition(getCanvas(event), event);
 
          setCanvasState({
             _inSelect: false, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
