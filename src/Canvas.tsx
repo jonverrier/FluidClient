@@ -6,8 +6,15 @@ import React, { MouseEvent, useState, useRef, useEffect } from 'react';
 // Other 3rd party imports
 import { log, tag } from 'missionlog';
 
-export interface ICanvasProps {
+class Coordinate {
 
+   x: number;
+   y: number;
+
+   constructor(x_: number, y_: number) {
+      this.x = x_;
+      this.y = y_;
+   }
 }
 
 // Path2D for a Heart SVG
@@ -27,71 +34,107 @@ function drawBackground (ctx: CanvasRenderingContext2D): Promise<void> {
    img.src = 'assets/img/board-512x384.png';
 
    // tesselate with backround image top to bottom, left to right
-   img.onload = () => {
+   function innerDraw (ctx: CanvasRenderingContext2D) {
       for (var j = 0; j < ctx.canvas.height; j += img.height) {
          for (var i = 0; i < ctx.canvas.width; i += img.width) {
             ctx.drawImage(img, i, j);
          }
       }
    }
+   var promise: Promise<void>;
 
-   return;
+   promise = new Promise<void>((resolve, reject) => {
+
+      img.onload = () => {
+         innerDraw(ctx);
+         resolve();
+      }
+   });
+
+   return promise;
 };
 
+function drawSelectionRect(ctx: CanvasRenderingContext2D,
+   selectionStart: Coordinate, selectionEnd: Coordinate)
+   : Promise<void> {
+   var promise: Promise<void>;
+
+   promise = new Promise<void>((resolve, reject) => {
+      ctx.save();
+
+      ctx.strokeStyle = "#393D47";
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.rect(selectionStart.x, selectionStart.y, selectionEnd.x - selectionStart.x, selectionEnd.y - selectionStart.y);
+      ctx.stroke(); 
+
+      ctx.restore();
+
+      resolve();
+   });
+
+   return promise;
+};
+
+/*
 function draw(ctx: CanvasRenderingContext2D, location: Coordinate) : void {
+
+   ctx.save();
 
    ctx.fillStyle = 'red';
    ctx.shadowColor = 'blue';
    ctx.shadowBlur = 15;
 
-   ctx.save();
    ctx.scale(SCALE, SCALE);
    ctx.translate(location.x / SCALE - OFFSETX, location.y / SCALE - OFFSETY);
    ctx.rotate(225 * Math.PI / 180);
    ctx.fill(SVG_PATH);
+
    ctx.restore();
 };
-
-class Coordinate {
-
-   x: number;
-   y: number;
-
-   constructor(x_: number, y_: number) {
-      this.x = x_;
-      this.y = y_;
-   }
-}
+*/
 
 class CanvasState {
 
-   width: number;
-   height: number;
-   coords: Array<Coordinate>;
+   _width: number;
+   _height: number;
+   _inSelect: boolean;
+   _selectionStart: Coordinate;
+   _selectionEnd: Coordinate;
 
-   constructor(coords_: Array<Coordinate>, width_: number, height_: number) {
-      this.coords = coords_;
-      this.width = width_;
-      this.height = height_;
+   constructor(width_: number, height_: number) {
+      this._width = width_;
+      this._height = height_;
+      this._inSelect = false;
+      this._selectionStart = new Coordinate(0, 0);
+      this._selectionEnd = new Coordinate(0, 0);
    }
 }
 
 function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
 
-   const [canvasState, setCanvasState] = useState<CanvasState> (new CanvasState(new Array<Coordinate>, canvasWidth, canvasHeight));
+   const [canvasState, setCanvasState] = useState<CanvasState> (new CanvasState(canvasWidth, canvasHeight));
 
    useEffect(() => {
       const canvasObj = ref.current;
       const ctx = canvasObj.getContext('2d');
 
       // draw background first
-      drawBackground(ctx);
+      drawBackground(ctx).then(() => {
+         // would draw shapes here
 
-      // draw all coordinates held in state
-      // canvasState.coords.forEach((coordinate: Coordinate) => { draw(ctx, coordinate) });
+         // then draw selection rectangle
+         if (canvasState._inSelect) {
+            drawSelectionRect(ctx, canvasState._selectionStart, canvasState._selectionEnd);
+         } 
+      });
    });
 
    return [canvasState, setCanvasState];
+}
+
+export interface ICanvasProps {
+
 }
 
 export const Canvas = (props: ICanvasProps) => {
@@ -99,16 +142,72 @@ export const Canvas = (props: ICanvasProps) => {
    const canvasRef = useRef(null);
    const [canvasState, setCanvasState] = useCanvas(canvasRef);
 
+   function getCanvas(event: MouseEvent): HTMLCanvasElement {
+
+      var target: HTMLCanvasElement;
+
+      if (event.target)
+         target = event.target as HTMLCanvasElement;
+
+      return target;
+   }
+
+   function getMousePosition(canvas: HTMLCanvasElement, event: MouseEvent): Coordinate {
+
+      let rect = canvas.getBoundingClientRect();
+      let x = event.clientX - rect.left;
+      let y = event.clientY - rect.top;
+
+      return new Coordinate(x, y);
+   }
+
    const handleCanvasClick = (event: MouseEvent) : void => {
 
-      // on each click get current mouse location & append
-      const newCoord = { x: event.clientX, y: event.clientY };
+      // Do hit testing for object selection here
+   };
 
-      var newCoordinates = new Array<Coordinate>();
-      newCoordinates = canvasState.coords.splice(0);
-      newCoordinates.push(newCoord);
+   const handleCanvasMouseDown = (event: MouseEvent): void => {
 
-      setCanvasState ({ coords: newCoordinates, width: canvasState.width, height: canvasState.height });
+      event.preventDefault();
+      event.stopPropagation();
+
+      var coord: Coordinate = getMousePosition(getCanvas(event), event);
+
+      setCanvasState({
+         _inSelect: true, _selectionStart: coord, _selectionEnd: coord,
+         _width: canvasState._width, _height: canvasState._height
+      });
+
+   };
+
+   const handleCanvasMouseMove= (event: MouseEvent): void => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (canvasState._inSelect) {
+         var coord: Coordinate = getMousePosition(getCanvas(event), event);
+
+         setCanvasState({
+            _inSelect: true, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
+            _width: canvasState._width, _height: canvasState._height
+         });
+      }
+   };
+
+   const handleCanvasMouseUp = (event: MouseEvent): void => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (canvasState._inSelect) {
+         var coord: Coordinate = getMousePosition(getCanvas(event), event);
+
+         setCanvasState({
+            _inSelect: false, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
+            _width: canvasState._width, _height: canvasState._height
+         });
+      }
    };
 
    return (<canvas
@@ -116,6 +215,9 @@ export const Canvas = (props: ICanvasProps) => {
       ref={canvasRef as any}
       width={canvasWidth as any}
       height={canvasHeight as any}
-      onClick = { handleCanvasClick }
+      onClick={handleCanvasClick}
+      onMouseDown={handleCanvasMouseDown}
+      onMouseMove={handleCanvasMouseMove}
+      onMouseUp={handleCanvasMouseUp}
    />);
 }
