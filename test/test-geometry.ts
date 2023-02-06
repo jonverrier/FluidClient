@@ -40,6 +40,21 @@ describe("Geometry", function () {
       expect(caught).to.equal(true);
    });
 
+   it("Needs to convert GPoint to and from JSON()", function () {
+
+      var point1: GPoint = new GPoint(1, 2);
+
+      var stream: string = point1.streamToJSON();
+
+      var point2: GPoint = new GPoint(); 
+
+      expect(point1.equals(point2)).to.equal(false);
+
+      point2.streamFromJSON(stream);
+
+      expect(point1.equals(point2)).to.equal(true);
+   });
+
    it("Needs to create, test & assign GRect", function () {
 
       var rect1: GRect = new GRect(1, 2, 1, 1);
@@ -51,22 +66,22 @@ describe("Geometry", function () {
       expect(rect1.equals(rect2)).to.equal(false);
       expect(rect1.equals(rect3)).to.equal(true);
       expect(rect1.equals(rect4)).to.equal(false);
-      expect(rect1.xmin === 1).to.equal(true);
-      expect(rect1.ymin === 2).to.equal(true);
-      expect(rect1.xmax === 2).to.equal(true);
-      expect(rect1.ymax === 3).to.equal(true);
+      expect(rect1.x === 1).to.equal(true);
+      expect(rect1.y === 2).to.equal(true);
+      expect(rect1.dx === 1).to.equal(true);
+      expect(rect1.dy === 1).to.equal(true);
 
       rect2.assign(rect1);
       expect(rect1.equals(rect2)).to.equal(true);
 
-      rect2.xmin = 5;
-      rect2.ymin = 5;
-      rect2.xmax = 10;
-      rect2.ymax = 10;
-      expect(rect2.xmin === 5).to.equal(true);
-      expect(rect2.ymin === 5).to.equal(true);
-      expect(rect2.xmax === 10).to.equal(true);
-      expect(rect2.ymax === 10).to.equal(true);
+      rect2.x = 5;
+      rect2.y = 5;
+      rect2.dx = 10;
+      rect2.dy = 10;
+      expect(rect2.x === 5).to.equal(true);
+      expect(rect2.y === 5).to.equal(true);
+      expect(rect2.dx === 10).to.equal(true);
+      expect(rect2.dy === 10).to.equal(true);
 
       var caught: boolean = false;
       try {
@@ -77,6 +92,20 @@ describe("Geometry", function () {
       expect(caught).to.equal(true);
    });
 
+   it("Needs to convert GRect to and from JSON()", function () {
+
+      var rect1: GRect = new GRect(1, 2, 3, 4);
+
+      var stream: string = rect1.streamToJSON();
+
+      var rect2: GRect = new GRect();
+
+      expect(rect1.equals(rect2)).to.equal(false);
+
+      rect2.streamFromJSON(stream);
+
+      expect(rect1.equals(rect2)).to.equal(true);
+   });
 });
 
 

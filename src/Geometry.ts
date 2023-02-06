@@ -3,8 +3,9 @@
 import Flatten from '@flatten-js/core'
 
 import { InvalidParameterError } from './Errors';
+import { MSerialisable } from "./SerialisationFramework";
 
-export class GPoint {
+export class GPoint extends MSerialisable {
 
    _pt: Flatten.Point;
 
@@ -27,6 +28,8 @@ export class GPoint {
    constructor();
 
    constructor(...arr: any[]) {
+
+      super();
 
       if (arr.length === 2) { // Construct from individual coordinates
          this._pt = new Flatten.Point(arr[0], arr[1]);
@@ -88,9 +91,21 @@ export class GPoint {
 
       return this;
    }
+
+   streamToJSON(): string {
+
+      return JSON.stringify({ x: this._pt.x, y: this._pt.y });
+   }
+
+   streamFromJSON(stream: string): void {
+
+      const obj = JSON.parse(stream);
+
+      this.assign(new GPoint(obj.x, obj.y));
+   }
 }
 
-export class GRect {
+export class GRect extends MSerialisable {
 
    _rc: Flatten.Box;
 
@@ -122,6 +137,8 @@ export class GRect {
    constructor();
 
    constructor(...arr: any[]) {
+
+      super();
 
       if (arr.length === 4) { // Construct from individual coordinates
          this._rc = new Flatten.Box(arr[0], arr[1], arr[0] + arr[2], arr[1]+arr[3]);
@@ -155,32 +172,32 @@ export class GRect {
    /**
    * set of 'getters' and 'setters' for private variables
    */
-   get xmin(): number {
+   get x(): number {
       return this._rc.xmin;
    }
-   get ymin(): number {
+   get y(): number {
       return this._rc.ymin;
    }
 
-   set xmin(x_: number) {
+   set x(x_: number) {
       this._rc.xmin = x_;
    }
-   set ymin(y_: number) {
+   set y(y_: number) {
       this._rc.ymin = y_;
    }
 
-   get xmax(): number {
-      return this._rc.xmax;
+   get dx(): number {
+      return this._rc.xmax - this._rc.xmin;
    }
-   get ymax(): number {
-      return this._rc.ymax;
+   get dy(): number {
+      return this._rc.ymax - this._rc.ymin;
    }
 
-   set xmax(x_: number) {
-      this._rc.xmax = x_;
+   set dx(x_: number) {
+      this._rc.xmax = this._rc.xmin + x_;
    }
-   set ymax(y_: number) {
-      this._rc.ymax = y_;
+   set dy(y_: number) {
+      this._rc.ymax = this._rc.ymin + y_;
    }
 
    /**
@@ -201,5 +218,17 @@ export class GRect {
       this._rc = rhs._rc.clone();
 
       return this;
+   }
+
+   streamToJSON(): string {
+
+      return JSON.stringify({ x: this._rc.xmin, y: this._rc.ymin, dx: this._rc.xmax - this._rc.xmin, dy: this._rc.ymax - this._rc.ymin });
+   }
+
+   streamFromJSON(stream: string): void {
+
+      const obj = JSON.parse(stream);
+
+      this.assign(new GRect(obj.x, obj.y, obj.dx, obj.dy));
    }
 }
