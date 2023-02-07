@@ -152,7 +152,7 @@ export class GRect extends MSerialisable {
       else
       if (arr.length === 1) {
          if (this.isMyType(arr[0])) { // Copy Constructor
-            this._rc = arr[0]._rc;
+            this._rc = new Flatten.Box(arr[0]._rc.xmin, arr[0]._rc.ymin, arr[0]._rc.xmax, arr[0]._rc.ymax);
          }
          else {
             throw new InvalidParameterError("Cannot construct GRect from unknown type.")
