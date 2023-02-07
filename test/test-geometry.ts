@@ -57,8 +57,11 @@ describe("Geometry", function () {
 
    it("Needs to create, test & assign GRect", function () {
 
+      let topLeft = new GPoint(1, 3);
+      let bottomRight = new GPoint(2, 4);
+
       var rect1: GRect = new GRect(1, 2, 1, 1);
-      var rect2: GRect = new GRect(new GPoint (1, 3), new GPoint (2, 4));
+      var rect2: GRect = new GRect(topLeft, bottomRight);
       var rect3: GRect = new GRect(rect1);
       var rect4: GRect = new GRect();
 
@@ -70,6 +73,9 @@ describe("Geometry", function () {
       expect(rect1.y === 2).to.equal(true);
       expect(rect1.dx === 1).to.equal(true);
       expect(rect1.dy === 1).to.equal(true);
+
+      expect(rect2.topLeft.equals(topLeft)).to.equal(true);
+      expect(rect2.bottomRight.equals(bottomRight)).to.equal(true);
 
       rect2.assign(rect1);
       expect(rect1.equals(rect2)).to.equal(true);
@@ -90,6 +96,11 @@ describe("Geometry", function () {
          caught = true;
       }
       expect(caught).to.equal(true);
+
+      rect3.topLeft = topLeft;
+      rect3.bottomRight = bottomRight;
+      expect(rect3.topLeft.equals(topLeft)).to.equal(true);
+      expect(rect3.bottomRight.equals(bottomRight)).to.equal(true);
    });
 
    it("Needs to convert GRect to and from JSON()", function () {
@@ -107,7 +118,7 @@ describe("Geometry", function () {
       expect(rect1.equals(rect2)).to.equal(true);
    });
 
-   it("Needs to correctly do Hit-testing", function () {
+   it("Needs to correctly do inclusion-testing for GRect", function () {
 
       var selectionRect: GRect = new GRect(100, 100, 100, 100);
 
@@ -120,7 +131,7 @@ describe("Geometry", function () {
       expect(selectionRect.fullyIncludes(crossingRect)).to.equal(false);
    });
 
-   it("Needs to correctly do normalisation", function () {
+   it("Needs to correctly do normalisation for GRect", function () {
 
       var loLeft: GPoint = new GPoint(10, 10); 
       var hiRight: GPoint = new GPoint(20, 20); 
@@ -129,6 +140,26 @@ describe("Geometry", function () {
       var normalised2 = GRect.normalise(loLeft, hiRight);
 
       expect(normalised1.equals(normalised2)).to.equal(true);
+   });
+
+   it("Needs to create grab handles on small GRect", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(20, 20);
+
+      var rc = new GRect (loLeft, hiRight);
+
+      expect(GRect.createGrabHandlesAround (rc, 4, 4).length === 4).to.equal(true);
+   });
+
+   it("Needs to create grab handles on larger GRect", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles * 4, 10 + GRect.minimumRelativeSizeForMidHandles * 4);
+
+      var rc = new GRect(loLeft, hiRight);
+
+      expect(GRect.createGrabHandlesAround(rc, 4, 4).length === 8).to.equal(true);
    });
 });
 

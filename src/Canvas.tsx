@@ -49,6 +49,16 @@ function drawShapes (ctx: CanvasRenderingContext2D,
          ctx.beginPath();
          ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
          ctx.stroke();
+
+         let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, 8, 8);
+         handles.forEach((handle: GRect) => {
+            ctx.beginPath();
+            ctx.rect(handle.x, handle.y, handle.dx, handle.dy);
+            ctx.stroke();
+            ctx.fillStyle = "#393D47";
+            ctx.fill();
+         });
+
       });
 
       ctx.restore();
@@ -104,11 +114,11 @@ class CanvasState {
 
       var shape: Rectangle = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
 
-      rect = new GRect(50, 50, 100, 100);
+      rect = new GRect(50, 50, 200, 200);
       shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
       this._shapes.set(shape.id, shape);
 
-      rect = new GRect(150, 150, 100, 100);
+      rect = new GRect(300, 300, 100, 100);
       shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
       this._shapes.set(shape.id, shape);
    }

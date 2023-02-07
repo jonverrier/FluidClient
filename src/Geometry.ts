@@ -109,6 +109,7 @@ export class GPoint extends MSerialisable {
 export class GRect extends MSerialisable {
 
    _rc: Flatten.Box;
+   static minimumRelativeSizeForMidHandles = 16; // borders have to be 16x the size of handles to get extra one in the mid point of border
 
    /**
     * Create a GRect object
@@ -147,7 +148,7 @@ export class GRect extends MSerialisable {
       }
       else
       if (arr.length === 2) { // Construct from individual coordinates
-         this._rc = new Flatten.Box(arr[0].x, arr[0].y, arr[1].x - arr[0].x, arr[1].y - arr[0].y);
+         this._rc = new Flatten.Box(arr[0].x, arr[0].y, arr[1].x, arr[1].y);
          return;
       }
       else
@@ -202,6 +203,41 @@ export class GRect extends MSerialisable {
       this._rc.ymax = this._rc.ymin + y_;
    }
 
+   get topLeft(): GPoint  {
+      return new GPoint(this._rc.xmin, this._rc.ymin);
+   }
+   set topLeft(pt: GPoint) {
+      this._rc.xmin = pt.x;
+      this._rc.ymin = pt.y;
+   }
+   get topRight(): GPoint {
+      return new GPoint(this._rc.xmax, this._rc.ymin);
+   }
+   get topMiddle(): GPoint {
+      return new GPoint(this._rc.xmin + this.dx/2, this._rc.ymin);
+   }
+
+
+   get bottomRight(): GPoint {
+      return new GPoint(this._rc.xmax, this._rc.ymax);
+   }
+   set bottomRight(pt: GPoint) {
+      this._rc.xmax = pt.x;
+      this._rc.ymax = pt.y;
+   }
+   get bottomLeft(): GPoint {
+      return new GPoint(this._rc.xmin, this._rc.ymax);
+   }
+   get bottomMiddle(): GPoint {
+      return new GPoint(this._rc.xmin + this.dx / 2, this._rc.ymax);
+   }
+
+   get leftMiddle(): GPoint {
+      return new GPoint(this._rc.xmin, this._rc.ymin + this.dy / 2);
+   }
+   get rightMiddle(): GPoint {
+      return new GPoint(this._rc.xmax, this._rc.ymin + this.dy / 2);
+   }
    /**
     * test for equality - checks all fields are the same. 
     * NB must use field values, not identity bcs if objects are streamed to/from JSON, identities will be different. 
@@ -263,5 +299,45 @@ export class GRect extends MSerialisable {
       var hiY: number = Math.max(pt1.y, pt2.y);
 
       return new GRect(loX, loY, hiX - loX, hiY - loY);
+   }
+
+   static createAround (pt: GPoint, dx: number, dy: number): GRect {
+
+      var loX: number = pt.x - dx / 2;;
+      var loY: number = pt.y - dy / 2;
+
+      return new GRect(loX, loY, dx, dy);
+   }
+
+   static createGrabHandlesAround(rc_: GRect, dx_: number, dy_: number): Array<GRect> {
+
+      let handles = new Array<GRect>();
+
+      let rc = GRect.createAround(rc_.topLeft, dx_, dy_);
+      handles.push(rc);
+      rc = GRect.createAround(rc_.topRight, dx_, dy_);
+      handles.push(rc);
+      rc = GRect.createAround(rc_.bottomLeft, dx_, dy_);
+      handles.push(rc);
+      rc = GRect.createAround(rc_.bottomRight, dx_, dy_);
+      handles.push(rc);
+
+      // Create extra horizontal handles if object is wide enough
+      if (rc_.dx >= dx_ * GRect.minimumRelativeSizeForMidHandles) {
+         rc = GRect.createAround(rc_.topMiddle, dx_, dy_);
+         handles.push(rc);
+         rc = GRect.createAround(rc_.bottomMiddle, dx_, dy_);
+         handles.push(rc);
+      }
+
+      // Create extra vertical handles if object is high enough
+      if (rc_.dy >= dy_ * GRect.minimumRelativeSizeForMidHandles) {
+         rc = GRect.createAround(rc_.leftMiddle, dx_, dy_);
+         handles.push(rc);
+         rc = GRect.createAround(rc_.rightMiddle, dx_, dy_);
+         handles.push(rc);
+      }
+
+      return handles;
    }
 }
