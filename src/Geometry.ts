@@ -39,6 +39,7 @@ export class GPoint extends MSerialisable {
       if (arr.length === 1) {
          if (this.isMyType(arr[0])) { // Copy Constructor
             this._pt = arr[0]._pt;
+            return;
          }
          else {
             throw new InvalidParameterError("Cannot construct GPoint from unknown type.")
@@ -153,6 +154,7 @@ export class GRect extends MSerialisable {
       if (arr.length === 1) {
          if (this.isMyType(arr[0])) { // Copy Constructor
             this._rc = new Flatten.Box(arr[0]._rc.xmin, arr[0]._rc.ymin, arr[0]._rc.xmax, arr[0]._rc.ymax);
+            return;
          }
          else {
             throw new InvalidParameterError("Cannot construct GRect from unknown type.")
@@ -220,15 +222,46 @@ export class GRect extends MSerialisable {
       return this;
    }
 
+   /**
+    * Stream out to JSON
+    */
    streamToJSON(): string {
 
       return JSON.stringify({ x: this._rc.xmin, y: this._rc.ymin, dx: this._rc.xmax - this._rc.xmin, dy: this._rc.ymax - this._rc.ymin });
    }
 
+   /**
+    * Stream in from JSON
+    * @param stream - the stream to read in from  
+    */
    streamFromJSON(stream: string): void {
 
       const obj = JSON.parse(stream);
 
       this.assign(new GRect(obj.x, obj.y, obj.dx, obj.dy));
+   }
+
+   /**
+    * Test if the rectangle rhs is fully within this one
+    * @param rhs - the rectangle to test
+    */
+   fullyIncludes(rhs: GRect): boolean {
+      return this._rc.xmin <= rhs._rc.xmin && this._rc.ymin <= rhs._rc.ymin && this._rc.xmax >= rhs._rc.xmax && this._rc.ymax >= rhs._rc.ymax;
+   }
+
+   /**
+    * Create a normalised rectangle, i.e. top left (low) to lower right (hi)
+    * @param pt1 - first point
+    * @param pt2 - second point
+    */
+
+   static normalise(pt1: GPoint, pt2: GPoint): GRect {
+
+      var loX: number = Math.min(pt1.x, pt2.x);
+      var loY: number = Math.min(pt1.y, pt2.y);
+      var hiX: number = Math.max(pt1.x, pt2.x);
+      var hiY: number = Math.max(pt1.y, pt2.y);
+
+      return new GRect(loX, loY, hiX - loX, hiY - loY);
    }
 }

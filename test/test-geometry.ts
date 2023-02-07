@@ -106,6 +106,30 @@ describe("Geometry", function () {
 
       expect(rect1.equals(rect2)).to.equal(true);
    });
+
+   it("Needs to correctly do Hit-testing", function () {
+
+      var selectionRect: GRect = new GRect(100, 100, 100, 100);
+
+      var insideRect: GRect = new GRect(100, 100, 50, 50);
+      var outsideRect: GRect = new GRect(50, 50, 50, 50);
+      var crossingRect: GRect = new GRect(50, 50, 100, 100);
+
+      expect(selectionRect.fullyIncludes(insideRect)).to.equal(true);
+      expect(selectionRect.fullyIncludes(outsideRect)).to.equal(false);
+      expect(selectionRect.fullyIncludes(crossingRect)).to.equal(false);
+   });
+
+   it("Needs to correctly do normalisation", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10); 
+      var hiRight: GPoint = new GPoint(20, 20); 
+
+      var normalised1 = GRect.normalise(loLeft, hiRight);
+      var normalised2 = GRect.normalise(loLeft, hiRight);
+
+      expect(normalised1.equals(normalised2)).to.equal(true);
+   });
 });
 
 

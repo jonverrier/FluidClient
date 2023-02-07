@@ -1,6 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { InvalidParameterError } from './Errors';
+import { uuid } from './Uuid';
 import { MSerialisable } from "./SerialisationFramework";
 import { GRect } from "./Geometry";
 
@@ -9,6 +10,7 @@ export enum ShapeBorderStyle { Solid="Solid", Dashed="Dashed", Dotted="Dotted" }
 
 export class Shape extends MSerialisable {
 
+   _id: string;
    _boundingRectangle: GRect;
    _borderColour: ShapeBorderColour;
    _borderStyle: ShapeBorderStyle;
@@ -38,6 +40,8 @@ export class Shape extends MSerialisable {
 
       super();
 
+      this._id = uuid();
+
       if (arr.length === 4) { // Construct from individual coordinates
          this._boundingRectangle = new GRect (arr[0]);
          this._borderColour = arr[1];
@@ -52,6 +56,7 @@ export class Shape extends MSerialisable {
             this._borderColour = arr[0]._borderColour;
             this._borderStyle = arr[0]._borderStyle;
             this._isSelected = arr[0]._isSelected;
+            return;
          }
          else {
             throw new InvalidParameterError("Cannot construct Shape from unknown type.")
@@ -74,6 +79,9 @@ export class Shape extends MSerialisable {
    /**
    * set of 'getters' and 'setters' for private variables
    */
+   get id (): string {
+      return this._id;
+   }
    get boundingRectangle (): GRect {
       return this._boundingRectangle;
    }
@@ -144,3 +152,40 @@ export class Shape extends MSerialisable {
    }
 }
 
+export class Rectangle extends Shape {
+
+   /**
+    * Create a Rectangle object
+    * @param boundingRectangle_ - boundingRectangle
+    * @param borderColour_ - colour
+    * @param borderStyle_ - style
+    * @param isSelected_ - true if object is selected and needs to draw and hit-test grab handles
+    */
+   public constructor(boundingRectangle_: GRect, borderColour_: ShapeBorderColour, borderStyle_: ShapeBorderStyle, isSelected_: boolean)
+
+   /**
+    * Create a Rectangle object
+    * @param rectangle_ - object to copy 
+    */
+   public constructor(rectangle_: Rectangle)
+
+   /**
+    * Create an empty Rectangle object - required for particiation in serialisation framework
+    */
+   constructor();
+
+   constructor(...arr: any[]) {
+
+      if (arr.length === 4) { // Construct from individual coordinates
+         super(arr[0], arr[1], arr[2], arr[3]);
+         return;
+      }
+      else
+      if (arr.length === 1) {
+         super(arr[0]);
+      }
+      else {
+         super();
+      }
+   }
+}
