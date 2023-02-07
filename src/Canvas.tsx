@@ -3,7 +3,8 @@
 // React
 import React, { MouseEvent, useState, useRef, useEffect } from 'react';
 
-import { GPoint } from './Geometry';
+import { GPoint, GRect } from './Geometry';
+import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from './Shape';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -35,6 +36,29 @@ function drawBackground (ctx: CanvasRenderingContext2D): Promise<void> {
    return promise;
 };
 
+function drawShapes (ctx: CanvasRenderingContext2D,
+   shapes : Map<string, Rectangle>)
+   : Promise<void> {
+   var promise: Promise<void>;
+
+   promise = new Promise<void>((resolve, reject) => {
+      ctx.save();
+
+      ctx.strokeStyle = "#393D47";
+      shapes.forEach((shape: Shape, key: string) => { 
+         ctx.beginPath();
+         ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+         ctx.stroke();
+      });
+
+      ctx.restore();
+
+      resolve();
+   });
+
+   return promise;
+}
+
 function drawSelectionRect(ctx: CanvasRenderingContext2D,
    selectionStart: GPoint, selectionEnd: GPoint)
    : Promise<void> {
@@ -57,24 +81,6 @@ function drawSelectionRect(ctx: CanvasRenderingContext2D,
    return promise;
 };
 
-/*
-function draw(ctx: CanvasRenderingContext2D, location: Coordinate) : void {
-
-   ctx.save();
-
-   ctx.fillStyle = 'red';
-   ctx.shadowColor = 'blue';
-   ctx.shadowBlur = 15;
-
-   ctx.scale(SCALE, SCALE);
-   ctx.translate(location.x / SCALE - OFFSETX, location.y / SCALE - OFFSETY);
-   ctx.rotate(225 * Math.PI / 180);
-   ctx.fill(SVG_PATH);
-
-   ctx.restore();
-};
-*/
-
 class CanvasState {
 
    _width: number;
@@ -82,6 +88,7 @@ class CanvasState {
    _inSelect: boolean;
    _selectionStart: GPoint;
    _selectionEnd: GPoint;
+   _shapes: Map<string, Shape>;
 
    constructor(width_: number, height_: number) {
       this._width = width_;
@@ -89,6 +96,21 @@ class CanvasState {
       this._inSelect = false;
       this._selectionStart = new GPoint(0, 0);
       this._selectionEnd = new GPoint(0, 0);
+
+      this._shapes = new Map<string, Shape>();
+
+      // DEBUG CODE 
+      var rect: GRect = new GRect(50, 50, 100, 100);
+
+      var shape: Rectangle = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
+
+      rect = new GRect(50, 50, 100, 100);
+      shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
+      this._shapes.set(shape.id, shape);
+
+      rect = new GRect(150, 150, 100, 100);
+      shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
+      this._shapes.set(shape.id, shape);
    }
 }
 
@@ -102,7 +124,11 @@ function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispat
 
       // draw background first
       drawBackground(ctx).then(() => {
-         // would draw shapes here
+
+         // then shapes
+         drawShapes(ctx, canvasState._shapes);
+
+      }).then (() => {
 
          // then draw selection rectangle
          if (canvasState._inSelect) {
@@ -156,7 +182,8 @@ export const Canvas = (props: ICanvasProps) => {
 
       setCanvasState({
          _inSelect: true, _selectionStart: coord, _selectionEnd: coord,
-         _width: canvasState._width, _height: canvasState._height
+         _width: canvasState._width, _height: canvasState._height, 
+         _shapes: canvasState._shapes
       });
 
    };
@@ -171,7 +198,8 @@ export const Canvas = (props: ICanvasProps) => {
 
          setCanvasState({
             _inSelect: true, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
-            _width: canvasState._width, _height: canvasState._height
+            _width: canvasState._width, _height: canvasState._height,
+            _shapes: canvasState._shapes
          });
       }
    };
@@ -186,7 +214,8 @@ export const Canvas = (props: ICanvasProps) => {
 
          setCanvasState({
             _inSelect: false, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
-            _width: canvasState._width, _height: canvasState._height
+            _width: canvasState._width, _height: canvasState._height,
+            _shapes: canvasState._shapes
          });
       }
    };
