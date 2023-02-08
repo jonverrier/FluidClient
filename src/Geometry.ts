@@ -286,11 +286,24 @@ export class GRect extends MSerialisable {
    }
 
    /**
+    * CLip rhs to fit withing the current rectangle
+    * @param rhs - the rectangle to test
+    */
+   clip(rhs: GRect): GRect {
+
+      let x = Math.max(this._rc.xmin, rhs._rc.xmin);
+      let y = Math.max(this._rc.ymin, rhs._rc.ymin);
+      let dx = Math.min(this._rc.xmax - x, rhs._rc.xmax - x);
+      let dy = Math.min(this._rc.ymax - y, rhs._rc.ymax - y);
+
+      return new GRect(x, y, dx, dy);
+   }
+
+   /**
     * Create a normalised rectangle, i.e. top left (low) to lower right (hi)
     * @param pt1 - first point
     * @param pt2 - second point
     */
-
    static normalise(pt1: GPoint, pt2: GPoint): GRect {
 
       var loX: number = Math.min(pt1.x, pt2.x);

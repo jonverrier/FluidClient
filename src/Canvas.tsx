@@ -12,6 +12,7 @@ import {
 import { GPoint, GRect } from './Geometry';
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from './Shape';
 import { CanvasMode } from './CanvasModes';
+import { ShapeController } from './CanvasControllers';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -174,6 +175,16 @@ export interface ICanvasProps {
    mode: CanvasMode;
 }
 
+function shapeControllerFromMode(mode_: CanvasMode, bounds_: GRect): ShapeController {
+   switch (mode_) {
+      case CanvasMode.Rectangle:
+         return new ShapeController (bounds_);
+
+      default:
+         return null;
+   }
+}
+
 export const Canvas = (props: ICanvasProps) => {
 
    const canvasRef = useRef(null);
@@ -182,8 +193,8 @@ export const Canvas = (props: ICanvasProps) => {
    const cursorDefaultClasses = cursorDefaultStyles();
    const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
 
-   function cursorStylesfromMode(mode: CanvasMode): string {
-      switch (mode) {
+   function cursorStylesFromMode(mode_: CanvasMode): string {
+      switch (mode_) {
          case CanvasMode.Rectangle:
             return cursorDrawRectangleClasses.root;
 
@@ -214,6 +225,18 @@ export const Canvas = (props: ICanvasProps) => {
    const handleCanvasClick = (event: MouseEvent) : void => {
 
       // Do hit testing for object selection here
+      let canvas = getCanvas(event);
+      let clientRect = canvas.getBoundingClientRect();
+      let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+
+      let shapeController = shapeControllerFromMode(props.mode, bounds);
+
+      shapeController.click(getMousePosition(canvas, event));
+      if (shapeController.isComplete) {
+         let shape = new Rectangle(shapeController.rectangle(), ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
+         canvasState._shapes.set(shape.id, shape);
+      }
+
    };
 
    const handleCanvasMouseDown = (event: MouseEvent): void => {
@@ -263,7 +286,7 @@ export const Canvas = (props: ICanvasProps) => {
       }
    };
 
-   return (<div className={cursorStylesfromMode(props.mode)}>
+   return (<div className={cursorStylesFromMode(props.mode)}>
       <canvas
       className="App-canvas"
       ref={canvasRef as any}
