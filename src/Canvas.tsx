@@ -3,12 +3,31 @@
 // React
 import React, { MouseEvent, useState, useRef, useEffect } from 'react';
 
+// Fluent
+import {
+   makeStyles
+} from '@fluentui/react-components';
+
+// Local
 import { GPoint, GRect } from './Geometry';
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from './Shape';
+import { CanvasMode } from './CanvasModes';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
 const canvasHeight = 1080;
+
+const cursorDefaultStyles = makeStyles({
+   root: {
+      cursor: 'default'
+   },
+});
+
+const cursorDrawRectangleStyles = makeStyles({
+   root: {
+      cursor: 'crosshair'
+   },
+});
 
 function drawBackground (ctx: CanvasRenderingContext2D): Promise<void> {
 
@@ -152,12 +171,26 @@ function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispat
 
 export interface ICanvasProps {
 
+   mode: CanvasMode;
 }
 
 export const Canvas = (props: ICanvasProps) => {
 
    const canvasRef = useRef(null);
    const [canvasState, setCanvasState] = useCanvas(canvasRef);
+
+   const cursorDefaultClasses = cursorDefaultStyles();
+   const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
+
+   function cursorStylesfromMode(mode: CanvasMode): string {
+      switch (mode) {
+         case CanvasMode.Rectangle:
+            return cursorDrawRectangleClasses.root;
+
+         default:
+            return cursorDefaultClasses.root;
+      }
+   }
 
    function getCanvas(event: MouseEvent): HTMLCanvasElement {
 
@@ -230,7 +263,8 @@ export const Canvas = (props: ICanvasProps) => {
       }
    };
 
-   return (<canvas
+   return (<div className={cursorStylesfromMode(props.mode)}>
+      <canvas
       className="App-canvas"
       ref={canvasRef as any}
       width={canvasWidth as any}
@@ -239,5 +273,5 @@ export const Canvas = (props: ICanvasProps) => {
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
-   />);
+   /></div>);
 }

@@ -28,6 +28,7 @@ import { Participants } from './Participants';
 import { FluidConnection } from './FluidConnection';
 import { Canvas } from './Canvas';
 import { CanvasTools } from './CanvasTools';
+import { CanvasMode } from './CanvasModes';
 
 const headerStyles = makeStyles({
    root: {
@@ -146,7 +147,8 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       fluidId: null,
       alertMessage: null,
       connecting: false,
-      canSignOut: false
+      canSignOut: false,
+      mode: CanvasMode.Select
    });
 
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
@@ -176,6 +178,16 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             sharePrompt: sharePromptFromJoinAs(newJoinAs),
             fluidId: newFluidId,
             canSignOut: canSignOut
+         }
+         return data
+      })
+   };
+
+   const setCanvasMode= (mode_: CanvasMode) => {
+      setUiState((prevState) => {
+         const data = {
+            ...prevState,
+            mode: mode_
          }
          return data
       })
@@ -310,6 +322,10 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       return uiState.canSignOut;
    }
 
+   function onToolSelect(mode_: CanvasMode): void {
+      setCanvasMode(mode_);
+   }
+
    return (
       <FluentProvider theme={teamsLightTheme}>
          <div className={headerClasses.root}>  {/* Top row for controls to setup a sharing session */}
@@ -352,7 +368,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             </div>
          </div>
 
-         <CanvasTools ></CanvasTools>
+         <CanvasTools onToolSelect={onToolSelect} ></CanvasTools>
 
          <div className={alertClasses.root}>
             {uiState.alertMessage
@@ -362,7 +378,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             : <div></div>}
          </div>
 
-         <Canvas ></Canvas>
+         <Canvas mode={uiState.mode}></Canvas>
 
       </FluentProvider>
    );
