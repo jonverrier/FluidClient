@@ -316,10 +316,26 @@ export class GRect extends MSerialisable {
 
    static createAround (pt: GPoint, dx: number, dy: number): GRect {
 
-      var loX: number = pt.x - dx / 2;;
+      var loX: number = pt.x - dx / 2;
       var loY: number = pt.y - dy / 2;
 
       return new GRect(loX, loY, dx, dy);
+   }
+
+   static ensureViableSize (rc_: GRect, dx_: number, dy_: number): GRect {
+
+      var working: GRect = new GRect (rc_);
+
+      if (working.dx < dx_) {
+         working.x -= dx_ / 2;
+         working.dx = dx_;
+      }
+      if (working.dy < dy_) {
+         working.y -= dy_ / 2;
+         working.dy = dy_;
+      }
+
+      return working;
    }
 
    static createGrabHandlesAround(rc_: GRect, dx_: number, dy_: number): Array<GRect> {

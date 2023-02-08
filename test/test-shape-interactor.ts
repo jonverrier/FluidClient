@@ -5,31 +5,32 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { GPoint, GRect } from '../src/Geometry';
-import { IShapeController, ShapeController } from '../src/CanvasControllers';
+import { IShapeInteractor, ShapeInteractor } from '../src/CanvasInteractors';
 
-describe("ShapeController", function () {
+describe("ShapeInteractor", function () {
 
-   it("Needs to create ShapeController and track to a click", function () {
+   it("Needs to create ShapeInteractor and track to a click", function () {
 
-      var bounds: GRect = new GRect(50, 50, 100, 100);
-      var pt1: GPoint = new GPoint(51, 51);
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var pt1: GPoint = new GPoint(100, 100);
 
-      var controller: IShapeController = new ShapeController(bounds);
+      var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
       expect(controller.isComplete()).to.equal(false);
 
       controller.click(pt1);
 
-      expect(controller.rectangle().topLeft.equals(pt1)).to.equal(true);
+      expect(controller.rectangle().dx === ShapeInteractor.defaultDx()).to.equal(true);
+      expect(controller.rectangle().dy === ShapeInteractor.defaultDy()).to.equal(true);
       expect(controller.isComplete()).to.equal(true);
    });
 
-   it("Needs to create ShapeController with click and drag", function () {
+   it("Needs to create ShapeInteractor with click and drag", function () {
 
-      var bounds: GRect = new GRect(50, 50, 100, 100);
-      var pt1: GPoint = new GPoint(51, 51);
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var pt1: GPoint = new GPoint(100, 100);
 
-      var controller: IShapeController = new ShapeController(bounds);
+      var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
       expect(controller.isComplete()).to.equal(false);
 
@@ -37,16 +38,17 @@ describe("ShapeController", function () {
       controller.mouseMove(pt1);
       controller.mouseUp(pt1);
 
-      expect(controller.rectangle().topLeft.equals(pt1)).to.equal(true);
+      expect(controller.rectangle().dx === ShapeInteractor.minimumDx()).to.equal(true);
+      expect(controller.rectangle().dy === ShapeInteractor.minimumDy()).to.equal(true);
       expect(controller.isComplete()).to.equal(true);
    });
 
    it("Needs to clip final GRect if necessary - top left", function () {
 
-      var bounds: GRect = new GRect(50, 50, 100, 100);
+      var bounds: GRect = new GRect(50, 50, 300, 300);
       var pt1: GPoint = new GPoint(49, 49);
 
-      var controller: IShapeController = new ShapeController(bounds);
+      var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
       expect(controller.isComplete()).to.equal(false);
 
@@ -58,11 +60,11 @@ describe("ShapeController", function () {
 
    it("Needs to clip final GRect if necessary - lower right", function () {
 
-      var bounds: GRect = new GRect(50, 50, 100, 100);
-      var pt1: GPoint = new GPoint(51, 51);
-      var pt2: GPoint = new GPoint(151, 151);
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var pt1: GPoint = new GPoint(251, 251);
+      var pt2: GPoint = new GPoint(351, 351);
 
-      var controller: IShapeController = new ShapeController(bounds);
+      var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
       expect(controller.isComplete()).to.equal(false);
 

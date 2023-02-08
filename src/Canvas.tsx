@@ -12,7 +12,7 @@ import {
 import { GPoint, GRect } from './Geometry';
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from './Shape';
 import { CanvasMode } from './CanvasModes';
-import { ShapeController } from './CanvasControllers';
+import { ShapeInteractor } from './CanvasInteractors';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -119,6 +119,7 @@ class CanvasState {
    _selectionStart: GPoint;
    _selectionEnd: GPoint;
    _shapes: Map<string, Shape>;
+   _shapeInteractor: ShapeInteractor;
 
    constructor(width_: number, height_: number) {
       this._width = width_;
@@ -128,19 +129,7 @@ class CanvasState {
       this._selectionEnd = new GPoint(0, 0);
 
       this._shapes = new Map<string, Shape>();
-
-      // DEBUG CODE 
-      var rect: GRect = new GRect(50, 50, 100, 100);
-
-      var shape: Rectangle = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-
-      rect = new GRect(50, 50, 200, 200);
-      shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-      this._shapes.set(shape.id, shape);
-
-      rect = new GRect(300, 300, 100, 100);
-      shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-      this._shapes.set(shape.id, shape);
+      this._shapeInteractor = null;
    }
 }
 
@@ -175,10 +164,10 @@ export interface ICanvasProps {
    mode: CanvasMode;
 }
 
-function shapeControllerFromMode(mode_: CanvasMode, bounds_: GRect): ShapeController {
+function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect): ShapeInteractor {
    switch (mode_) {
       case CanvasMode.Rectangle:
-         return new ShapeController (bounds_);
+         return new ShapeInteractor (bounds_);
 
       default:
          return null;
@@ -224,19 +213,11 @@ export const Canvas = (props: ICanvasProps) => {
 
    const handleCanvasClick = (event: MouseEvent) : void => {
 
-      // Do hit testing for object selection here
-      let canvas = getCanvas(event);
-      let clientRect = canvas.getBoundingClientRect();
-      let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
 
-      let shapeController = shapeControllerFromMode(props.mode, bounds);
+      event.preventDefault();
+      event.stopPropagation();
 
-      shapeController.click(getMousePosition(canvas, event));
-      if (shapeController.isComplete) {
-         let shape = new Rectangle(shapeController.rectangle(), ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-         canvasState._shapes.set(shape.id, shape);
-      }
-
+      return; 
    };
 
    const handleCanvasMouseDown = (event: MouseEvent): void => {
@@ -246,10 +227,17 @@ export const Canvas = (props: ICanvasProps) => {
 
       var coord: GPoint = getMousePosition(getCanvas(event), event);
 
+      let canvas = getCanvas(event);
+      let clientRect = canvas.getBoundingClientRect();
+      let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+
+      let shapeInteractor = shapeInteractorFromMode(props.mode, bounds);
+      shapeInteractor.mouseDown(coord);
+
       setCanvasState({
          _inSelect: true, _selectionStart: coord, _selectionEnd: coord,
-         _width: canvasState._width, _height: canvasState._height, 
-         _shapes: canvasState._shapes
+         _width: canvasState._width, _height: canvasState._height,
+         _shapes: canvasState._shapes, _shapeInteractor: shapeInteractor
       });
 
    };
@@ -262,10 +250,12 @@ export const Canvas = (props: ICanvasProps) => {
       if (canvasState._inSelect) {
          var coord: GPoint = getMousePosition(getCanvas(event), event);
 
+         canvasState._shapeInteractor.mouseMove(coord);
+
          setCanvasState({
             _inSelect: true, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
             _width: canvasState._width, _height: canvasState._height,
-            _shapes: canvasState._shapes
+            _shapes: canvasState._shapes, _shapeInteractor: canvasState._shapeInteractor
          });
       }
    };
@@ -278,11 +268,19 @@ export const Canvas = (props: ICanvasProps) => {
       if (canvasState._inSelect) {
          var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-         setCanvasState({
-            _inSelect: false, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
-            _width: canvasState._width, _height: canvasState._height,
-            _shapes: canvasState._shapes
-         });
+         canvasState._shapeInteractor.mouseUp(coord);
+
+         // TODO - how to tell if adding new shape vs moving existing
+         if (canvasState._shapeInteractor.isComplete) {
+            let shape = new Rectangle(canvasState._shapeInteractor.rectangle(), ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
+            canvasState._shapes.set(shape.id, shape);
+
+            setCanvasState({
+               _inSelect: false, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
+               _width: canvasState._width, _height: canvasState._height,
+               _shapes: canvasState._shapes, _shapeInteractor: null
+            });
+         } 
       }
    };
 
