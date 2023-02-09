@@ -5,20 +5,20 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { GPoint, GRect } from '../src/Geometry';
-import { ShapeDrawerFactory, ShapeDrawer } from '../src/ShapeDrawer';
+import { ShapeRendererFactory, ShapeRenderer } from '../src/ShapeRenderer';
 
 describe("ShapeDrawer", function () {
 
    it("Needs to create ShapeDrawer", function () {
 
-      var drawer: ShapeDrawer = ShapeDrawerFactory.create("Shape");
+      var drawer: ShapeRenderer = ShapeRendererFactory.create("Shape");
 
       expect(drawer === null).to.equal(false);
    });
 
    it("Needs to create RectangleShapeDrawer", function () {
 
-      var drawer: ShapeDrawer = ShapeDrawerFactory.create("Rectangle");
+      var drawer: ShapeRenderer = ShapeRendererFactory.create("Rectangle");
 
       expect(drawer === null).to.equal(false);
    });
