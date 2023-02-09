@@ -16,13 +16,10 @@ describe("ShapeInteractor", function () {
 
       var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
-      expect(controller.isComplete()).to.equal(false);
-
       controller.click(pt1);
 
-      expect(controller.rectangle().dx === ShapeInteractor.defaultDx()).to.equal(true);
-      expect(controller.rectangle().dy === ShapeInteractor.defaultDy()).to.equal(true);
-      expect(controller.isComplete()).to.equal(true);
+      expect(controller.rectangle.dx === ShapeInteractor.defaultDx()).to.equal(true);
+      expect(controller.rectangle.dy === ShapeInteractor.defaultDy()).to.equal(true);
    });
 
    it("Needs to create ShapeInteractor with click and drag", function () {
@@ -32,15 +29,12 @@ describe("ShapeInteractor", function () {
 
       var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
-      expect(controller.isComplete()).to.equal(false);
-
       controller.mouseDown(pt1);
       controller.mouseMove(pt1);
       controller.mouseUp(pt1);
 
-      expect(controller.rectangle().dx === ShapeInteractor.minimumDx()).to.equal(true);
-      expect(controller.rectangle().dy === ShapeInteractor.minimumDy()).to.equal(true);
-      expect(controller.isComplete()).to.equal(true);
+      expect(controller.rectangle.dx === ShapeInteractor.minimumDx()).to.equal(true);
+      expect(controller.rectangle.dy === ShapeInteractor.minimumDy()).to.equal(true);
    });
 
    it("Needs to clip final GRect if necessary - top left", function () {
@@ -50,12 +44,9 @@ describe("ShapeInteractor", function () {
 
       var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
-      expect(controller.isComplete()).to.equal(false);
-
       controller.click(pt1);
 
-      expect(controller.rectangle().topLeft.equals(bounds.topLeft)).to.equal(true);
-      expect(controller.isComplete()).to.equal(true);
+      expect(controller.rectangle.topLeft.equals(bounds.topLeft)).to.equal(true);
    });
 
    it("Needs to clip final GRect if necessary - lower right", function () {
@@ -66,15 +57,12 @@ describe("ShapeInteractor", function () {
 
       var controller: IShapeInteractor = new ShapeInteractor(bounds);
 
-      expect(controller.isComplete()).to.equal(false);
-
       controller.mouseDown(pt1);
       controller.mouseMove(pt2);
       controller.mouseUp(pt2);
 
-      expect(controller.rectangle().topLeft.equals(pt1)).to.equal(true);
-      expect(controller.rectangle().bottomRight.equals(bounds.bottomRight)).to.equal(true);
-      expect(controller.isComplete()).to.equal(true);
+      expect(controller.rectangle.topLeft.equals(pt1)).to.equal(true);
+      expect(controller.rectangle.bottomRight.equals(bounds.bottomRight)).to.equal(true);
    });
 });
 

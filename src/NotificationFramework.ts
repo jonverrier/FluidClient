@@ -326,7 +326,7 @@ export class NotificationRouterFor<EventData> implements IObserver
 
    /**
     * Create a NotificationRouterFor<EventData>  object
-    * @param observerInterest - object to copy from - should work for JSON format and for real constructed objects
+    * @param observerRouter - object to copy from - should work for JSON format and for real constructed objects
     */
    public constructor(observerRouter: NotificationRouterFor<EventData>);
 

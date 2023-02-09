@@ -1,7 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { GPoint, GRect } from './Geometry';
-import { Shape, Rectangle } from './Shape';
+import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 
 export interface IShapeInteractor {
 
@@ -9,10 +9,14 @@ export interface IShapeInteractor {
    mouseDown(pt: GPoint): void;
    mouseMove(pt: GPoint): void;
    mouseUp(pt: GPoint): void;
-
-   rectangle(): GRect;
-   isComplete(): boolean;
+   rectangle: GRect;
 }
+
+export var shapeInteractionComplete: string = "ShapeInteractionComplete";
+export var shapeInteractionCompleteInterest = new Interest(shapeInteractionComplete);
+
+// Signature for the function called on completion
+type FunctionFor<GRect> = (interest: Interest, data: NotificationFor<GRect>) => void;
 
 var defaultDX: number = 100;
 var defaultDY: number = 50;
@@ -20,9 +24,8 @@ var defaultDY: number = 50;
 var minimumDX: number = 16;
 var minimumDY: number = 16;
 
-export class ShapeInteractor implements IShapeInteractor {
+export class ShapeInteractor extends Notifier implements IShapeInteractor  {
 
-   private _isComplete: boolean;
    private _rectangle: GRect;
    private _bounds: GRect;
 
@@ -31,7 +34,9 @@ export class ShapeInteractor implements IShapeInteractor {
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
     */
    public constructor(bounds_: GRect) {
-      this._isComplete = false;
+
+      super();
+
       this._bounds = new GRect(bounds_);
       this._rectangle = new GRect();
    }
@@ -39,7 +44,9 @@ export class ShapeInteractor implements IShapeInteractor {
    click(pt: GPoint): void {
       var newRect: GRect = GRect.createAround(pt, defaultDX, defaultDY);
       this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
-      this._isComplete = true;
+
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
    }
 
    mouseDown(pt: GPoint): void {
@@ -53,17 +60,18 @@ export class ShapeInteractor implements IShapeInteractor {
    }
 
    mouseUp(pt: GPoint): void {
-      var newRect: GRect = new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y);
+      var newRect: GRect = GRect.normaliseFromRectangle (new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
       this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
-      this._isComplete = true;
+
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
    }
 
-   rectangle(): GRect {
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
       return this._rectangle;
-   }
-
-   isComplete(): boolean {
-      return this._isComplete;
    }
 
    static defaultDx(): number {

@@ -136,8 +136,8 @@ describe("Geometry", function () {
       var loLeft: GPoint = new GPoint(10, 10); 
       var hiRight: GPoint = new GPoint(20, 20); 
 
-      var normalised1 = GRect.normalise(loLeft, hiRight);
-      var normalised2 = GRect.normalise(loLeft, hiRight);
+      var normalised1 = GRect.normaliseFromPoints(loLeft, hiRight);
+      var normalised2 = GRect.normaliseFromPoints(loLeft, hiRight);
 
       expect(normalised1.equals(normalised2)).to.equal(true);
    });

@@ -304,7 +304,7 @@ export class GRect extends MSerialisable {
     * @param pt1 - first point
     * @param pt2 - second point
     */
-   static normalise(pt1: GPoint, pt2: GPoint): GRect {
+   static normaliseFromPoints(pt1: GPoint, pt2: GPoint): GRect {
 
       var loX: number = Math.min(pt1.x, pt2.x);
       var loY: number = Math.min(pt1.y, pt2.y);
@@ -312,6 +312,15 @@ export class GRect extends MSerialisable {
       var hiY: number = Math.max(pt1.y, pt2.y);
 
       return new GRect(loX, loY, hiX - loX, hiY - loY);
+   }
+
+   /**
+    * Create a normalised rectangle, i.e. top left (low) to lower right (hi)
+    * @param rect - the rectangle to normalise
+    */
+   static normaliseFromRectangle(rect: GRect): GRect {    
+
+      return GRect.normaliseFromPoints (rect.topLeft, rect.bottomRight);
    }
 
    static createAround (pt: GPoint, dx: number, dy: number): GRect {
