@@ -1,7 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { GPoint, GRect } from "./Geometry";
-import { ShapeBorderColour, ShapeBorderStyle, } from "./Shape"; 
+import { Shape, ShapeBorderColour, ShapeBorderStyle, } from "./Shape"; 
 
 // Signature for the factory function 
 type FactoryFunctionFor<ShapeDrawer> = () => ShapeDrawer;
@@ -48,7 +48,7 @@ export class ShapeRendererFactory {
 /// <summary>
 /// ShapeRenderer - common super class for shape drawers
 /// <summary>
-export class ShapeRenderer {
+export abstract class ShapeRenderer {
 
    /**
     * Create an empty ShapeRenderer object 
@@ -57,11 +57,90 @@ export class ShapeRenderer {
 
    }
 
-   static createInstance(): ShapeRenderer {
-      return new ShapeRenderer();
+   // Helper function as many derived classes will need it
+   protected drawBorder(ctx: CanvasRenderingContext2D,
+      shape: Shape): void {
+
+      ctx.save();
+
+      ctx.strokeStyle = "#393D47";
+
+      // TODO - set draw colour
+
+      switch (shape.borderStyle) {
+
+         case ShapeBorderStyle.Dashed:
+            ctx.setLineDash([5, 5]);
+            break;
+
+         case ShapeBorderStyle.Dotted:
+            ctx.setLineDash([1, 1]);
+            break;
+
+         case ShapeBorderStyle.Solid:
+         default:
+            break;
+      }
+
+      ctx.beginPath();
+      ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+      ctx.stroke();
+
+      ctx.restore();
    }
 
-   private static _factoryShape: ShapeRendererFactory = new ShapeRendererFactory("Shape", ShapeRenderer.createInstance);
+   // Helper function as many derived classes will need it
+   protected drawSelectionBorder(ctx: CanvasRenderingContext2D,
+      shape: Shape): void {
+
+      ctx.save();
+
+      ctx.strokeStyle = "#393D47";
+      ctx.fillStyle = "#393D47";
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = "green";
+
+      let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, 8, 8);
+
+      handles.forEach((handle: GRect) => {
+
+         ctx.beginPath();
+         ctx.fillRect(handle.x, handle.y, handle.dx, handle.dy);
+         ctx.stroke();
+      });
+
+      ctx.restore();
+   }
+
+   // to be overriden by derived classes. 
+   abstract draw(ctx: CanvasRenderingContext2D,
+      shape: Shape): void;
+}
+
+/// <summary>
+/// SelectionRectangleRenderer - draws Rectangle shapes
+/// <summary>
+export class SelectionRectangleRenderer extends ShapeRenderer {
+
+   /**
+    * Create an empty SelectionRectangleRenderer object 
+    */
+   constructor() {
+
+      super();
+   }
+
+   draw(ctx: CanvasRenderingContext2D,
+      shape: Shape): void {
+
+      this.drawBorder(ctx, shape);
+   }
+
+   static createInstance(): RectangleShapeRenderer {
+      return new RectangleShapeRenderer();
+   }
+
+   private static _factoryForSelectionRectangle: ShapeRendererFactory = new ShapeRendererFactory("SelectionRectangle", SelectionRectangleRenderer.createInstance);
 }
 
 /// <summary>
@@ -77,9 +156,19 @@ export class RectangleShapeRenderer extends ShapeRenderer {
       super();
    }
 
+   draw(ctx: CanvasRenderingContext2D,
+      shape: Shape): void {
+
+      this.drawBorder(ctx, shape);
+
+      if (shape.isSelected) {
+         this.drawSelectionBorder(ctx, shape);
+      }
+   }
+
    static createInstance(): RectangleShapeRenderer {
       return new RectangleShapeRenderer();
    }
 
-   private static _factoryRectangle: ShapeRendererFactory = new ShapeRendererFactory("Rectangle", RectangleShapeRenderer.createInstance);
+   private static _factoryForRectangle: ShapeRendererFactory = new ShapeRendererFactory("Rectangle", RectangleShapeRenderer.createInstance);
 }

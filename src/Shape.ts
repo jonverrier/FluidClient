@@ -5,7 +5,7 @@ import { uuid } from './Uuid';
 import { MSerialisable } from "./SerialisationFramework";
 import { GRect } from "./Geometry";
 
-export enum ShapeBorderColour { Red="Red", Blue="Blue", Green="Green", Black="Black"};
+export enum ShapeBorderColour { Red="Red", Blue="Blue", Green="Green", Black="Black", Border = "Border"};
 export enum ShapeBorderStyle { Solid="Solid", Dashed="Dashed", Dotted="Dotted" }; 
 
 export class Shape extends MSerialisable {
@@ -150,6 +150,46 @@ export class Shape extends MSerialisable {
 
       this.assign(new Shape(obj.boundingRectangle, typedColour, typedStyle, obj.isSelected));
    }
+
+   shapeID(): string {
+      return "Shape";
+   }
+}
+
+export class SelectionRectangle extends Shape {
+
+   /**
+    * Create a SelectionRectangle object
+    * @param boundingRectangle_ - boundingRectangle
+    */
+   public constructor(boundingRectangle_: GRect)
+
+   /**
+    * Create a Rectangle object
+    * @param rectangle_ - object to copy 
+    */
+   public constructor(rectangle_: Rectangle)
+
+   /**
+    * Create an empty Rectangle object - required for particiation in serialisation framework
+    */
+   constructor();
+
+   constructor(...arr: any[]) {
+
+      if (arr.length === 1) { // Construct from individual coordinates
+         super(arr[0], ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
+         return;
+      }
+      else {
+         super(new GRect(), ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
+      }
+   }
+
+   // Unique ID that is used to look up the associated renderer
+   shapeID(): string {
+      return "SelectionRectangle";
+   }
 }
 
 export class Rectangle extends Shape {
@@ -187,5 +227,10 @@ export class Rectangle extends Shape {
       else {
          super();
       }
+   }
+
+   // Unique ID that is used to look up the associated renderer
+   shapeID(): string {
+      return "Rectangle";
    }
 }

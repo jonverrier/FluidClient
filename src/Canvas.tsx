@@ -14,6 +14,7 @@ import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } fr
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from './Shape';
 import { CanvasMode } from './CanvasModes';
 import { ShapeInteractor, shapeInteractionCompleteInterest } from './CanvasInteractors';
+import { ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -63,35 +64,13 @@ function drawShapes (ctx: CanvasRenderingContext2D,
    var promise: Promise<void>;
 
    promise = new Promise<void>((resolve, reject) => {
-      ctx.save();
-
-      ctx.strokeStyle = "#393D47";
-      ctx.fillStyle = "#393D47";
 
       shapes.forEach((shape: Shape, key: string) => { 
-         ctx.beginPath();
-         ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
-         ctx.stroke();
 
-         if (shape.isSelected) {
-            let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, 8, 8);
+         let renderer = ShapeRendererFactory.create(shape.shapeID());
 
-            handles.forEach((handle: GRect) => {
-
-               ctx.save();
-               ctx.shadowBlur = 8;
-               ctx.shadowColor = "green";
-               ctx.beginPath();
-               ctx.fillRect(handle.x, handle.y, handle.dx, handle.dy);
-               ctx.stroke();
-               ctx.restore();
-   
-            });
-         }
-
+         renderer.draw(ctx, shape);
       });
-
-      ctx.restore();
 
       resolve();
    });
@@ -105,6 +84,9 @@ function drawSelectionRect(ctx: CanvasRenderingContext2D,
    var promise: Promise<void>;
 
    promise = new Promise<void>((resolve, reject) => {
+
+      var border: Shape = new Shape(selectionRect, ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
+
       ctx.save();
 
       ctx.strokeStyle = "#393D47";
