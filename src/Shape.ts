@@ -51,7 +51,7 @@ export class Shape extends MSerialisable {
       }
       else
       if (arr.length === 1) {
-         if (this.isMyType(arr[0])) { // Copy Constructor
+         if (Shape.isMyType(arr[0])) { // Copy Constructor
             this._boundingRectangle = new GRect(arr[0]._boundingRectangle);
             this._borderColour = arr[0]._borderColour;
             this._borderStyle = arr[0]._borderStyle;
@@ -72,7 +72,7 @@ export class Shape extends MSerialisable {
       }
    }
 
-   private isMyType(rhs: Shape): boolean {
+   protected static isMyType(rhs: Shape): boolean {
       return rhs && rhs.hasOwnProperty('_boundingRectangle');
    }
 
@@ -178,7 +178,10 @@ export class SelectionRectangle extends Shape {
    constructor(...arr: any[]) {
 
       if (arr.length === 1) { // Construct from individual coordinates
-         super(arr[0], ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
+         if (Shape.isMyType(arr[0]))
+            super(arr[0]);
+         else
+            super(arr[0], ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
          return;
       }
       else {

@@ -11,10 +11,10 @@ import {
 // Local
 import { GPoint, GRect } from './Geometry';
 import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } from './NotificationFramework';
-import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from './Shape';
+import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from './Shape';
 import { CanvasMode } from './CanvasModes';
 import { ShapeInteractor, shapeInteractionCompleteInterest } from './CanvasInteractors';
-import { ShapeRendererFactory } from './ShapeRenderer';
+import { SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -85,17 +85,11 @@ function drawSelectionRect(ctx: CanvasRenderingContext2D,
 
    promise = new Promise<void>((resolve, reject) => {
 
-      var border: Shape = new Shape(selectionRect, ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
+      var border: Shape = new SelectionRectangle(selectionRect);
 
-      ctx.save();
+      let renderer = new SelectionRectangleRenderer ();
 
-      ctx.strokeStyle = "#393D47";
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.rect(selectionRect.x, selectionRect.y, selectionRect.dx, selectionRect.dy);
-      ctx.stroke(); 
-
-      ctx.restore();
+      renderer.draw(ctx, border);
 
       resolve();
    });

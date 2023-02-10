@@ -64,24 +64,7 @@ export abstract class ShapeRenderer {
       ctx.save();
 
       ctx.strokeStyle = "#393D47";
-
-      // TODO - set draw colour
-
-      switch (shape.borderStyle) {
-
-         case ShapeBorderStyle.Dashed:
-            ctx.setLineDash([5, 5]);
-            break;
-
-         case ShapeBorderStyle.Dotted:
-            ctx.setLineDash([1, 1]);
-            break;
-
-         case ShapeBorderStyle.Solid:
-         default:
-            break;
-      }
-
+      ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.stroke();
