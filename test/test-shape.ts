@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { GRect } from '../src/Geometry';
-import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from '../src/Shape';
+import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from '../src/Shape';
 
 
 describe("Shape", function () {
@@ -28,6 +28,7 @@ describe("Shape", function () {
       expect(shape1.borderStyle === ShapeBorderStyle.Solid).to.equal(true);
       expect(shape1.isSelected).to.equal(false);
       expect(shape1.id.length > 0).to.equal(true);
+      expect(shape1.shapeID().length > 0).to.equal(true);
 
       shape2.assign(shape1);
       expect(shape1.equals(shape2)).to.equal(true);
@@ -91,6 +92,7 @@ describe("Rectangle", function () {
       expect(shape1.borderStyle === ShapeBorderStyle.Solid).to.equal(true);
       expect(shape1.isSelected).to.equal(false);
       expect(shape1.id.length > 0).to.equal(true);
+      expect(shape1.shapeID().length > 0).to.equal(true);
 
       shape2.assign(shape1);
       expect(shape1.equals(shape2)).to.equal(true);
@@ -134,5 +136,67 @@ describe("Rectangle", function () {
 
 });
 
+
+describe("SelectionRectangle", function () {
+
+   it("Needs to create, test & assign SelectionRectangle", function () {
+
+      var rect: GRect = new GRect(1, 2, 3, 4);
+
+      var shape1: Rectangle = new SelectionRectangle(rect);
+      var shape2: Rectangle = new SelectionRectangle(shape1);
+      var shape3: Rectangle = new SelectionRectangle();
+
+      expect(shape1.equals(shape1)).to.equal(true);
+      expect(shape1.equals(shape2)).to.equal(true);
+      expect(shape1.equals(shape3)).to.equal(false);
+      expect(shape1.boundingRectangle.equals(rect) === true).to.equal(true);
+      expect(shape1.borderColour === ShapeBorderColour.Border).to.equal(true);
+      expect(shape1.borderStyle === ShapeBorderStyle.Dashed).to.equal(true);
+      expect(shape1.isSelected).to.equal(false);
+      expect(shape1.id.length > 0).to.equal(true);
+      expect(shape1.shapeID().length > 0).to.equal(true);
+
+      shape3.assign(shape1);
+      expect(shape1.equals(shape3)).to.equal(true);
+
+      var rect2: GRect = new GRect(5, 6, 7, 8);
+      shape1.boundingRectangle = rect2;
+      shape1.borderColour = ShapeBorderColour.Red;
+      shape1.borderStyle = ShapeBorderStyle.Dashed;
+      shape1.isSelected = true;
+
+      expect(shape1.boundingRectangle.equals(rect2) === true).to.equal(true);
+      expect(shape1.borderColour === ShapeBorderColour.Red).to.equal(true);
+      expect(shape1.borderStyle === ShapeBorderStyle.Dashed).to.equal(true);
+      expect(shape1.isSelected).to.equal(true);
+
+      var caught: boolean = false;
+      try {
+         var shape5: Shape = new Shape(null as Shape);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).to.equal(true);
+   });
+
+   it("Needs to convert Rectangle to and from JSON()", function () {
+
+      var rect: GRect = new GRect(1, 2, 3, 4);
+
+      var shape1: SelectionRectangle = new SelectionRectangle(rect);
+
+      var stream: string = shape1.streamToJSON();
+
+      var shape2: SelectionRectangle = new SelectionRectangle();
+
+      expect(shape1.equals(shape2)).to.equal(false);
+
+      shape2.streamFromJSON(stream);
+
+      expect(shape1.equals(shape2)).to.equal(true);
+   });
+
+});
 
 

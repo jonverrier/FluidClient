@@ -3,12 +3,34 @@
 // React
 import React, { MouseEvent, useState, useRef, useEffect } from 'react';
 
+// Fluent
+import {
+   makeStyles
+} from '@fluentui/react-components';
+
+// Local
 import { GPoint, GRect } from './Geometry';
-import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle } from './Shape';
+import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } from './NotificationFramework';
+import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from './Shape';
+import { CanvasMode } from './CanvasModes';
+import { ShapeInteractor, shapeInteractionCompleteInterest } from './CanvasInteractors';
+import { SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
 const canvasHeight = 1080;
+
+const cursorDefaultStyles = makeStyles({
+   root: {
+      cursor: 'default'
+   },
+});
+
+const cursorDrawRectangleStyles = makeStyles({
+   root: {
+      cursor: 'crosshair'
+   },
+});
 
 function drawBackground (ctx: CanvasRenderingContext2D): Promise<void> {
 
@@ -42,26 +64,13 @@ function drawShapes (ctx: CanvasRenderingContext2D,
    var promise: Promise<void>;
 
    promise = new Promise<void>((resolve, reject) => {
-      ctx.save();
 
-      ctx.strokeStyle = "#393D47";
       shapes.forEach((shape: Shape, key: string) => { 
-         ctx.beginPath();
-         ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
-         ctx.stroke();
 
-         let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, 8, 8);
-         handles.forEach((handle: GRect) => {
-            ctx.beginPath();
-            ctx.rect(handle.x, handle.y, handle.dx, handle.dy);
-            ctx.stroke();
-            ctx.fillStyle = "#393D47";
-            ctx.fill();
-         });
+         let renderer = ShapeRendererFactory.create(shape.shapeID());
 
+         renderer.draw(ctx, shape);
       });
-
-      ctx.restore();
 
       resolve();
    });
@@ -70,20 +79,17 @@ function drawShapes (ctx: CanvasRenderingContext2D,
 }
 
 function drawSelectionRect(ctx: CanvasRenderingContext2D,
-   selectionStart: GPoint, selectionEnd: GPoint)
+   selectionRect: GRect)
    : Promise<void> {
    var promise: Promise<void>;
 
    promise = new Promise<void>((resolve, reject) => {
-      ctx.save();
 
-      ctx.strokeStyle = "#393D47";
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.rect(selectionStart.x, selectionStart.y, selectionEnd.x - selectionStart.x, selectionEnd.y - selectionStart.y);
-      ctx.stroke(); 
+      var border: Shape = new SelectionRectangle(selectionRect);
 
-      ctx.restore();
+      let renderer = new SelectionRectangleRenderer ();
+
+      renderer.draw(ctx, border);
 
       resolve();
    });
@@ -95,32 +101,17 @@ class CanvasState {
 
    _width: number;
    _height: number;
-   _inSelect: boolean;
-   _selectionStart: GPoint;
-   _selectionEnd: GPoint;
    _shapes: Map<string, Shape>;
+   _shapeInteractor: ShapeInteractor;
+   _notificationRouter: NotificationRouterFor<GRect>;
 
    constructor(width_: number, height_: number) {
       this._width = width_;
       this._height = height_;
-      this._inSelect = false;
-      this._selectionStart = new GPoint(0, 0);
-      this._selectionEnd = new GPoint(0, 0);
 
       this._shapes = new Map<string, Shape>();
-
-      // DEBUG CODE 
-      var rect: GRect = new GRect(50, 50, 100, 100);
-
-      var shape: Rectangle = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-
-      rect = new GRect(50, 50, 200, 200);
-      shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-      this._shapes.set(shape.id, shape);
-
-      rect = new GRect(300, 300, 100, 100);
-      shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-      this._shapes.set(shape.id, shape);
+      this._shapeInteractor = null;
+      this._notificationRouter = null;
    }
 }
 
@@ -141,8 +132,8 @@ function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispat
       }).then (() => {
 
          // then draw selection rectangle
-         if (canvasState._inSelect) {
-            drawSelectionRect(ctx, canvasState._selectionStart, canvasState._selectionEnd);
+         if (canvasState._shapeInteractor) {
+            drawSelectionRect(ctx, canvasState._shapeInteractor.rectangle);
          } 
       });
    });
@@ -152,12 +143,39 @@ function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispat
 
 export interface ICanvasProps {
 
+   mode: CanvasMode;
+}
+
+function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect): ShapeInteractor {
+   switch (mode_) {
+      case CanvasMode.Rectangle:
+         return new ShapeInteractor (bounds_);
+
+      case CanvasMode.Select:
+         return new ShapeInteractor(bounds_);
+
+      default:
+         return null;
+   }
 }
 
 export const Canvas = (props: ICanvasProps) => {
 
    const canvasRef = useRef(null);
    const [canvasState, setCanvasState] = useCanvas(canvasRef);
+
+   const cursorDefaultClasses = cursorDefaultStyles();
+   const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
+
+   function cursorStylesFromMode(mode_: CanvasMode): string {
+      switch (mode_) {
+         case CanvasMode.Rectangle:
+            return cursorDrawRectangleClasses.root;
+
+         default:
+            return cursorDefaultClasses.root;
+      }
+   }
 
    function getCanvas(event: MouseEvent): HTMLCanvasElement {
 
@@ -180,8 +198,38 @@ export const Canvas = (props: ICanvasProps) => {
 
    const handleCanvasClick = (event: MouseEvent) : void => {
 
-      // Do hit testing for object selection here
+      event.preventDefault();
+      event.stopPropagation();
+
+      return; 
    };
+
+   function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
+
+      switch (props.mode) { 
+         case CanvasMode.Rectangle:
+            // Clear previous selections
+            canvasState._shapes.forEach((shape: Shape, key: string) => {
+               shape.isSelected = false;
+            });
+            // Create new shape - selected
+            let shape = new Rectangle(data.eventData, ShapeBorderColour.Black, ShapeBorderStyle.Solid, true);
+            canvasState._shapes.set(shape.id, shape);
+            break;
+         case CanvasMode.Select:
+         default:
+            // Select items within the selection area
+            canvasState._shapes.forEach((shape: Shape, key: string) => {
+               if (data.eventData.fullyIncludes(shape.boundingRectangle)) {
+                  shape.isSelected = true;
+               }
+               else {
+                  shape.isSelected = false;
+               }
+            });
+            break;
+   }
+   }
 
    const handleCanvasMouseDown = (event: MouseEvent): void => {
 
@@ -190,10 +238,23 @@ export const Canvas = (props: ICanvasProps) => {
 
       var coord: GPoint = getMousePosition(getCanvas(event), event);
 
+      let canvas = getCanvas(event);
+      let clientRect = canvas.getBoundingClientRect();
+      let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+
+
+      // Create the right interactor, and hook up to notifications of when the interaction is complete
+      let shapeInteractor = shapeInteractorFromMode(props.mode, bounds);
+      shapeInteractor.mouseDown(coord);
+
+      var notificationRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this)); 
+      shapeInteractor.addObserver(new ObserverInterest(notificationRouter, shapeInteractionCompleteInterest));
+
       setCanvasState({
-         _inSelect: true, _selectionStart: coord, _selectionEnd: coord,
-         _width: canvasState._width, _height: canvasState._height, 
-         _shapes: canvasState._shapes
+         _width: canvasState._width, _height: canvasState._height,
+         _shapes: canvasState._shapes,
+         _shapeInteractor: shapeInteractor,
+         _notificationRouter: notificationRouter
       });
 
    };
@@ -203,13 +264,16 @@ export const Canvas = (props: ICanvasProps) => {
       event.preventDefault();
       event.stopPropagation();
 
-      if (canvasState._inSelect) {
+      if (canvasState._shapeInteractor) {
          var coord: GPoint = getMousePosition(getCanvas(event), event);
 
+         canvasState._shapeInteractor.mouseMove(coord);
+
          setCanvasState({
-            _inSelect: true, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
             _width: canvasState._width, _height: canvasState._height,
-            _shapes: canvasState._shapes
+            _shapes: canvasState._shapes,
+            _shapeInteractor: canvasState._shapeInteractor,
+            _notificationRouter: canvasState._notificationRouter
          });
       }
    };
@@ -219,18 +283,22 @@ export const Canvas = (props: ICanvasProps) => {
       event.preventDefault();
       event.stopPropagation();
 
-      if (canvasState._inSelect) {
+      if (canvasState._shapeInteractor) {
          var coord: GPoint = getMousePosition(getCanvas(event), event);
 
+         canvasState._shapeInteractor.mouseUp(coord);
+
          setCanvasState({
-            _inSelect: false, _selectionStart: canvasState._selectionStart, _selectionEnd: coord,
             _width: canvasState._width, _height: canvasState._height,
-            _shapes: canvasState._shapes
+            _shapes: canvasState._shapes,
+            _shapeInteractor: null,
+            _notificationRouter: null
          });
       }
    };
 
-   return (<canvas
+   return (<div className={cursorStylesFromMode(props.mode)}>
+      <canvas
       className="App-canvas"
       ref={canvasRef as any}
       width={canvasWidth as any}
@@ -239,5 +307,5 @@ export const Canvas = (props: ICanvasProps) => {
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
-   />);
+   /></div>);
 }
