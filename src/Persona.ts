@@ -106,6 +106,10 @@ export class Persona extends MSerialisable {
       this.assign(new Persona (obj.id, obj.name, obj.thumbnailB64, new Date(obj.lastSeenAt)));
    }
 
+   static factoryFn(): Persona {
+      return new Persona;
+   }
+
    /**
    * set of 'getters' for private variables
    */

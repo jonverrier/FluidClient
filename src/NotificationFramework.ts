@@ -152,7 +152,7 @@ export class Notification {
 }
 
 /// <summary>
-/// NotificationFor -  template to specialse Notification by adding an EventData class. 
+/// NotificationFor -  template to specialse Notification by adding an NotificationData class. 
 /// Value class - just holds reference to the data, is expected to exist only for the synchronous life of the notification. 
 /// If you want data to last longer, add a reference type and the observer will have to save it. 
 /// </summary>
@@ -162,12 +162,12 @@ export class NotificationFor<EventData> extends Notification
 
 
    /**
-    * Create an empty NotificationFor<EventData>  object - required for particiation in serialisation framework
+    * Create an empty NotificationFor<NotificationData>  object - required for particiation in serialisation framework
     */
    constructor();
 
    /**
-    * Create a NotificationFor<EventData> object
+    * Create a NotificationFor<NotificationData> object
     * @param notification_ - object to copy from - should work for JSON format and for real constructed objects
     */
    public constructor(notification_: NotificationFor<EventData>);
@@ -307,11 +307,11 @@ export class ObserverInterest {
 /// NotificationRouterFor -  template to act as an intermediary, type-safe router that connects a specific function signature for the method that is called in a notification
 /// </summary>
 /// 
-type FunctionFor<EventData> = (interest: Interest, data: NotificationFor<EventData>) => void;
+type FunctionFor<NotificationData> = (interest: Interest, data: NotificationFor<NotificationData>) => void;
 
-export class NotificationRouterFor<EventData> implements IObserver
+export class NotificationRouterFor<NotificationData> implements IObserver
 {
-   private _function: FunctionFor<EventData>;
+   private _function: FunctionFor<NotificationData>;
 
    /**
     * Create empty NotificationRouterFor object
@@ -322,13 +322,13 @@ export class NotificationRouterFor<EventData> implements IObserver
     * Create a NotificationRouterFor object
     * @param interest_ - the thing it is interested in 
     */
-   constructor(_function: FunctionFor<EventData>);
+   constructor(_function: FunctionFor<NotificationData>);
 
    /**
-    * Create a NotificationRouterFor<EventData>  object
+    * Create a NotificationRouterFor<NotificationData>  object
     * @param observerRouter - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(observerRouter: NotificationRouterFor<EventData>);
+   public constructor(observerRouter: NotificationRouterFor<NotificationData>);
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Construct empty
@@ -345,14 +345,14 @@ export class NotificationRouterFor<EventData> implements IObserver
       }
    }
 
-   private isMyType(rhs: FunctionFor<EventData>): boolean {
+   private isMyType(rhs: FunctionFor<NotificationData>): boolean {
       return rhs.hasOwnProperty('_function');
    }
 
    /**
    * set of 'getters' for private variables
    */
-   get function(): FunctionFor<EventData> {
+   get function(): FunctionFor<NotificationData> {
       return this._function;
    }
 
@@ -361,7 +361,7 @@ export class NotificationRouterFor<EventData> implements IObserver
     * Shallow compare
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: NotificationRouterFor<EventData>): boolean {
+   equals(rhs: NotificationRouterFor<NotificationData>): boolean {
 
       return (this._function === rhs._function);
    }
@@ -370,13 +370,13 @@ export class NotificationRouterFor<EventData> implements IObserver
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: NotificationRouterFor<EventData>): NotificationRouterFor<EventData> {
+   assign(rhs: NotificationRouterFor<NotificationData>): NotificationRouterFor<NotificationData> {
       this._function = rhs._function;
 
       return this;
    }
 
-   notify(interest_: Interest, notification_: NotificationFor<EventData>): void {
+   notify(interest_: Interest, notification_: NotificationFor<NotificationData>): void {
 
       // pass on to the required method
       this._function(interest_, notification_);
@@ -402,15 +402,15 @@ export class Notifier {
    }
 
    // Operations
-   notifyObservers(interest_: Interest, event_: Notification): void {
+   notifyObservers(interest_: Interest, notificationData_: Notification): void {
 
-      log.debug(tag.notification, "Notification:" + interest_.notificationId + ": " + JSON.stringify (event_));
+      log.debug(tag.notification, "Notification:" + interest_.notificationId + ": " + JSON.stringify (notificationData_));
 
       this._observerInterests.forEach((observerInterest) => {
 
          if (observerInterest.interest.equals (interest_)) {
 
-            observerInterest.observer.notify(observerInterest.interest, event_);
+            observerInterest.observer.notify(observerInterest.interest, notificationData_);
          }
        });
     }

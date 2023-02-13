@@ -13,7 +13,7 @@ export abstract class MSerialisable {
    }
 
    abstract streamToJSON(): string;
-   abstract streamFromJSON (stream: string) : void;
+   abstract streamFromJSON(stream: string): void;
 }
 
 /*

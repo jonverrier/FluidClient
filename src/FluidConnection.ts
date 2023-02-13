@@ -8,6 +8,7 @@ import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
 import { ClientProps } from './FluidConnectionProps';
+import { CaucusOf, CaucusFactoryFunctionFor } from './Caucus';
 
 var alwaysWaitAfterConnectFor: number = 1000;
 
@@ -126,6 +127,10 @@ export class FluidConnection extends Notifier {
       else {
          throw new InvalidOperationError("The remote data service is not connected - please try again in a short while.")
       }
+   }
+
+   personCaucus(): CaucusOf<Persona> {
+      return new CaucusOf<Persona>(this._container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
    }
 
    watchForChanges(): void {
