@@ -12,9 +12,10 @@ import {
 import { GPoint, GRect } from './Geometry';
 import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } from './NotificationFramework';
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from './Shape';
+import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
 import { ShapeInteractor, shapeInteractionCompleteInterest } from './CanvasInteractors';
-import { SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
+import { RectangleShapeRenderer, SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -69,6 +70,11 @@ function drawShapes (ctx: CanvasRenderingContext2D,
 
          let renderer = ShapeRendererFactory.create(shape.shapeID());
 
+         // TODO - this is a plug until can dynamically create shapes and shape renderers
+         // And can plug that unto the CaucusOf<Shape>s
+         if (!renderer)
+            renderer = new RectangleShapeRenderer();
+
          renderer.draw(ctx, shape);
       });
 
@@ -99,25 +105,23 @@ function drawSelectionRect(ctx: CanvasRenderingContext2D,
 
 class CanvasState {
 
-   _width: number;
-   _height: number;
-   _shapes: Map<string, Shape>;
-   _shapeInteractor: ShapeInteractor;
-   _notificationRouter: NotificationRouterFor<GRect>;
+   width: number;
+   height: number;
+   shapes: Map<string, Shape>;
+   shapeInteractor: ShapeInteractor;
 
-   constructor(width_: number, height_: number) {
-      this._width = width_;
-      this._height = height_;
+   constructor(width_: number, height_: number, shapes_: Map<string, Shape>) {
+      this.width = width_;
+      this.height = height_;
 
-      this._shapes = new Map<string, Shape>();
-      this._shapeInteractor = null;
-      this._notificationRouter = null;
+      this.shapes = new Map<string, Shape>();
+      this.shapeInteractor = null;
    }
 }
 
-function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
+function useCanvas(ref: React.MutableRefObject<any>, shapes_: Map<string, Shape>): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
 
-   const [canvasState, setCanvasState] = useState<CanvasState> (new CanvasState(canvasWidth, canvasHeight));
+   const [canvasState, setCanvasState] = useState<CanvasState> (new CanvasState(canvasWidth, canvasHeight, shapes_));
 
    useEffect(() => {
       const canvasObj = ref.current;
@@ -127,13 +131,13 @@ function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispat
       drawBackground(ctx).then(() => {
 
          // then shapes
-         drawShapes(ctx, canvasState._shapes);
+         drawShapes(ctx, canvasState.shapes);
 
       }).then (() => {
 
          // then draw selection rectangle
-         if (canvasState._shapeInteractor) {
-            drawSelectionRect(ctx, canvasState._shapeInteractor.rectangle);
+         if (canvasState.shapeInteractor) {
+            drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
          } 
       });
    });
@@ -144,6 +148,7 @@ function useCanvas(ref: React.MutableRefObject<any>): [CanvasState, React.Dispat
 export interface ICanvasProps {
 
    mode: CanvasMode;
+   shapeCaucus: CaucusOf<Shape>;
 }
 
 function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect): ShapeInteractor {
@@ -162,7 +167,8 @@ function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect): ShapeIntera
 export const Canvas = (props: ICanvasProps) => {
 
    const canvasRef = useRef(null);
-   const [canvasState, setCanvasState] = useCanvas(canvasRef);
+   const [canvasState, setCanvasState] = useCanvas(canvasRef,
+                                                   props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>);
 
    const cursorDefaultClasses = cursorDefaultStyles();
    const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
@@ -209,17 +215,20 @@ export const Canvas = (props: ICanvasProps) => {
       switch (props.mode) { 
          case CanvasMode.Rectangle:
             // Clear previous selections
-            canvasState._shapes.forEach((shape: Shape, key: string) => {
+            canvasState.shapes.forEach((shape: Shape, key: string) => {
                shape.isSelected = false;
             });
             // Create new shape - selected
             let shape = new Rectangle(data.eventData, ShapeBorderColour.Black, ShapeBorderStyle.Solid, true);
-            canvasState._shapes.set(shape.id, shape);
+
+            // set the version in Cuacus first, which pushes to other clients, then reset our state
+            props.shapeCaucus.add(shape.id, shape);
+            canvasState.shapes.set(shape.id, shape);
             break;
          case CanvasMode.Select:
          default:
             // Select items within the selection area
-            canvasState._shapes.forEach((shape: Shape, key: string) => {
+            canvasState.shapes.forEach((shape: Shape, key: string) => {
                if (data.eventData.fullyIncludes(shape.boundingRectangle)) {
                   shape.isSelected = true;
                }
@@ -242,7 +251,6 @@ export const Canvas = (props: ICanvasProps) => {
       let clientRect = canvas.getBoundingClientRect();
       let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
 
-
       // Create the right interactor, and hook up to notifications of when the interaction is complete
       let shapeInteractor = shapeInteractorFromMode(props.mode, bounds);
       shapeInteractor.mouseDown(coord);
@@ -251,10 +259,9 @@ export const Canvas = (props: ICanvasProps) => {
       shapeInteractor.addObserver(new ObserverInterest(notificationRouter, shapeInteractionCompleteInterest));
 
       setCanvasState({
-         _width: canvasState._width, _height: canvasState._height,
-         _shapes: canvasState._shapes,
-         _shapeInteractor: shapeInteractor,
-         _notificationRouter: notificationRouter
+         width: canvasState.width, height: canvasState.height,
+         shapes: canvasState.shapes,
+         shapeInteractor: shapeInteractor
       });
 
    };
@@ -264,16 +271,15 @@ export const Canvas = (props: ICanvasProps) => {
       event.preventDefault();
       event.stopPropagation();
 
-      if (canvasState._shapeInteractor) {
+      if (canvasState.shapeInteractor) {
          var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-         canvasState._shapeInteractor.mouseMove(coord);
+         canvasState.shapeInteractor.mouseMove(coord);
 
          setCanvasState({
-            _width: canvasState._width, _height: canvasState._height,
-            _shapes: canvasState._shapes,
-            _shapeInteractor: canvasState._shapeInteractor,
-            _notificationRouter: canvasState._notificationRouter
+            width: canvasState.width, height: canvasState.height,
+            shapes: canvasState.shapes,
+            shapeInteractor: canvasState.shapeInteractor
          });
       }
    };
@@ -283,19 +289,42 @@ export const Canvas = (props: ICanvasProps) => {
       event.preventDefault();
       event.stopPropagation();
 
-      if (canvasState._shapeInteractor) {
+      if (canvasState.shapeInteractor) {
          var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-         canvasState._shapeInteractor.mouseUp(coord);
+         canvasState.shapeInteractor.mouseUp(coord);
 
          setCanvasState({
-            _width: canvasState._width, _height: canvasState._height,
-            _shapes: canvasState._shapes,
-            _shapeInteractor: null,
-            _notificationRouter: null
+            width: canvasState.width, height: canvasState.height,
+            shapes: canvasState.shapes,
+            shapeInteractor: null
          });
       }
    };
+
+   function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
+
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: props.shapeCaucus.current(),
+         shapeInteractor: canvasState.shapeInteractor
+      });
+   }
+
+   if (props.shapeCaucus) {
+      var router: NotificationRouterFor<string>;
+      var addedInterest: ObserverInterest;
+      var changedInterest: ObserverInterest;
+      var removedInterest: ObserverInterest;
+
+      router = new NotificationRouterFor<string>(onCaucusChange.bind(this));
+      addedInterest = new ObserverInterest(router, CaucusOf.caucusMemberAddedInterest);
+      changedInterest = new ObserverInterest(router, CaucusOf.caucusMemberChangedInterest);
+      removedInterest = new ObserverInterest(router, CaucusOf.caucusMemberRemovedInterest);
+      props.shapeCaucus.addObserver(addedInterest);
+      props.shapeCaucus.addObserver(changedInterest);
+      props.shapeCaucus.addObserver(removedInterest);
+   }
 
    return (<div className={cursorStylesFromMode(props.mode)}>
       <canvas

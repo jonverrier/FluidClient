@@ -24,6 +24,7 @@ import { Alert } from '@fluentui/react-components/unstable';
 // Local
 import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
 import { Persona } from './Persona';
+import { Shape } from './Shape';
 import { FluidConnection } from './FluidConnection';
 import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from './NotificationFramework';
 import { CaucusOf } from './Caucus';
@@ -92,6 +93,7 @@ export interface IWhiteboardToolsHeaderProps {
    fluidConnection: FluidConnection;
    navigateToHash: NavigateToHash;
    participantCaucus: CaucusOf<Persona>;
+   shapeCaucus: CaucusOf<Shape>;
 }
 
 export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
@@ -146,7 +148,8 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       alertMessage: null,
       connecting: false,
       canSignOut: false,
-      mode: CanvasMode.Select
+      mode: CanvasMode.Select,
+      participants: new Map<string, Persona>
    });
 
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
@@ -193,6 +196,16 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
          const data = {
             ...prevState,
             mode: mode_
+         }
+         return data
+      })
+   };
+
+   const setParticipants = (participants_: Map<string, Persona>) => {
+      setUiState((prevState) => {
+         const data = {
+            ...prevState,
+            participants: participants_
          }
          return data
       })
@@ -331,11 +344,13 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    function onToolSelect(mode_: CanvasMode): void {
+
       setCanvasMode(mode_);
    }
 
    function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
-      this.forceUpdate();
+
+      setParticipants(props.participantCaucus.current());
    }
 
    if (props.participantCaucus) {
@@ -405,7 +420,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             : <div></div>}
          </div>
 
-         <Canvas mode={uiState.mode}></Canvas>
+         <Canvas mode={uiState.mode} shapeCaucus={props.shapeCaucus}></Canvas>
 
       </FluentProvider>
    );

@@ -13,6 +13,7 @@ import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValu
 import { ObserverInterest, NotificationRouterFor } from './NotificationFramework';
 import { CaucusOf } from './Caucus';
 import { Persona } from './Persona';
+import { Shape } from './Shape';
 import { FluidConnection } from './FluidConnection';
 import { WhiteboardToolsHeader } from './Whiteboard';
 
@@ -31,9 +32,11 @@ export interface IAppProps {
 }
 
 class AppState {
+
    localUser: Persona;
    fluidConnection: FluidConnection;
    participantCaucus: CaucusOf<Persona>;
+   shapeCaucus: CaucusOf<Shape>;
 }
 
 function makeLocalUser(): Persona {
@@ -103,18 +106,19 @@ export class App extends React.Component<IAppProps, AppState> {
       this.state = {
          fluidConnection: fluidConnection,
          localUser: this._initialUser,
-         participantCaucus: null
+         participantCaucus: null,
+         shapeCaucus: null
       };
 
    }
 
    onConnection(containerId: string): void {
-      var caucus: CaucusOf<Persona> = this.state.fluidConnection.participantCaucus();
 
       this.setState ({
          fluidConnection: this.state.fluidConnection,
          localUser: this.state.localUser,
-         participantCaucus: caucus
+         participantCaucus: this.state.fluidConnection.participantCaucus(),
+         shapeCaucus: this.state.fluidConnection.shapeCaucus()
       });
    }
 
@@ -125,6 +129,7 @@ export class App extends React.Component<IAppProps, AppState> {
             navigateToHash={navigateToHash}
             localUser={this.state.localUser}
             participantCaucus={this.state.participantCaucus}
+            shapeCaucus={this.state.shapeCaucus}
          />
       );
    }

@@ -4,6 +4,7 @@ import { AzureClient } from "@fluidframework/azure-client";
 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
+import { Shape } from './Shape';
 import { ConnectionError, InvalidOperationError } from './Errors';
 import { ClientProps } from './FluidConnectionProps';
 import { CaucusOf, CaucusFactoryFunctionFor } from './Caucus';
@@ -14,7 +15,10 @@ export interface IConnectionProps {
 }
 
 const containerSchema = {
-   initialObjects: { participantMap: SharedMap }
+   initialObjects: {
+      participantMap: SharedMap,
+      shapeMap: SharedMap
+   }
 };
 
 export class FluidConnection extends Notifier {
@@ -27,6 +31,7 @@ export class FluidConnection extends Notifier {
    _client: AzureClient;
    _container: IFluidContainer;
    _participantCaucus: CaucusOf<Persona>;
+   _shapeCaucus: CaucusOf<Shape>;
 
    constructor(props: IConnectionProps) {
 
@@ -37,6 +42,7 @@ export class FluidConnection extends Notifier {
       this._container = null;
       this._localUser = null;
       this._participantCaucus = null;
+      this._shapeCaucus = null;
    }
 
    async createNew(localUser: Persona): Promise<string> {
@@ -54,28 +60,20 @@ export class FluidConnection extends Notifier {
          this._container = container;
 
          // Attach _container to service and return assigned ID
-         const id = await container.attach();
+         const containerId = await container.attach();
          await container.connect();
          await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
-         // Notifiy observers we are connected
-         // They can then hook up their own observers to the caucus, 
-         // which will include the changes when we connect our own user ID to the caucus
-         this._participantCaucus = new CaucusOf<Persona>(container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
-         this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
+         this.setupAfterConnection(containerId);
 
-         // Connect our own user ID to the caucus
-         var storedVal: string = localUser.streamToJSON();
-         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-
-         return id;
+         return containerId;
       }
       catch (e: any) {
-         throw new ConnectionError("Error connecting new container to remote data service:" + e.message);
+         throw new ConnectionError("Error connecting new container to remote data service: " + e.message);
       }
    }
 
-   async attachToExisting(id: string, localUser: Persona): Promise<string> {
+   async attachToExisting(containerId: string, localUser: Persona): Promise<string> {
 
       try {
          var clientProps: ClientProps = new ClientProps();
@@ -86,27 +84,38 @@ export class FluidConnection extends Notifier {
 
          this._localUser = localUser;
 
-         const { container, services } = await this._client.getContainer(id, containerSchema);
+         const { container, services } = await this._client.getContainer(containerId, containerSchema);
          this._container = container;
          await container.connect();
          await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
-         // Notifiy observers we are connected
-         // They can then hook up their own observers to the caucus,
-         // which will include the changes when we connect our own user ID to the caucus
-         this._participantCaucus = new CaucusOf<Persona>(container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
-         this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
+         this.setupAfterConnection(containerId);
 
-         // Connect our own user ID to the caucus
-         var storedVal: string = localUser.streamToJSON();
-         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-
-         return id;
+         return containerId;
       }
       catch (e: any) {
-         throw new ConnectionError("Error attaching existing new container to remote data service:" + e.message)
+         throw new ConnectionError("Error attaching existing new container to remote data service: " + e.message)
       }
    }
+
+   // local function to cut down duplication between createNew() and AttachToExisting())
+   private setupAfterConnection(id: string): void {
+
+      // Create caucuses so they exist when observers are notified of connection
+      this._participantCaucus = new CaucusOf<Persona>(this._container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
+      this._shapeCaucus = new CaucusOf<Shape>(this._container.initialObjects.shapeMap as SharedMap, Shape.factoryFn);
+
+      // Notify observers we are connected
+      // They can then hook up their own observers to the caucus,
+      // which will include the changes when we connect our own user ID to the caucus
+      this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
+
+      // Connect our own user ID to the caucus
+      var storedVal: string = this._localUser.streamToJSON();
+      (this._container.initialObjects.participantMap as SharedMap).set(this._localUser.id, storedVal);
+
+   }
+
 
    canDisconnect(): boolean {
 
@@ -134,6 +143,10 @@ export class FluidConnection extends Notifier {
 
    participantCaucus(): CaucusOf<Persona> {
       return this._participantCaucus;
+   }
+
+   shapeCaucus(): CaucusOf<Shape> {
+      return this._shapeCaucus;
    }
 
 }
