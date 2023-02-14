@@ -47,8 +47,7 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
             }
          } else {
 
-            this.notifyObservers(CaucusOf.caucusMemberRemovedInterest, new NotificationFor<string>(CaucusOf.caucusMemberRemovedInterest, changed.key));
-
+            this.notifyObservers(CaucusOf.caucusMemberAddedInterest, new NotificationFor<string>(CaucusOf.caucusMemberAddedInterest, changed.key));
          }
       });
    }

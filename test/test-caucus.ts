@@ -13,7 +13,7 @@ var myThumbnail: string = "abcd";
 var myLastSeenAt = new Date();
 
 async function wait() {
-   await new Promise(resolve => setTimeout(resolve, 500));
+   await new Promise(resolve => setTimeout(resolve, 1000));
 }
 
 function onAdd(interest_: Interest, notification_: NotificationFor<string>) : void {
@@ -43,15 +43,14 @@ describe("Caucus", function () {
       newConnection = new FluidConnection({});
 
       persona = new Persona(myId, myName, myThumbnail, myLastSeenAt);
-
       id = await newConnection.createNew(persona);
 
       await wait();
-      let caucus = newConnection.personCaucus();
+      let caucus = newConnection.participantCaucus();
 
       caucus.add(persona.id, persona);
       expect(caucus.has(persona.id)).to.equal(true);
-      expect(caucus.get(persona.id).equals (persona)).to.equal(true);
+      expect(caucus.get(persona.id).equals(persona)).to.equal(true);
       expect(caucus.current().size).to.equal(1);
 
       persona.name = "Joe";
@@ -64,11 +63,9 @@ describe("Caucus", function () {
       expect(caucus.has(persona.id)).to.equal(false);
       expect(caucus.current().size).to.equal(0);
 
+      await wait();
       await newConnection.disconnect();
    });
- 
-
-
 
 });
 

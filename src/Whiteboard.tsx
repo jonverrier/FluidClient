@@ -24,8 +24,8 @@ import { Alert } from '@fluentui/react-components/unstable';
 // Local
 import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
 import { Persona } from './Persona';
-import { Participants } from './Participants';
 import { FluidConnection } from './FluidConnection';
+import { CaucusOf } from './Caucus';
 import { Canvas } from './Canvas';
 import { CanvasTools } from './CanvasTools';
 import { CanvasMode } from './CanvasModes';
@@ -87,9 +87,10 @@ type NavigateToHash = (id: string) => void;
 
 export interface IWhiteboardToolsHeaderProps {
 
-   participants: Participants;
+   localUser: Persona;
    fluidConnection: FluidConnection;
    navigateToHash: NavigateToHash;
+   participantCaucus: CaucusOf<Persona>;
 }
 
 export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
@@ -141,9 +142,9 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    const [uiState, setUiState] = useState({
-      joinAs: props.participants.localUser.name,
-      enableShare: enableShareFromJoinAs(props.participants.localUser.name),
-      sharePrompt: sharePromptFromJoinAs(props.participants.localUser.name),
+      joinAs: props.localUser.name,
+      enableShare: enableShareFromJoinAs(props.localUser.name),
+      sharePrompt: sharePromptFromJoinAs(props.localUser.name),
       fluidId: null,
       alertMessage: null,
       connecting: false,
@@ -154,15 +155,16 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
    const urlToSharePromptEnabled: string = fullConnectionString(uiState.fluidId);
 
-   const avatarNames = makeAvatarNames(uiState.joinAs, props.participants.localUser, props.participants.remoteUsers);
+   const avatarNames = makeAvatarNames(uiState.joinAs, props.participantCaucus);
    const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: avatarNames, maxInlineItems: 3 });
 
-   function makeAvatarNames(joinAs: string, localUser: Persona, remoteUsers: Persona[]): Array<NameKeyPair> {
+   function makeAvatarNames(joinAs: string, caucus: CaucusOf<Persona>): Array<NameKeyPair> {
+
+      let caucusMembers = caucus.current();
+
       var avatarNameKeyPair: Array<NameKeyPair> = new Array<NameKeyPair>();
 
-      avatarNameKeyPair.push({ name: joinAs, key: localUser.id });
-
-      remoteUsers.forEach((item, index) => {
+      caucusMembers.forEach((item, key) => {
          avatarNameKeyPair.push({ name: item.name, key: item.id });
       });
 
@@ -201,9 +203,9 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    function onConnect(): void {
 
       // Create a new, freshly stamped user, with the stable UUID and the text the user typed in 
-      var newPersona: Persona = new Persona(props.participants.localUser.id,
+      var newPersona: Persona = new Persona(props.localUser.id,
          uiState.joinAs,
-         props.participants.localUser.thumbnailB64,
+         props.localUser.thumbnailB64,
          new Date());
 
       if (isJoiningExisting()) {

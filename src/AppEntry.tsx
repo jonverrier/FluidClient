@@ -11,8 +11,8 @@ import { log, LogLevel, tag } from 'missionlog';
 import { uuid } from './Uuid';
 import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
 import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from './NotificationFramework';
+import { CaucusOf } from './Caucus';
 import { Persona } from './Persona';
-import { Participants } from './Participants';
 import { FluidConnection } from './FluidConnection';
 import { WhiteboardToolsHeader } from './Whiteboard';
 
@@ -31,8 +31,9 @@ export interface IAppProps {
 }
 
 class AppState {
-   participants: Participants;
+   localUser: Persona;
    fluidConnection: FluidConnection;
+   participantCaucus: CaucusOf<Persona>;
 }
 
 function makeLocalUser(): Persona {
@@ -78,8 +79,21 @@ function checkNavigateToLastBoard(): void {
 export class App extends React.Component<IAppProps, AppState> {
 
    private _initialUser: Persona;
+   private _router: NotificationRouterFor<string>;
+   private _connectedInterest: ObserverInterest;
+   private _participantCaucus: CaucusOf<Persona>;
+
+   /*
    private _router: NotificationRouterFor<Array<Persona>>;
-   private _interest: ObserverInterest;
+   private addedInterest: ObserverInterest;
+   private changedInterest: ObserverInterest;
+   private removedInterest: ObserverInterest;
+
+      this._router = new NotificationRouterFor<Array<Persona>>(this.onCaucusChange.bind(this));
+      this.addedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberAddedInterest);
+      this.changedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberChangedInterest);
+      this.removedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberRemovedInterest);
+   */
 
    constructor(props: IAppProps) {
 
@@ -93,29 +107,38 @@ export class App extends React.Component<IAppProps, AppState> {
       checkNavigateToLastBoard();
 
       this._initialUser = makeLocalUser();
-      this._router = new NotificationRouterFor<Array<Persona>>(this.onRemoteChange.bind(this));
-      this._interest = new ObserverInterest(this._router, FluidConnection.remoteUsersChangedInterest);
 
       var fluidConnection: FluidConnection = new FluidConnection({});
-      var participants: Participants = new Participants(this._initialUser, new Array<Persona>())
-      fluidConnection.addObserver(this._interest);
+      this._router = new NotificationRouterFor <string> (this.onConnection.bind(this));
+      this._connectedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberAddedInterest);
+      fluidConnection.addObserver(this._connectedInterest);
 
       this.state = {
          fluidConnection: fluidConnection,
-         participants: participants
+         localUser: this._initialUser,
+         participantCaucus: null
       };
 
    }
 
-   onRemoteChange(interest_: Interest, notification_: NotificationFor<Array<Persona>>): void {
+   onConnection(containerId: string): void {
+      var caucus: CaucusOf<Persona> = this.state.fluidConnection.participantCaucus();
 
-      this.setState({ participants: new Participants(this._initialUser, notification_.eventData) });
-      this.forceUpdate(); // Need to push new properties down to the Header component
+      this.setState ({
+         fluidConnection: this.state.fluidConnection,
+         localUser: this.state.localUser,
+         participantCaucus: caucus
+      });
    }
 
    render() {
       return (
-         <WhiteboardToolsHeader fluidConnection={this.state.fluidConnection} participants={this.state.participants} navigateToHash={navigateToHash} />
+         <WhiteboardToolsHeader
+            fluidConnection={this.state.fluidConnection}
+            navigateToHash={navigateToHash}
+            localUser={this.state.localUser}
+            participantCaucus={this.state.participantCaucus}
+         />
       );
    }
 }

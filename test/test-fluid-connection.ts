@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Persona } from '../src/Persona';
-import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from '../src/NotificationFramework';
+import { Interest, NotificationFor } from '../src/NotificationFramework';
 import { FluidConnection } from '../src/FluidConnection';
 import { uuid } from '../src/Uuid';
 
@@ -13,10 +13,10 @@ var myThumbnail: string = "abcd";
 var myLastSeenAt = new Date();
 
 async function wait() {
-   await new Promise(resolve => setTimeout(resolve, 500));
+   await new Promise(resolve => setTimeout(resolve, 1000));
 }
 
-function onRemoteChange(interest_: Interest, notification_: NotificationFor<Array<Persona>>) : void {
+function onConnect(interest_: Interest, notification_: NotificationFor<string>) : void {
 
 }
 
@@ -63,6 +63,7 @@ describe("FluidConnection", function () {
       await wait();
 
       await newConnection.disconnect();
+      await wait();
 
       expect(newConnection.canDisconnect() === false).to.equal(true);
    });   

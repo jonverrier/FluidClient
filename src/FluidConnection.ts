@@ -21,13 +21,14 @@ const containerSchema = {
 
 export class FluidConnection extends Notifier {
 
+   public static connectedNotificationId = "connected";
+   public static connectedInterest = new Interest(FluidConnection.connectedNotificationId);
+
    _props: IConnectionProps;
    _localUser: Persona;
    _client: AzureClient;
    _container: IFluidContainer;
-
-   public static remoteUsersChangedNotificationId = "RemoteUsersChanged";
-   public static remoteUsersChangedInterest = new Interest(FluidConnection.remoteUsersChangedNotificationId);
+   _participantCaucus: CaucusOf<Persona>;
 
    constructor(props: IConnectionProps) {
 
@@ -37,6 +38,7 @@ export class FluidConnection extends Notifier {
       this._props = props;
       this._container = null;
       this._localUser = null;
+      this._participantCaucus = null;
    }
 
    async createNew(localUser: Persona): Promise<string> {
@@ -53,17 +55,20 @@ export class FluidConnection extends Notifier {
          const { container, services } = await this._client.createContainer(containerSchema);
          this._container = container;
 
-         // Set default data as our user ID
-         var storedVal: string = localUser.streamToJSON();
-
-         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-
          // Attach _container to service and return assigned ID
          const id = await container.attach();
          await container.connect();
          await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
-         this.watchForChanges();
+         // Notifiy observers we are connected
+         // They can then hook up their own observers to the caucus, 
+         // which will include the changes when we connect our own user ID to the caucus
+         this._participantCaucus = new CaucusOf<Persona>(container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
+         this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
+
+         // Connect our own user ID to the caucus
+         var storedVal: string = localUser.streamToJSON();
+         (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
 
          return id;
       }
@@ -88,12 +93,15 @@ export class FluidConnection extends Notifier {
          await container.connect();
          await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
-         // Add our User ID to the shared data - unconditional write so we have stable UUIDs
+         // Notifiy observers we are connected
+         // They can then hook up their own observers to the caucus,
+         // which will include the changes when we connect our own user ID to the caucus
+         this._participantCaucus = new CaucusOf<Persona>(container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
+         this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
+
+         // Connect our own user ID to the caucus
          var storedVal: string = localUser.streamToJSON();
          (container.initialObjects.participantMap as any).set(localUser.id, storedVal);
-
-         this.watchForChanges();
-         this.bubbleUp();
 
          return id;
       }
@@ -108,11 +116,8 @@ export class FluidConnection extends Notifier {
          return false;
 
       var state = this._container.connectionState;
-
       if (state !== ConnectionState.Connected)
          return false;
-
-      // TODO - should we check this._container.isDirty;
 
       return true;
    }
@@ -120,7 +125,7 @@ export class FluidConnection extends Notifier {
    async disconnect(): Promise<boolean> {
 
       if (this.canDisconnect()) {
-         this._container.disconnect();
+         await this._container.disconnect();
 
          return true;
       }
@@ -129,35 +134,8 @@ export class FluidConnection extends Notifier {
       }
    }
 
-   personCaucus(): CaucusOf<Persona> {
+   participantCaucus(): CaucusOf<Persona> {
       return new CaucusOf<Persona>(this._container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
    }
 
-   watchForChanges(): void {
-      (this._container.initialObjects.participantMap as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
-
-         log.debug(tag.notification, "valueChanged:" + JSON.stringify(changed));
-
-         this.bubbleUp();
-      });
-   }
-
-   private bubbleUp(): void {
-      var _remoteUsers = new Array<Persona>();
-
-      //  enumerate members of the sharedMap
-      (this._container.initialObjects.participantMap as any).forEach((value: any, key: string, map: Map<string, any>) => {
-         var temp: Persona = new Persona();
-
-         temp.streamFromJSON(value);
-
-         if (temp.id !== this._localUser.id) {
-            _remoteUsers.push(temp);
-         }
-      });
-
-      var notificationData: NotificationFor<Array<Persona>> = new NotificationFor<Array<Persona>>(FluidConnection.remoteUsersChangedInterest, _remoteUsers);
-
-      this.notifyObservers(FluidConnection.remoteUsersChangedInterest, notificationData);
-   }
 }
