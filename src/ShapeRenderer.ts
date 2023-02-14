@@ -64,7 +64,6 @@ export abstract class ShapeRenderer {
       ctx.save();
 
       ctx.strokeStyle = "#393D47";
-      ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.stroke();
@@ -82,6 +81,11 @@ export abstract class ShapeRenderer {
       ctx.fillStyle = "#393D47";
       ctx.shadowBlur = 8;
       ctx.shadowColor = "green";
+
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+      ctx.stroke();
 
       let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, 8, 8);
 

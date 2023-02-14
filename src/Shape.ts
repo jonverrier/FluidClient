@@ -154,6 +154,12 @@ export class Shape extends MSerialisable {
    shapeID(): string {
       return "Shape";
    }
+
+   // TO DO - will need a way to virtually construct derived types. 
+   static factoryFn(): Shape {
+      return new Shape();
+   }
+
 }
 
 export class SelectionRectangle extends Shape {
@@ -193,6 +199,7 @@ export class SelectionRectangle extends Shape {
    shapeID(): string {
       return "SelectionRectangle";
    }
+
 }
 
 export class Rectangle extends Shape {

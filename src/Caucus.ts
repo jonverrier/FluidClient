@@ -33,8 +33,6 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
       (this._shared as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
 
-         log.debug(tag.notification, "valueChanged:" + JSON.stringify(changed));
-
          if (changed.previousValue) {
 
             if (target.has(changed.key)) {
@@ -102,6 +100,7 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
          this._localCopy.set(key, object);
       }); 
+
       return this._localCopy;
    }
 }

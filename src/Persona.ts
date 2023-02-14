@@ -107,7 +107,7 @@ export class Persona extends MSerialisable {
    }
 
    static factoryFn(): Persona {
-      return new Persona;
+      return new Persona();
    }
 
    /**
