@@ -25,6 +25,7 @@ import { Alert } from '@fluentui/react-components/unstable';
 import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
 import { Persona } from './Persona';
 import { FluidConnection } from './FluidConnection';
+import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from './NotificationFramework';
 import { CaucusOf } from './Caucus';
 import { Canvas } from './Canvas';
 import { CanvasTools } from './CanvasTools';
@@ -104,10 +105,6 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const inputId = useId('joinAs');
 
    function isJoiningExisting(): boolean {
-      return false;
-
-      if (location.protocol === 'file') //  Dont attempt to rejoin local Whiteboard as they are ephemeral
-         return false;
 
       return location.hash ? true : false;
    }
@@ -155,18 +152,24 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    const urlToSharePromptDisabled: string = "You can copy the URL to share this whiteboard with others when you have clicked the share button";
    const urlToSharePromptEnabled: string = fullConnectionString(uiState.fluidId);
 
-   const avatarNames = makeAvatarNames(uiState.joinAs, props.participantCaucus);
+   const avatarNames = makeAvatarNames(uiState.joinAs, props.localUser, props.participantCaucus);
    const { inlineItems, overflowItems } = partitionAvatarGroupItems({ items: avatarNames, maxInlineItems: 3 });
 
-   function makeAvatarNames(joinAs: string, caucus: CaucusOf<Persona>): Array<NameKeyPair> {
-
-      let caucusMembers = caucus.current();
+   function makeAvatarNames(joinAs: string, localUser: Persona, caucus: CaucusOf<Persona>): Array<NameKeyPair> {
 
       var avatarNameKeyPair: Array<NameKeyPair> = new Array<NameKeyPair>();
 
-      caucusMembers.forEach((item, key) => {
-         avatarNameKeyPair.push({ name: item.name, key: item.id });
-      });
+      if (!caucus) {
+         // If we have no members, for example we are not connected, we show ourselves only
+         avatarNameKeyPair.push({ name: localUser.name, key: localUser.id });
+      }
+      else {
+         let caucusMembers = caucus.current();
+
+         caucusMembers.forEach((item, key) => {
+            avatarNameKeyPair.push({ name: item.name, key: item.id });
+         });
+      }
 
       return avatarNameKeyPair;
    }
@@ -268,7 +271,10 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
    }
 
    function fullConnectionString(id: string): string {
-      return window.location.href + '#' + id;
+      if (id)
+         return location.protocol + location.hostname + location.pathname + '#' + id;
+      else
+         return location.protocol + location.hostname + location.pathname;
    }
 
    function onCopyConnectionString(): void {
@@ -326,6 +332,25 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    function onToolSelect(mode_: CanvasMode): void {
       setCanvasMode(mode_);
+   }
+
+   function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
+      this.forceUpdate();
+   }
+
+   if (props.participantCaucus) {
+      var router: NotificationRouterFor<string>;
+      var addedInterest: ObserverInterest;
+      var changedInterest: ObserverInterest;
+      var removedInterest: ObserverInterest;
+
+      router = new NotificationRouterFor<string>(onCaucusChange.bind(this));
+      addedInterest = new ObserverInterest(router, CaucusOf.caucusMemberAddedInterest);
+      changedInterest = new ObserverInterest(router, CaucusOf.caucusMemberChangedInterest);
+      removedInterest = new ObserverInterest(router, CaucusOf.caucusMemberRemovedInterest);
+      props.participantCaucus.addObserver(addedInterest);
+      props.participantCaucus.addObserver(changedInterest);
+      props.participantCaucus.addObserver(removedInterest);
    }
 
    return (

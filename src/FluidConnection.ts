@@ -2,8 +2,6 @@
 import { IFluidContainer, ConnectionState, SharedMap, IValueChanged } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
-import { log, tag } from 'missionlog';
-
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError } from './Errors';
@@ -135,7 +133,7 @@ export class FluidConnection extends Notifier {
    }
 
    participantCaucus(): CaucusOf<Persona> {
-      return new CaucusOf<Persona>(this._container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
+      return this._participantCaucus;
    }
 
 }

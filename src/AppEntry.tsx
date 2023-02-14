@@ -10,7 +10,7 @@ import { log, LogLevel, tag } from 'missionlog';
 // Local
 import { uuid } from './Uuid';
 import { IKeyValueStore, localKeyValueStore, KeyValueStoreKeys } from './KeyValueStore';
-import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from './NotificationFramework';
+import { ObserverInterest, NotificationRouterFor } from './NotificationFramework';
 import { CaucusOf } from './Caucus';
 import { Persona } from './Persona';
 import { FluidConnection } from './FluidConnection';
@@ -56,9 +56,6 @@ function makeLocalUser(): Persona {
 
 function navigateToHash(id: string): void {
 
-   if (location.protocol === 'file') //  Don't attempt to rejoin local Whiteboard as they are ephemeral
-      return;
-
    if (id) {
       log.debug(tag.application, "Navigating to:" + id);
       window.location.hash = '#' + id;
@@ -66,6 +63,9 @@ function navigateToHash(id: string): void {
 }
 
 function checkNavigateToLastBoard(): void {
+
+   if (location.protocol === 'file:') //  Don't attempt to rejoin local Whiteboard as they are ephemeral
+      return;
 
    var localStore: IKeyValueStore = localKeyValueStore();
 
@@ -81,19 +81,6 @@ export class App extends React.Component<IAppProps, AppState> {
    private _initialUser: Persona;
    private _router: NotificationRouterFor<string>;
    private _connectedInterest: ObserverInterest;
-   private _participantCaucus: CaucusOf<Persona>;
-
-   /*
-   private _router: NotificationRouterFor<Array<Persona>>;
-   private addedInterest: ObserverInterest;
-   private changedInterest: ObserverInterest;
-   private removedInterest: ObserverInterest;
-
-      this._router = new NotificationRouterFor<Array<Persona>>(this.onCaucusChange.bind(this));
-      this.addedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberAddedInterest);
-      this.changedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberChangedInterest);
-      this.removedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberRemovedInterest);
-   */
 
    constructor(props: IAppProps) {
 
@@ -109,8 +96,8 @@ export class App extends React.Component<IAppProps, AppState> {
       this._initialUser = makeLocalUser();
 
       var fluidConnection: FluidConnection = new FluidConnection({});
-      this._router = new NotificationRouterFor <string> (this.onConnection.bind(this));
-      this._connectedInterest = new ObserverInterest(this._router, CaucusOf.caucusMemberAddedInterest);
+      this._router = new NotificationRouterFor<string>(this.onConnection.bind(this));
+      this._connectedInterest = new ObserverInterest(this._router, FluidConnection.connectedInterest);
       fluidConnection.addObserver(this._connectedInterest);
 
       this.state = {

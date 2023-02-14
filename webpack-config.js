@@ -4,7 +4,7 @@ module.exports = {
    mode: "development",
    target: 'web',
    output: {
-      filename: "fluidwhiteboard.min.js",
+      filename: "fluidwhiteboard.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
