@@ -410,7 +410,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             </div>
          </div>
 
-         <CanvasTools onToolSelect={onToolSelect} ></CanvasTools>
+         <CanvasTools onToolSelect={onToolSelect} shapeCaucus={props.shapeCaucus}></CanvasTools>
 
          <div className={alertClasses.root}>
             {uiState.alertMessage
