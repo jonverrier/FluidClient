@@ -33,6 +33,9 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
       (this._shared as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
 
+         if (local)
+            return;
+
          if (changed.previousValue) {
 
             if (target.has(changed.key)) {
