@@ -119,32 +119,6 @@ class CanvasState {
    }
 }
 
-function useCanvas(ref: React.MutableRefObject<any>, shapes_: Map<string, Shape>): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
-
-   const [canvasState, setCanvasState] = useState<CanvasState> (new CanvasState(canvasWidth, canvasHeight, shapes_));
-
-   useEffect(() => {
-      const canvasObj = ref.current;
-      const ctx = canvasObj.getContext('2d');
-
-      // draw background first
-      drawBackground(ctx).then(() => {
-
-         // then shapes
-         drawShapes(ctx, canvasState.shapes);
-
-      }).then (() => {
-
-         // then draw selection rectangle
-         if (canvasState.shapeInteractor) {
-            drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
-         } 
-      });
-   });
-
-   return [canvasState, setCanvasState];
-}
-
 export interface ICanvasProps {
 
    mode: CanvasMode;
@@ -164,11 +138,76 @@ function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect): ShapeIntera
    }
 }
 
+
+
 export const Canvas = (props: ICanvasProps) => {
 
    const canvasRef = useRef(null);
+
+   // Set up variables needed to hook into Notification Framework
+   var router: NotificationRouterFor<string>;
+   router = new NotificationRouterFor<string>(onCaucusChange.bind(this));
+   var addedInterest: ObserverInterest = new ObserverInterest(router, CaucusOf.caucusMemberAddedInterest);
+   var changedInterest: ObserverInterest = new ObserverInterest(router, CaucusOf.caucusMemberChangedInterest);
+   var removedInterest: ObserverInterest = new ObserverInterest(router, CaucusOf.caucusMemberRemovedInterest);
+
+   function useCanvas(ref: React.MutableRefObject<any>, shapes_: Map<string, Shape>, caucus: CaucusOf<Shape>): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
+
+      const [canvasState, setCanvasState] = useState<CanvasState>(new CanvasState(canvasWidth, canvasHeight, shapes_));
+
+      useEffect(() => {
+
+         // Anything in here is fired on component mount.
+         if (props.shapeCaucus) {
+
+            props.shapeCaucus.addObserver(addedInterest);
+            props.shapeCaucus.addObserver(changedInterest);
+            props.shapeCaucus.addObserver(removedInterest);
+         }
+
+         const canvasObj = ref.current;
+         const ctx = canvasObj.getContext('2d');
+
+         // draw background first
+         drawBackground(ctx).then(() => {
+
+            // then shapes
+            drawShapes(ctx, canvasState.shapes);
+
+         }).then(() => {
+
+            // then draw selection rectangle
+            if (canvasState.shapeInteractor) {
+               drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+            }
+         });
+         return () => {
+            // Anything in here is fired on component unmount.
+            if (props.shapeCaucus) {
+
+               props.shapeCaucus.removeObserver (addedInterest);
+               props.shapeCaucus.removeObserver (changedInterest);
+               props.shapeCaucus.removeObserver (removedInterest);
+            }
+         }
+      });
+
+      return [canvasState, setCanvasState];
+   }
+
+   function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
+
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: props.shapeCaucus.current(),
+         shapeInteractor: canvasState.shapeInteractor
+      });
+   }
+
    const [canvasState, setCanvasState] = useCanvas(canvasRef,
-                                                   props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>);
+      props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>,
+      props.shapeCaucus
+   );
 
    const cursorDefaultClasses = cursorDefaultStyles();
    const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
@@ -217,17 +256,18 @@ export const Canvas = (props: ICanvasProps) => {
             // Clear previous selections
             canvasState.shapes.forEach((shape: Shape, key: string) => {
                shape.isSelected = false;
+               props.shapeCaucus.amend (shape.id, shape);
             });
             // Create new shape - selected
             let shape = new Rectangle(data.eventData, ShapeBorderColour.Black, ShapeBorderStyle.Solid, true);
 
-            // set the version in Cuacus first, which pushes to other clients, then reset our state
+            // set the version in Cuacus first, which pushes to other clients, then reset our state to match
             props.shapeCaucus.add(shape.id, shape);
             canvasState.shapes.set(shape.id, shape);
             break;
          case CanvasMode.Select:
          default:
-            // Select items within the selection area
+            // Select items within the selection area and de-select others
             canvasState.shapes.forEach((shape: Shape, key: string) => {
                if (data.eventData.fullyIncludes(shape.boundingRectangle)) {
                   shape.isSelected = true;
@@ -235,6 +275,9 @@ export const Canvas = (props: ICanvasProps) => {
                else {
                   shape.isSelected = false;
                }
+               // set the version in Cuacus first, which pushes to other clients, then reset our state to match
+               props.shapeCaucus.amend(shape.id, shape);
+               canvasState.shapes.set(shape.id, shape);
             });
             break;
    }
@@ -301,30 +344,6 @@ export const Canvas = (props: ICanvasProps) => {
          });
       }
    };
-
-   function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
-
-      setCanvasState({
-         width: canvasState.width, height: canvasState.height,
-         shapes: props.shapeCaucus.current(),
-         shapeInteractor: canvasState.shapeInteractor
-      });
-   }
-
-   if (props.shapeCaucus) {
-      var router: NotificationRouterFor<string>;
-      var addedInterest: ObserverInterest;
-      var changedInterest: ObserverInterest;
-      var removedInterest: ObserverInterest;
-
-      router = new NotificationRouterFor<string>(onCaucusChange.bind(this));
-      addedInterest = new ObserverInterest(router, CaucusOf.caucusMemberAddedInterest);
-      changedInterest = new ObserverInterest(router, CaucusOf.caucusMemberChangedInterest);
-      removedInterest = new ObserverInterest(router, CaucusOf.caucusMemberRemovedInterest);
-      props.shapeCaucus.addObserver(addedInterest);
-      props.shapeCaucus.addObserver(changedInterest);
-      props.shapeCaucus.addObserver(removedInterest);
-   }
 
    return (<div className={cursorStylesFromMode(props.mode)}>
       <canvas

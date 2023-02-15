@@ -6,7 +6,7 @@ import { describe, it } from 'mocha';
 import { uuid } from '../src/Uuid';
 
 
-describe("Uiid", function () {
+describe("Uuid", function () {
 
    it("Needs to create UUID", function () {
 
