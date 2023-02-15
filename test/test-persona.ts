@@ -91,6 +91,13 @@ describe("Persona", function () {
       expect(persona1.lastSeenAt === myLastSeenAt).to.equal(true);
    });
 
+   it("Needs to copy construct", function () {
+
+      let persona2: Persona = new Persona(persona1);
+
+      expect(persona1.equals(persona2) === true).to.equal(true);
+   });
+
    it("Needs to correctly change attributes", function () {
 
       var personaNew: Persona = new Persona(persona1.id, persona1.name, persona1.thumbnailB64, persona1.lastSeenAt);
