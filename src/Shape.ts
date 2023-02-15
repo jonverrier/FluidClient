@@ -5,8 +5,10 @@ import { uuid } from './Uuid';
 import { MSerialisable } from "./SerialisationFramework";
 import { GRect } from "./Geometry";
 
-export enum ShapeBorderColour { Red="Red", Blue="Blue", Green="Green", Black="Black", Border = "Border"};
-export enum ShapeBorderStyle { Solid="Solid", Dashed="Dashed", Dotted="Dotted" }; 
+export enum ShapeBorderColour { Red = "Red", Blue = "Blue", Green = "Green", Black = "Black", Border = "Border", Invisible="Invisible"};
+export enum ShapeBorderStyle { Solid="Solid", Dashed="Dashed", Dotted="Dotted", None="None"}; 
+
+const nullShapeUuid: string = "374cb6a8-b229-4cde-843f-c530df79dca6";
 
 export class Shape extends MSerialisable {
 
@@ -15,6 +17,16 @@ export class Shape extends MSerialisable {
    _borderColour: ShapeBorderColour;
    _borderStyle: ShapeBorderStyle;
    _isSelected: boolean;
+
+   /**
+    * Create a Shape object
+    * @param uuid - uuid for the shape (e.g we create a local copy of a shpe created remotely and need to retain the ID)
+    * @param boundingRectangle_ - boundingRectangle
+    * @param borderColour_ - colour
+    * @param borderStyle_ - style
+    * @param isSelected_ - true if object is selected and needs to draw and hit-test grab handles
+    */
+   public constructor(uuid: string, boundingRectangle_: GRect, borderColour_: ShapeBorderColour, borderStyle_: ShapeBorderStyle, isSelected_: boolean)
 
    /**
     * Create a Shape object
@@ -40,9 +52,17 @@ export class Shape extends MSerialisable {
 
       super();
 
-      this._id = uuid();
-
-      if (arr.length === 4) { // Construct from individual coordinates
+      if (arr.length === 5) { // Construct from individual parameters including ID
+         this._id = arr[0];
+         this._boundingRectangle = new GRect(arr[1]);
+         this._borderColour = arr[2];
+         this._borderStyle = arr[3]
+         this._isSelected = arr[4];
+         return;
+      }
+      else
+         if (arr.length === 4) { // Construct from individual parameters
+         this._id = uuid();
          this._boundingRectangle = new GRect (arr[0]);
          this._borderColour = arr[1];
          this._borderStyle = arr[2]
@@ -52,6 +72,7 @@ export class Shape extends MSerialisable {
       else
       if (arr.length === 1) {
          if (Shape.isMyType(arr[0])) { // Copy Constructor
+            this._id = arr[0]._id;
             this._boundingRectangle = new GRect(arr[0]._boundingRectangle);
             this._borderColour = arr[0]._borderColour;
             this._borderStyle = arr[0]._borderStyle;
@@ -64,6 +85,7 @@ export class Shape extends MSerialisable {
       }
       else
       if (arr.length === 0) { // Empty Constructor
+         this._id = uuid();
          this._boundingRectangle = new GRect;
          this._borderColour = ShapeBorderColour.Black;
          this._borderStyle = ShapeBorderStyle.Solid;
@@ -115,7 +137,8 @@ export class Shape extends MSerialisable {
     */
    equals(rhs: Shape): boolean {
 
-      return (this._boundingRectangle.equals(rhs._boundingRectangle) && 
+      return (this._id === rhs._id &&
+         this._boundingRectangle.equals(rhs._boundingRectangle) && 
          this._borderColour === rhs._borderColour &&
          this._borderStyle === rhs._borderStyle &&
          this._isSelected === rhs._isSelected);
@@ -127,6 +150,7 @@ export class Shape extends MSerialisable {
     */
    assign(rhs: Shape): Shape {
 
+      this._id = rhs._id;
       this._boundingRectangle = new GRect (rhs._boundingRectangle);
       this._borderColour = rhs._borderColour;
       this._borderStyle = rhs._borderStyle;
@@ -137,7 +161,7 @@ export class Shape extends MSerialisable {
 
    streamToJSON(): string {
 
-      return JSON.stringify({ boundingRectangle: this._boundingRectangle, borderColour: this._borderColour, borderStyle: this._borderStyle, isSelected: this._isSelected });
+      return JSON.stringify({ id: this._id, boundingRectangle: this._boundingRectangle, borderColour: this._borderColour, borderStyle: this._borderStyle, isSelected: this._isSelected });
    }
 
    streamFromJSON(stream: string): void {
@@ -148,7 +172,7 @@ export class Shape extends MSerialisable {
 
       let typedStyle: ShapeBorderStyle = ShapeBorderStyle[obj.borderStyle as keyof typeof ShapeBorderStyle]; 
 
-      this.assign(new Shape(obj.boundingRectangle, typedColour, typedStyle, obj.isSelected));
+      this.assign(new Shape(obj.id, obj.boundingRectangle, typedColour, typedStyle, obj.isSelected));
    }
 
    shapeID(): string {
@@ -158,6 +182,18 @@ export class Shape extends MSerialisable {
    // TO DO - will need a way to virtually construct derived types. 
    static factoryFn(): Shape {
       return new Shape();
+   }
+
+   isNull(): boolean {
+      return this.equals(Shape.nullShape());
+   }
+
+   static isNull(rhs: Shape): boolean {
+      return rhs.equals(Shape.nullShape());
+   }
+
+   static nullShape(): Shape {
+      return new Shape(nullShapeUuid, new GRect(0, 0, 0, 0), ShapeBorderColour.Invisible, ShapeBorderStyle.None, false);
    }
 
 }
