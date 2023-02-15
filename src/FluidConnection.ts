@@ -7,9 +7,7 @@ import { Persona } from './Persona';
 import { Shape } from './Shape';
 import { ConnectionError, InvalidOperationError } from './Errors';
 import { ClientProps } from './FluidConnectionProps';
-import { CaucusOf, CaucusFactoryFunctionFor } from './Caucus';
-
-var alwaysWaitAfterConnectFor: number = 1000;
+import { CaucusOf } from './Caucus';
 
 export interface IConnectionProps {
 }
@@ -59,14 +57,20 @@ export class FluidConnection extends Notifier {
          const { container, services } = await this._client.createContainer(containerSchema);
          this._container = container;
 
-         // Attach _container to service and return assigned ID
-         const containerId = await container.attach();
-         await container.connect();
-         await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
+         let self = this;
 
-         this.setupAfterConnection(containerId);
+         return new Promise<string>((resolve, reject) => {
+            // Attach _container to service and return assigned ID
+            const containerIdPromise = container.attach();
 
-         return containerId;
+            containerIdPromise.then((containerId) => {
+               self.setupAfterConnection(containerId);
+
+               resolve (containerId);
+            }).catch(() => {
+               reject ();
+            });
+         });
       }
       catch (e: any) {
          throw new ConnectionError("Error connecting new container to remote data service: " + e.message);
@@ -86,8 +90,6 @@ export class FluidConnection extends Notifier {
 
          const { container, services } = await this._client.getContainer(containerId, containerSchema);
          this._container = container;
-         await container.connect();
-         await new Promise(resolve => setTimeout(resolve, alwaysWaitAfterConnectFor)); // Always wait - reduces chance of stale UI
 
          this.setupAfterConnection(containerId);
 
@@ -113,7 +115,6 @@ export class FluidConnection extends Notifier {
       // Connect our own user ID to the caucus
       var storedVal: string = this._localUser.streamToJSON();
       (this._container.initialObjects.participantMap as SharedMap).set(this._localUser.id, storedVal);
-
    }
 
 
