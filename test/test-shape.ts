@@ -70,6 +70,22 @@ describe("Shape", function () {
       expect(shape1.equals(shape2)).to.equal(true);
    });
 
+   it("Needs to construct from factoryFn", function () {
+
+      var shape1: Shape = Shape.factoryFn();
+      var shape2 = new Shape(shape1);
+
+      expect(shape1.equals (shape2) === true).to.equal(true);
+   });
+
+   it("Needs to create and test for nullShape", function () {
+
+      var shape1: Shape = Shape.nullShape();
+
+      expect(shape1.isNull()).to.equal(true);
+      expect(Shape.isNull(shape1)).to.equal(true);
+   });
+
 });
 
 describe("Rectangle", function () {
