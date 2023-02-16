@@ -14,7 +14,7 @@ import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } fr
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from './Shape';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
-import { ShapeInteractor, shapeInteractionCompleteInterest } from './CanvasInteractors';
+import { FreeRectangleInteractor, shapeInteractionCompleteInterest } from './CanvasInteractors';
 import { RectangleShapeRenderer, SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
@@ -108,7 +108,7 @@ class CanvasState {
    width: number;
    height: number;
    shapes: Map<string, Shape>;
-   shapeInteractor: ShapeInteractor;
+   shapeInteractor: FreeRectangleInteractor;
 
    constructor(width_: number, height_: number, shapes_: Map<string, Shape>) {
       this.width = width_;
@@ -125,13 +125,13 @@ export interface ICanvasProps {
    shapeCaucus: CaucusOf<Shape>;
 }
 
-function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect): ShapeInteractor {
+function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect): FreeRectangleInteractor {
    switch (mode_) {
       case CanvasMode.Rectangle:
-         return new ShapeInteractor (bounds_);
+         return new FreeRectangleInteractor (bounds_);
 
       case CanvasMode.Select:
-         return new ShapeInteractor(bounds_);
+         return new FreeRectangleInteractor(bounds_);
 
       default:
          return null;

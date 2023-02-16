@@ -32,14 +32,14 @@ class MockCtx {
 
 describe("ShapeRenderer", function () {
 
-   it("Needs to create SelectionRectangleRenderer", function () {
+   it("Needs to create SelectionRectangle Renderer", function () {
 
       var renderer: ShapeRenderer = ShapeRendererFactory.create("SelectionRectangle");
 
       expect(renderer === null).to.equal(false);
    });
 
-   it("Needs to create RectangleShapeDrawer", function () {
+   it("Needs to create Rectangle Renderer", function () {
 
       var renderer: ShapeRenderer = ShapeRendererFactory.create("Rectangle");
 

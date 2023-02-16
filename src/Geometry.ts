@@ -286,6 +286,14 @@ export class GRect extends MSerialisable {
    }
 
    /**
+    * Test if the rectangle rhs is fully within this one
+    * @param pt - the point rectangle to test
+    */
+   includes(pt: GPoint): boolean {
+      return this._rc.xmin <= pt.x && this._rc.ymin <= pt.y && this._rc.xmax >= pt.x && this._rc.ymax >= pt.y;
+   }
+
+   /**
     * CLip rhs to fit withing the current rectangle
     * @param rhs - the rectangle to test
     */
