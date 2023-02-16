@@ -6,7 +6,7 @@ import { describe, it } from 'mocha';
 
 import { GPoint, GRect } from '../src/Geometry';
 import { Shape, ShapeBorderColour, ShapeBorderStyle } from '../src/Shape';
-import { IShapeInteractor, FreeRectangleInteractor, HitTestInteractor } from '../src/CanvasInteractors';
+import { IShapeInteractor, FreeRectangleInteractor, HitTestInteractor, HitTestResult } from '../src/CanvasInteractors';
 
 describe("FreeRectangleInteractor", function () {
 
@@ -92,7 +92,7 @@ describe("HitTestInteractor", function () {
 
       expect(controller.rectangle.equals(bounds)).to.equal(true);
       expect(controller.shapes === shapes).to.equal(true);
-      expect(controller.lastHitTest === null).to.equal(false);
+      expect(controller.lastHitTest === HitTestResult.None).to.equal(true);
 
       // Do real hit-testing
       controller.mouseMove(crossing);

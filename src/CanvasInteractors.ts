@@ -119,6 +119,7 @@ export class HitTestInteractor extends Notifier implements IShapeInteractor {
 
       this._shapes = shapes_;
       this._rectangle = rectangle_;
+      this._lastHitTest = HitTestResult.None;
    }
 
    click(pt: GPoint): boolean {
@@ -148,7 +149,7 @@ export class HitTestInteractor extends Notifier implements IShapeInteractor {
       return false; // No need for further call
    }
 
-   lastHitTest(): HitTestResult {
+   get lastHitTest(): HitTestResult {
 
       return this._lastHitTest;
    }
