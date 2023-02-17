@@ -203,6 +203,13 @@ export class GRect extends MSerialisable {
       this._rc.ymax = this._rc.ymin + y_;
    }
 
+   get top(): number {
+      return this._rc.ymax;
+   }
+   get right(): number {
+      return this._rc.xmax;
+   }
+
    get topLeft(): GPoint  {
       return new GPoint(this._rc.xmin, this._rc.ymin);
    }
@@ -283,6 +290,30 @@ export class GRect extends MSerialisable {
     */
    fullyIncludes(rhs: GRect): boolean {
       return this._rc.xmin <= rhs._rc.xmin && this._rc.ymin <= rhs._rc.ymin && this._rc.xmax >= rhs._rc.xmax && this._rc.ymax >= rhs._rc.ymax;
+   }
+
+   /**
+    * Test if the point pt is within this rectangle, including its border
+    * @param pt - the point rectangle to test
+    */
+   includes(pt: GPoint): boolean {
+      return this._rc.xmin <= pt.x && this._rc.ymin <= pt.y && this._rc.xmax >= pt.x && this._rc.ymax >= pt.y;
+   }
+
+   /**
+    * Test if the point pt is on the left border
+    * @param pt - the point rectangle to test
+    */
+   isOnLeftBorder (pt: GPoint): boolean {
+      return this._rc.xmin === pt.x && (this._rc.ymin <= pt.y && this._rc.ymax >= pt.y);
+   }
+
+   /**
+    * Test if the point pt is on the left border
+    * @param pt - the point rectangle to test
+    */
+   isOnRightBorder(pt: GPoint): boolean {
+      return this._rc.xmax === pt.x && (this._rc.ymin <= pt.y && this._rc.ymax >= pt.y);
    }
 
    /**

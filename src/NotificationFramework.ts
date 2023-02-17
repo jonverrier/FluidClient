@@ -387,10 +387,16 @@ export interface IObserver {
    notify(interest_: Interest, notification_: Notification): void;
 }
 
+export interface INotifier {
+   addObserver(observerInterest_: ObserverInterest): void;
+   removeObserver(observerInterest_: ObserverInterest): boolean;
+   removeAllObservers(): void;
+}
+
 /// <summary>
 /// Notifier -  class that sends notifications when things change
 /// </summary>
-export class Notifier {
+export class Notifier implements INotifier {
 
    private _observerInterests : Array<ObserverInterest>;
 

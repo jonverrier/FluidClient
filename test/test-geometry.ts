@@ -131,6 +131,19 @@ describe("Geometry", function () {
       expect(selectionRect.fullyIncludes(crossingRect)).to.equal(false);
    });
 
+   it("Needs to correctly do inclusion-testing for GPoint", function () {
+
+      var selectionRect: GRect = new GRect(100, 100, 100, 100);
+
+      var inside: GPoint = new GPoint(100, 100);
+      var outside: GPoint = new GPoint(50, 50);
+      var crossing: GPoint = new GPoint(50, 50);
+
+      expect(selectionRect.includes(inside)).to.equal(true);
+      expect(selectionRect.includes(outside)).to.equal(false);
+      expect(selectionRect.includes(crossing)).to.equal(false);
+   });
+
    it("Needs to correctly do normalisation for GRect", function () {
 
       var loLeft: GPoint = new GPoint(10, 10); 
