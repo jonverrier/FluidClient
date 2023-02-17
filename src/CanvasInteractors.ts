@@ -1,7 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { GPoint, GRect } from './Geometry';
-import { Interest, NotificationFor, Notifier } from './NotificationFramework';
+import { Interest, NotificationFor, Notifier, INotifier, ObserverInterest } from './NotificationFramework';
 import { Shape } from './Shape';
 
 export enum HitTestResult {
@@ -10,13 +10,35 @@ export enum HitTestResult {
    TopLeft = "TopLeft", TopRight = "TopRight", BottomLeft = "BottomLeft", BottomRight = "BottomRight"
 }
 
-export interface IShapeInteractor {
+interface IShapeMover {
 
    click (pt: GPoint): boolean;
    mouseDown(pt: GPoint): boolean;
    mouseMove(pt: GPoint): boolean;
    mouseUp(pt: GPoint): boolean;
    rectangle: GRect;
+}
+
+export abstract class IShapeInteractor extends Notifier implements IShapeMover {
+
+   abstract click(pt: GPoint): boolean;
+   abstract mouseDown(pt: GPoint): boolean;
+   abstract mouseMove(pt: GPoint): boolean;
+   abstract mouseUp(pt: GPoint): boolean;
+   abstract rectangle: GRect;
+
+   static defaultDx(): number {
+      return defaultDX;
+   }
+   static defaultDy(): number {
+      return defaultDY;
+   }
+   static minimumDx(): number {
+      return minimumDX;
+   }
+   static minimumDy(): number {
+      return minimumDY;
+   }
 }
 
 export var shapeInteractionComplete: string = "ShapeInteractionComplete";
@@ -29,7 +51,7 @@ var minimumDX: number = 16;
 var minimumDY: number = 16;
 
 // Interactor that lets the user draw a rectangle from mouse down to mouse up
-export class FreeRectangleInteractor extends Notifier implements IShapeInteractor  {
+export class FreeRectangleInteractor extends IShapeInteractor  {
 
    private _rectangle: GRect;
    private _bounds: GRect;
@@ -87,27 +109,86 @@ export class FreeRectangleInteractor extends Notifier implements IShapeInteracto
       return this._rectangle;
    }
 
-   static defaultDx(): number {
-      return defaultDX;
+}
+
+// Interactor that lets the user draw a rectangle with constrained Y values moving right hand border only
+export class RightRectangleInteractor extends IShapeInteractor {
+
+   private _rectangle: GRect;
+   private _bounds: GRect;
+
+   /**
+    * Create a RightRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    */
+   public constructor(bounds_: GRect, initial_: GRect) {
+
+      super();
+
+      this._bounds = new GRect(bounds_);
+      this._rectangle = new GRect(initial_);
    }
 
-   static defaultDy(): number {
-      return defaultDY;
+   click(pt: GPoint): boolean {
+
+      return false; // No need for further call
    }
-   static minimumDx(): number {
-      return minimumDX;
+
+   mouseDown(pt: GPoint): boolean {
+
+      var newRect: GRect = new GRect(this._rectangle.x,
+         this._rectangle.y,
+         pt.x - (this._rectangle.x),
+         this._rectangle.dy);
+
+      this._rectangle = this._bounds.clip(newRect);
+
+      return false; // No need for further call
    }
-   static minimumDy(): number {
-      return minimumDY;
+
+   mouseMove(pt: GPoint): boolean {
+
+      var newRect: GRect = new GRect(this._rectangle.x,
+         this._rectangle.y,
+         pt.x - (this._rectangle.x),
+         this._rectangle.dy);
+
+      this._rectangle = this._bounds.clip(newRect);
+
+      return false; // No need for further call
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      var newRect: GRect = GRect.normaliseFromRectangle(new GRect(this._rectangle.x,
+         this._rectangle.y,
+         pt.x - (this._rectangle.x),
+         this._rectangle.dy));
+
+      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
+
+      return false; // No need for further call
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._rectangle;
    }
 }
 
+
 // Interactor that works out if the mouse is over a click-able area of the shapes
-export class HitTestInteractor extends Notifier implements IShapeInteractor {
+export class HitTestInteractor extends IShapeInteractor {
 
    private _shapes: Map<string, Shape>;
    private _rectangle: GRect;
    private _lastHitTest: HitTestResult;
+   private _lastHitShape: Shape;
 
    /**
     * Create a HitTestInteractor object
@@ -120,6 +201,7 @@ export class HitTestInteractor extends Notifier implements IShapeInteractor {
       this._shapes = shapes_;
       this._rectangle = rectangle_;
       this._lastHitTest = HitTestResult.None;
+      this._lastHitShape = null;
    }
 
    click(pt: GPoint): boolean {
@@ -132,26 +214,58 @@ export class HitTestInteractor extends Notifier implements IShapeInteractor {
 
    mouseMove(pt: GPoint): boolean {
 
+      let hit: boolean = false;
+      this._lastHitTest = HitTestResult.None;
+      this._lastHitShape = null;
+
       this._shapes.forEach((shape: Shape, key: string) => {
 
-         // for check the bounding box. If within, do more detailed tests, else skip them
-         if (shape.boundingRectangle.includes(pt)) {
-            // TODO - more hitesting here, store an extra result? 
-            return true;
+         if (!hit) {
+            // for check the bounding box. If within, do more detailed tests, else skip them
+            if (shape.boundingRectangle.includes(pt)) {
+
+               if (shape.boundingRectangle.isOnLeftBorder(pt)) {
+                  hit = true;
+                  this._lastHitTest = HitTestResult.Left;
+                  this._lastHitShape = shape;
+               }
+               else
+               if (shape.boundingRectangle.isOnRightBorder(pt)) {
+                  hit = true;
+                  this._lastHitTest = HitTestResult.Right;
+                  this._lastHitShape = shape;
+               }
+            }
          }
 
       });
 
-      return false;
+      return hit;
    }
 
    mouseUp(pt: GPoint): boolean {
       return false; // No need for further call
    }
 
+   /**
+   * Getters for private variables
+   */
    get lastHitTest(): HitTestResult {
 
       return this._lastHitTest;
+   }
+
+   get lastHitShape(): Shape {
+
+      return this._lastHitShape;
+   }
+
+   /**
+   * Setters for private variables
+   */
+   set shapes(shapes_: Map<string, Shape>) {
+
+      this._shapes = shapes_;
    }
 
    /**
