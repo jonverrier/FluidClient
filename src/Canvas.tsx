@@ -14,7 +14,7 @@ import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } fr
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from './Shape';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
-import { IShapeInteractor, FreeRectangleInteractor, RightRectangleInteractor, shapeInteractionCompleteInterest, HitTestInteractor, HitTestResult } from './CanvasInteractors';
+import { IShapeInteractor, FreeRectangleInteractor, LeftRectangleInteractor, RightRectangleInteractor, shapeInteractionCompleteInterest, HitTestInteractor, HitTestResult } from './CanvasInteractors';
 import { RectangleShapeRenderer, SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
@@ -143,6 +143,8 @@ export interface ICanvasProps {
    shapeCaucus: CaucusOf<Shape>;
 }
 
+// BUILD NOTE
+// Update this for every style of interaction
 function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect, initial_: GRect, hitTest_: HitTestResult): IShapeInteractor {
    switch (mode_) {
       case CanvasMode.Rectangle:
@@ -150,6 +152,9 @@ function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect, initial_: GR
 
       case CanvasMode.Select:
          switch (hitTest_) { 
+            case HitTestResult.Left:
+               return new LeftRectangleInteractor(bounds_, initial_);
+
             case HitTestResult.Right:
                return new RightRectangleInteractor(bounds_, initial_);
 
@@ -162,8 +167,6 @@ function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect, initial_: GR
          return null;
    }
 }
-
-
 
 export const Canvas = (props: ICanvasProps) => {
 
@@ -245,6 +248,8 @@ export const Canvas = (props: ICanvasProps) => {
    const cursorLeftClasses = cursorLeftStyles();
    const cursorRightClasses = cursorRightStyles();
 
+   // BUILD NOTE
+   // Update this for every style of interaction
    function cursorStylesFromModeAndLastHit(mode_: CanvasMode, lastHit_: HitTestResult): string {
       switch (mode_) {
          case CanvasMode.Rectangle:
@@ -354,11 +359,20 @@ export const Canvas = (props: ICanvasProps) => {
       let clientRect = canvas.getBoundingClientRect();
       let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
 
+      let more = canvasState.hitTestInteractor.mouseDown(coord);
+      let hit = HitTestResult.None;
+      var shape: Shape = null;
+
+      if (more) {
+         hit = canvasState.hitTestInteractor.lastHitTest;
+         shape = canvasState.hitTestInteractor.lastHitShape;
+      }
+
       // Create the right interactor, and hook up to notifications of when the interaction is complete
       let shapeInteractor = shapeInteractorFromMode(props.mode,
          bounds,
-         canvasState.lastHitShape ? canvasState.lastHitShape.boundingRectangle : new GRect(),
-         canvasState.lastHit);
+         shape ? shape.boundingRectangle : new GRect(),
+         hit);
       shapeInteractor.mouseDown(coord);
 
       var notificationRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this));
