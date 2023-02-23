@@ -169,6 +169,19 @@ describe("Geometry", function () {
       expect(normalised1.equals(normalised2)).to.equal(true);
    });
 
+   it("Needs to correctly clip a GPoint", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(20, 20);
+
+      var rc = GRect.normaliseFromPoints(loLeft, hiRight);
+
+      expect((rc.clipPoint(new GPoint(0, 0)).x)).to.equal(loLeft.x);
+      expect((rc.clipPoint(new GPoint(0, 0)).y)).to.equal(loLeft.y);
+      expect((rc.clipPoint(new GPoint(21, 21)).x)).to.equal(hiRight.x);
+      expect((rc.clipPoint(new GPoint(21, 21)).y)).to.equal(hiRight.y);
+   });
+
    it("Needs to create grab handles on small GRect", function () {
 
       var loLeft: GPoint = new GPoint(10, 10);

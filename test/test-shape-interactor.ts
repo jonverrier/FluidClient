@@ -13,6 +13,7 @@ import {
    RightRectangleInteractor,
    TopRectangleInteractor,
    BottomRectangleInteractor,
+   RectangleMoveInteractor,
    HitTestInteractor,
    HitTestResult
 } from '../src/CanvasInteractors';
@@ -311,4 +312,59 @@ describe("BottomRectangleInteractor", function () {
 
       expect(controller.rectangle.top === bounds.top).to.equal(true);
    });
+});
+
+describe("RectangleMoveInteractor", function () {
+
+   it("Needs to create RectangleMoveInteractor with click and drag", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var initial: GRect = new GRect(100, 100, 50, 50);
+
+      var controller: IShapeInteractor = new RectangleMoveInteractor(bounds, initial, initial.topLeft);
+
+      controller.mouseDown(initial.topLeft);
+      controller.mouseMove(initial.topLeft);
+      controller.mouseUp(initial.topRight);
+
+      expect(controller.rectangle.dy === initial.dy).to.equal(true);
+      expect(controller.rectangle.dx === initial.dx).to.equal(true);
+      expect(controller.rectangle.x === initial.topRight.x).to.equal(true);
+      expect(controller.rectangle.y === initial.bottomRight.y).to.equal(true);
+   });
+
+
+   it("Needs to clip final GRect if necessary - lower left", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var initial: GRect = new GRect(100, 100, 50, 50);
+      var pt: GPoint = new GPoint(1, 1);
+
+      var controller: IShapeInteractor = new RectangleMoveInteractor(bounds, initial, initial.bottomLeft);
+
+      controller.mouseDown(initial.bottomLeft);
+      controller.mouseMove(pt);
+      controller.mouseUp(pt);
+
+      expect(controller.rectangle.dy === initial.dy).to.equal(true);
+      expect(controller.rectangle.dx === initial.dx).to.equal(true);
+      expect(controller.rectangle.x === bounds.bottomLeft.x).to.equal(true);
+      expect(controller.rectangle.y === bounds.bottomLeft.y).to.equal(true);
+   });
+   /*
+   it("Needs to clip final GRect if necessary - upper right", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var initial: GRect = new GRect(50, 50, 200, 200);
+      var pt2: GPoint = new GPoint(351, 351);
+
+      var controller: IShapeInteractor = new BottomRectangleInteractor(bounds, initial);
+
+      controller.mouseDown(initial.bottomRight);
+      controller.mouseMove(pt2);
+      controller.mouseUp(pt2);
+
+      expect(controller.rectangle.top === bounds.top).to.equal(true);
+   });
+   */
 });

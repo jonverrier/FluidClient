@@ -7,7 +7,7 @@ import { MSerialisable } from "./SerialisationFramework";
 
 export class GPoint extends MSerialisable {
 
-   _pt: Flatten.Point;
+   private _pt: Flatten.Point;
 
    /**
     * Create a GPoint object
@@ -227,11 +227,15 @@ export class GRect extends MSerialisable {
    }
 
 
-   get bottomRight(): GPoint {
-      return new GPoint(this._rc.xmax, this._rc.ymin);
+
+   get topLeft(): GPoint {
+      return new GPoint(this._rc.xmin, this._rc.ymax);
    }
    get topMiddle(): GPoint {
       return new GPoint(this._rc.xmin + (this.dx / 2), this._rc.ymax);
+   }
+   get bottomRight(): GPoint {
+      return new GPoint(this._rc.xmax, this._rc.ymin);
    }
    get bottomMiddle(): GPoint {
       return new GPoint(this._rc.xmin + (this.dx / 2), this._rc.ymin);
@@ -257,7 +261,8 @@ export class GRect extends MSerialisable {
     * @param rhs - the object to assign this one from.  
     */
    assign(rhs: GRect): GRect {
-      this._rc = rhs._rc.clone();
+
+      this._rc = new Flatten.Box(rhs.x, rhs.y, rhs.x + rhs.dx, rhs.y + rhs.dy);
 
       return this;
    }
@@ -409,7 +414,7 @@ export class GRect extends MSerialisable {
     * Clip rhs to fit withing the current rectangle
     * @param rhs - the rectangle to test
     */
-   clip(rhs: GRect): GRect {
+   clipRect(rhs: GRect): GRect {
 
       let clipped = new GRect(rhs);
 
@@ -422,6 +427,27 @@ export class GRect extends MSerialisable {
          clipped._rc.xmax = this._rc.xmax;
       if (clipped._rc.ymax > this._rc.ymax)
          clipped._rc.ymax = this._rc.ymax;
+
+      return clipped;
+   }
+
+   /**
+    * Clip rhs to fit withing the current rectangle
+    * @param rhs - the point to clip
+    */
+   clipPoint(rhs: GPoint): GPoint {
+
+      let clipped = new GPoint(rhs);
+
+      if (clipped.x < this._rc.xmin)
+         clipped.x = this._rc.xmin;
+      if (clipped.y < this._rc.ymin)
+         clipped.y = this._rc.ymin;
+
+      if (clipped.x > this._rc.xmax)
+         clipped.x = this._rc.xmax;
+      if (clipped.y > this._rc.ymax)
+         clipped.y = this._rc.ymax;
 
       return clipped;
    }

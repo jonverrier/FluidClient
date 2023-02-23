@@ -26,6 +26,7 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
    abstract mouseUp(pt: GPoint): boolean;
    abstract rectangle: GRect;
 
+   // TODO - replace with GRECT version
    static defaultGrabHandleDxDy(): number {
       return defaultGrabHandleDXDY;
    }
@@ -74,21 +75,21 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
 
    mouseDown(pt: GPoint): boolean {
       var newRect: GRect = new GRect(pt.x, pt.y, 0, 0);
-      this._rectangle = this._bounds.clip(newRect);
+      this._rectangle = this._bounds.clipRect(newRect);
 
       return false; // No need for further call
    }
 
    mouseMove(pt: GPoint): boolean {
       var newRect: GRect = new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y);
-      this._rectangle = this._bounds.clip(newRect);
+      this._rectangle = this._bounds.clipRect(newRect);
 
       return false; // No need for further call
    }
 
    mouseUp(pt: GPoint): boolean {
       var newRect: GRect = GRect.normaliseFromRectangle (new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
-      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
@@ -114,6 +115,7 @@ export class RightRectangleInteractor extends IShapeInteractor {
    /**
     * Create a RightRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial recongle for the object being moved
     */
    public constructor(bounds_: GRect, initial_: GRect) {
 
@@ -154,7 +156,7 @@ export class RightRectangleInteractor extends IShapeInteractor {
          pt.x - (this._rectangle.x),
          this._rectangle.dy));
 
-      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
    }
 
    /**
@@ -174,6 +176,7 @@ export class LeftRectangleInteractor extends IShapeInteractor {
    /**
     * Create a LeftRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial recongle for the object being moved
     */
    public constructor(bounds_: GRect, initial_: GRect) {
 
@@ -214,7 +217,7 @@ export class LeftRectangleInteractor extends IShapeInteractor {
          this._rectangle.dx - (pt.x - this._rectangle.x),
          this._rectangle.dy));
 
-      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
    }
 
    /**
@@ -234,6 +237,7 @@ export class TopRectangleInteractor extends IShapeInteractor {
    /**
     * Create a TopRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial recongle for the object being moved
     */
    public constructor(bounds_: GRect, initial_: GRect) {
 
@@ -274,7 +278,7 @@ export class TopRectangleInteractor extends IShapeInteractor {
          this._rectangle.dx,
          (pt.y - this._rectangle.y)));
 
-      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
    }
 
    /**
@@ -292,8 +296,10 @@ export class BottomRectangleInteractor extends IShapeInteractor {
    private _bounds: GRect;
 
    /**
-    * Create a TopRectangleInteractor object
+    * Create a BottomRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial recongle for the object being moved
+    * 
     */
    public constructor(bounds_: GRect, initial_: GRect) {
 
@@ -334,7 +340,75 @@ export class BottomRectangleInteractor extends IShapeInteractor {
          this._rectangle.dx,
          this._rectangle.dy - (pt.y - this._rectangle.y)));
 
-      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._rectangle;
+   }
+}
+
+// Interactor that lets the user move a rectangle with constrained X values moving top border only
+export class RectangleMoveInteractor extends IShapeInteractor {
+
+   private _rectangle: GRect;
+   private _bounds: GRect;
+   private _initialPt: GPoint; // keep initial mouse pos, and initial rect, them all movements are relative
+   private _initialRect: GRect;
+
+   /**
+    * Create a RectangleMoveInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial recongle for the object being moved
+    * @param start_ -  the start position of the mouse
+    */
+   public constructor(bounds_: GRect, initial_: GRect, start_: GPoint) {
+
+      super();
+
+      this._bounds = new GRect(bounds_);
+      this._rectangle = new GRect(initial_);
+      this._initialPt = new GPoint(start_);
+      this._initialRect = new GRect(initial_);
+   }
+
+   mouseDown(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      return false; // No need for further call
+   }
+
+   mouseMove(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      return false; // No need for further call
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
+
+      return false; // No need for further call
+   }
+
+   private commonMouseProcessing(pt: GPoint): void {
+
+      let ptClipped = this._bounds.clipPoint(pt);
+
+      let newRect = GRect.normaliseFromRectangle(new GRect(this._initialRect.x + (ptClipped.x - this._initialPt.x),
+         this._initialRect.y + (ptClipped.y - this._initialPt.y),
+         this._initialRect.dx,
+         this._initialRect.dy));
+
+      this._rectangle.assign(newRect);
    }
 
    /**
