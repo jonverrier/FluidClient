@@ -232,6 +232,19 @@ describe("Geometry", function () {
       expect(rc.isOnRightGrabHandle(loLeft, GRect.defaultGrabHandleDxy())).to.equal(false);
       expect(rc.isOnBottomGrabHandle(hiRight, GRect.defaultGrabHandleDxy())).to.equal(false);
    });
+
+   it("Needs to fail grab handle intersections on small rectangle", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(20, 20);
+
+      var rc = new GRect(loLeft, hiRight);
+
+      expect(rc.isOnTopGrabHandle(rc.topMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
+      expect(rc.isOnLeftGrabHandle(rc.leftMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
+      expect(rc.isOnRightGrabHandle(rc.rightMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
+      expect(rc.isOnBottomGrabHandle(rc.bottomMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
+   });
 });
 
 

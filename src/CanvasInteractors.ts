@@ -13,7 +13,6 @@ export enum HitTestResult {
 
 interface IShapeMover {
 
-   click (pt: GPoint): boolean;
    mouseDown(pt: GPoint): boolean;
    mouseMove(pt: GPoint): boolean;
    mouseUp(pt: GPoint): boolean;
@@ -22,7 +21,6 @@ interface IShapeMover {
 
 export abstract class IShapeInteractor extends Notifier implements IShapeMover {
 
-   abstract click(pt: GPoint): boolean;
    abstract mouseDown(pt: GPoint): boolean;
    abstract mouseMove(pt: GPoint): boolean;
    abstract mouseUp(pt: GPoint): boolean;
@@ -74,16 +72,6 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
       this._rectangle = new GRect();
    }
 
-   click(pt: GPoint): boolean {
-      var newRect: GRect = GRect.createAround(pt, defaultDX, defaultDY);
-      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
-
-      this.notifyObservers(shapeInteractionCompleteInterest,
-         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
-   }
-
    mouseDown(pt: GPoint): boolean {
       var newRect: GRect = new GRect(pt.x, pt.y, 0, 0);
       this._rectangle = this._bounds.clip(newRect);
@@ -133,11 +121,6 @@ export class RightRectangleInteractor extends IShapeInteractor {
 
       this._bounds = new GRect(bounds_);
       this._rectangle = new GRect(initial_);
-   }
-
-   click(pt: GPoint): boolean {
-
-      return false; // No need for further call
    }
 
    mouseDown(pt: GPoint): boolean {
@@ -200,11 +183,6 @@ export class LeftRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   click(pt: GPoint): boolean {
-
-      return false; // No need for further call
-   }
-
    mouseDown(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
@@ -265,11 +243,6 @@ export class TopRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   click(pt: GPoint): boolean {
-
-      return false; // No need for further call
-   }
-
    mouseDown(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
@@ -328,11 +301,6 @@ export class BottomRectangleInteractor extends IShapeInteractor {
 
       this._bounds = new GRect(bounds_);
       this._rectangle = new GRect(initial_);
-   }
-
-   click(pt: GPoint): boolean {
-
-      return false; // No need for further call
    }
 
    mouseDown(pt: GPoint): boolean {
@@ -404,10 +372,6 @@ export class HitTestInteractor extends IShapeInteractor {
       this._lastHitTest = HitTestResult.None;
       this._lastHitShape = null;
       this._grabHandleDxDy = grabHandleDxDy_;
-   }
-
-   click(pt: GPoint): boolean {
-      return this.commonMouseProcessing(pt);
    }
 
    mouseDown(pt: GPoint): boolean {

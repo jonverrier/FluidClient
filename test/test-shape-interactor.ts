@@ -17,20 +17,16 @@ import {
    HitTestResult
 } from '../src/CanvasInteractors';
 
-describe("FreeRectangleInteractor", function () {
+describe("IShapeInteractor", function () {
 
-   it("Needs to create FreeRectangleInteractor and track to a click", function () {
+   it("Needs to provide defaultDXY values", function () {
 
-      var bounds: GRect = new GRect(50, 50, 300, 300);
-      var pt: GPoint = new GPoint(100, 100);
-
-      var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
-
-      controller.click(pt);
-
-      expect(controller.rectangle.dx === FreeRectangleInteractor.defaultDx()).to.equal(true);
-      expect(controller.rectangle.dy === FreeRectangleInteractor.defaultDy()).to.equal(true);
+      expect(IShapeInteractor.defaultDx() > 0).to.equal(true);
+      expect(IShapeInteractor.defaultDy() > 0).to.equal(true);
    });
+});
+
+describe("FreeRectangleInteractor", function () {
 
    it("Needs to create FreeRectangleInteractor with click and drag", function () {
 
@@ -54,7 +50,9 @@ describe("FreeRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
 
-      controller.click(pt);
+      controller.mouseDown(pt);
+      controller.mouseMove(pt);
+      controller.mouseUp(pt);
 
       expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
    });
@@ -80,7 +78,7 @@ describe("HitTestInteractor", function () {
    it("Needs to create HitTestInteractor and track to a click", function () {
 
       let bounds = new GRect(50, 50, 300, 300);
-      let shapeRect = new GRect(55, 55, 50, 50);
+      let shapeRect = new GRect(55, 55, 100, 100);
       let shapes = new Map<string, Shape>();
 
       var shape1: Shape = new Shape(shapeRect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
@@ -89,11 +87,16 @@ describe("HitTestInteractor", function () {
       var inside: GPoint = new GPoint(56, 56);
       var outside: GPoint = new GPoint(49, 49);
       var crossingLeft: GPoint = new GPoint(55, 75);
-      var crossingRight: GPoint = new GPoint(105, 75);
+      var crossingRight: GPoint = new GPoint(155, 75);
 
       var controller: HitTestInteractor = new HitTestInteractor(shapes, bounds, IShapeInteractor.defaultGrabHandleDxDy());
 
       controller.shapes = shapes;
+
+      // Not doing anything, just call the functions for coverage
+      expect(controller.mouseMove(inside)).to.equal(false);
+      expect(controller.mouseUp(inside)).to.equal(false);
+      expect(controller.mouseDown(inside)).to.equal(false);
 
       expect(controller.rectangle.equals(bounds)).to.equal(true);
       expect(controller.shapes === shapes).to.equal(true);
@@ -105,6 +108,11 @@ describe("HitTestInteractor", function () {
       expect(controller.mouseMove(outside)).to.equal(false);
       expect(controller.mouseMove(crossingLeft)).to.equal(true);
       expect(controller.mouseMove(crossingRight)).to.equal(true);
+
+      expect(controller.mouseMove(shapeRect.topMiddle)).to.equal(true);
+      expect(controller.mouseMove(shapeRect.bottomMiddle)).to.equal(true);
+      expect(controller.mouseMove(shapeRect.leftMiddle)).to.equal(true);
+      expect(controller.mouseMove(shapeRect.rightMiddle)).to.equal(true);
 
    });
 });
@@ -118,8 +126,7 @@ describe("RightRectangleInteractor", function () {
       var pt: GPoint = new GPoint(100, 100);
 
       var controller: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
-
-      controller.click(pt); // this achieves nothing 
+ 
       controller.mouseDown(initial.bottomLeft);
       controller.mouseMove(pt);
       controller.mouseUp(pt);
@@ -170,7 +177,6 @@ describe("LeftRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new LeftRectangleInteractor(bounds, initial);
 
-      controller.click(pt); // this achieves nothing 
       controller.mouseDown(initial.bottomLeft);
       controller.mouseMove(pt);
       controller.mouseUp(pt);
@@ -220,7 +226,6 @@ describe("TopRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new TopRectangleInteractor(bounds, initial);
 
-      controller.click(pt); // this achieves nothing 
       controller.mouseDown(initial.topRight);
       controller.mouseMove(pt);
       controller.mouseUp(pt);
@@ -270,7 +275,6 @@ describe("BottomRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new BottomRectangleInteractor(bounds, initial);
 
-      controller.click(pt); // this achieves nothing 
       controller.mouseDown(initial.bottomRight);
       controller.mouseMove(pt);
       controller.mouseUp(pt);
