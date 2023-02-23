@@ -174,6 +174,24 @@ describe("Geometry", function () {
 
       expect(GRect.createGrabHandlesAround(rc, 4, 4).length === 8).to.equal(true);
    });
+
+   it("Needs to test border intersections", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles * 4, 10 + GRect.minimumRelativeSizeForMidHandles * 4);
+
+      var rc = new GRect(loLeft, hiRight);
+
+      expect(rc.isOnTopBorder(hiRight)).to.equal(true);
+      expect(rc.isOnLeftBorder(loLeft)).to.equal(true);
+      expect(rc.isOnRightBorder(hiRight)).to.equal(true);
+      expect(rc.isOnBottomBorder(loLeft)).to.equal(true);
+
+      expect(rc.isOnTopBorder(loLeft)).to.equal(false);
+      expect(rc.isOnLeftBorder(hiRight)).to.equal(false);
+      expect(rc.isOnRightBorder(loLeft)).to.equal(false);
+      expect(rc.isOnBottomBorder(hiRight)).to.equal(false);
+   });
 });
 
 

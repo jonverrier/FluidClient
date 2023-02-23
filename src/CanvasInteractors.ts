@@ -241,6 +241,136 @@ export class LeftRectangleInteractor extends IShapeInteractor {
    }
 }
 
+// Interactor that lets the user draw a rectangle with constrained X values moving top border only
+export class TopRectangleInteractor extends IShapeInteractor {
+
+   private _rectangle: GRect;
+   private _bounds: GRect;
+
+   /**
+    * Create a TopRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    */
+   public constructor(bounds_: GRect, initial_: GRect) {
+
+      super();
+
+      this._bounds = new GRect(bounds_);
+      this._rectangle = new GRect(initial_);
+   }
+
+   click(pt: GPoint): boolean {
+
+      return false; // No need for further call
+   }
+
+   mouseDown(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      return false; // No need for further call
+   }
+
+   mouseMove(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      return false; // No need for further call
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
+
+      return false; // No need for further call
+   }
+
+   private commonMouseProcessing(pt: GPoint): void {
+
+      var newRect: GRect = GRect.normaliseFromRectangle(new GRect(this._rectangle.x,
+         this._rectangle.y,
+         this._rectangle.dx,
+         (pt.y - this._rectangle.y)));
+
+      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._rectangle;
+   }
+}
+
+// Interactor that lets the user draw a rectangle with constrained X values moving top border only
+export class BottomRectangleInteractor extends IShapeInteractor {
+
+   private _rectangle: GRect;
+   private _bounds: GRect;
+
+   /**
+    * Create a TopRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    */
+   public constructor(bounds_: GRect, initial_: GRect) {
+
+      super();
+
+      this._bounds = new GRect(bounds_);
+      this._rectangle = new GRect(initial_);
+   }
+
+   click(pt: GPoint): boolean {
+
+      return false; // No need for further call
+   }
+
+   mouseDown(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      return false; // No need for further call
+   }
+
+   mouseMove(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      return false; // No need for further call
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      this.commonMouseProcessing(pt);
+
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
+
+      return false; // No need for further call
+   }
+
+   private commonMouseProcessing(pt: GPoint): void {
+
+      var newRect: GRect = GRect.normaliseFromRectangle(new GRect(this._rectangle.x,
+         pt.y,
+         this._rectangle.dx,
+         this._rectangle.dy - (pt.y - this._rectangle.y)));
+
+      this._rectangle = this._bounds.clip(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._rectangle;
+   }
+}
+
 // Interactor that works out if the mouse is over a click-able area of the shapes
 export class HitTestInteractor extends IShapeInteractor {
 
@@ -297,11 +427,23 @@ export class HitTestInteractor extends IShapeInteractor {
                   this._lastHitShape = shape;
                }
                else
-                  if (shape.boundingRectangle.isOnRightBorder(pt)) {
-                     hit = true;
-                     this._lastHitTest = HitTestResult.Right;
-                     this._lastHitShape = shape;
+               if (shape.boundingRectangle.isOnRightBorder(pt)) {
+                  hit = true;
+                  this._lastHitTest = HitTestResult.Right;
+                  this._lastHitShape = shape;
                   }
+               else
+               if (shape.boundingRectangle.isOnTopBorder(pt)) {
+                  hit = true;
+                  this._lastHitTest = HitTestResult.Top;
+                  this._lastHitShape = shape;
+               }
+               else
+               if (shape.boundingRectangle.isOnBottomBorder(pt)) {
+                  hit = true;
+                  this._lastHitTest = HitTestResult.Bottom;
+                  this._lastHitShape = shape;
+               }
             }
          }
 

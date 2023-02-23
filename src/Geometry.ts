@@ -317,7 +317,23 @@ export class GRect extends MSerialisable {
    }
 
    /**
-    * CLip rhs to fit withing the current rectangle
+    * Test if the point pt is on the top border
+    * @param pt - the point rectangle to test
+    */
+   isOnTopBorder(pt: GPoint): boolean {
+      return this._rc.ymax === pt.y && (this._rc.xmin <= pt.x && this._rc.xmax >= pt.x);
+   }
+
+   /**
+    * Test if the point pt is on the bottom border
+    * @param pt - the point rectangle to test
+    */
+   isOnBottomBorder(pt: GPoint): boolean {
+      return this._rc.ymin === pt.y && (this._rc.xmin <= pt.x && this._rc.xmax >= pt.x);
+   }
+
+   /**
+    * Clip rhs to fit withing the current rectangle
     * @param rhs - the rectangle to test
     */
    clip(rhs: GRect): GRect {

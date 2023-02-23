@@ -14,7 +14,7 @@ import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } fr
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from './Shape';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
-import { IShapeInteractor, FreeRectangleInteractor, LeftRectangleInteractor, RightRectangleInteractor, shapeInteractionCompleteInterest, HitTestInteractor, HitTestResult } from './CanvasInteractors';
+import { IShapeInteractor, FreeRectangleInteractor, LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor, shapeInteractionCompleteInterest, HitTestInteractor, HitTestResult } from './CanvasInteractors';
 import { RectangleShapeRenderer, SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
@@ -42,6 +42,18 @@ const cursorLeftStyles = makeStyles({
 const cursorRightStyles = makeStyles({
    root: {
       cursor: 'w-resize'
+   },
+});
+
+const cursorTopStyles = makeStyles({
+   root: {
+      cursor: 's-resize' // s-resize because Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
+   },
+});
+
+const cursorBottomStyles = makeStyles({
+   root: {
+      cursor: 'n-resize' // n-resize because Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
    },
 });
 
@@ -158,6 +170,12 @@ function shapeInteractorFromMode(mode_: CanvasMode, bounds_: GRect, initial_: GR
             case HitTestResult.Right:
                return new RightRectangleInteractor(bounds_, initial_);
 
+            case HitTestResult.Top:
+               return new TopRectangleInteractor(bounds_, initial_);
+
+            case HitTestResult.Bottom:
+               return new BottomRectangleInteractor(bounds_, initial_);
+
             default:
             case HitTestResult.None:
                return new FreeRectangleInteractor(bounds_);
@@ -247,6 +265,8 @@ export const Canvas = (props: ICanvasProps) => {
    const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
    const cursorLeftClasses = cursorLeftStyles();
    const cursorRightClasses = cursorRightStyles();
+   const cursorTopClasses = cursorTopStyles();
+   const cursorBottomClasses = cursorBottomStyles();
 
    // BUILD NOTE
    // Update this for every style of interaction
@@ -261,6 +281,10 @@ export const Canvas = (props: ICanvasProps) => {
                   return cursorLeftClasses.root;
                case HitTestResult.Right:
                   return cursorRightClasses.root;
+               case HitTestResult.Top:
+                  return cursorTopClasses.root;
+               case HitTestResult.Bottom:
+                  return cursorBottomClasses.root;
 
                default:
                return cursorDefaultClasses.root;
