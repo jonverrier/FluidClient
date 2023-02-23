@@ -108,8 +108,9 @@ export class GPoint extends MSerialisable {
 
 export class GRect extends MSerialisable {
 
-   _rc: Flatten.Box;
-   static minimumRelativeSizeForMidHandles = 16; // borders have to be 16x the size of handles to get extra one in the mid point of border
+   private _rc: Flatten.Box;
+   private static minimumRelativeSizeForMidHandlesXY = 12; // borders have to be 12x the size of handles to get extra one in the mid point of border. 
+   private static defaultGrabHandleDXY: number = 8;      // Default grab handle is 8 units wide. 
 
    /**
     * Create a GRect object
@@ -210,40 +211,36 @@ export class GRect extends MSerialisable {
       return this._rc.xmax;
    }
 
-   get topLeft(): GPoint  {
+   get bottomLeft(): GPoint  {
       return new GPoint(this._rc.xmin, this._rc.ymin);
    }
-   set topLeft(pt: GPoint) {
+   set bottomLeft(pt: GPoint) {
       this._rc.xmin = pt.x;
       this._rc.ymin = pt.y;
    }
    get topRight(): GPoint {
-      return new GPoint(this._rc.xmax, this._rc.ymin);
+      return new GPoint(this._rc.xmax, this._rc.ymax);
    }
-   get topMiddle(): GPoint {
-      return new GPoint(this._rc.xmin + this.dx/2, this._rc.ymin);
+   set topRight(pt: GPoint) {
+      this._rc.xmax = pt.x;
+      this._rc.ymax = pt.y;
    }
 
 
    get bottomRight(): GPoint {
-      return new GPoint(this._rc.xmax, this._rc.ymax);
+      return new GPoint(this._rc.xmax, this._rc.ymin);
    }
-   set bottomRight(pt: GPoint) {
-      this._rc.xmax = pt.x;
-      this._rc.ymax = pt.y;
-   }
-   get bottomLeft(): GPoint {
-      return new GPoint(this._rc.xmin, this._rc.ymax);
+   get topMiddle(): GPoint {
+      return new GPoint(this._rc.xmin + (this.dx / 2), this._rc.ymax);
    }
    get bottomMiddle(): GPoint {
-      return new GPoint(this._rc.xmin + this.dx / 2, this._rc.ymax);
+      return new GPoint(this._rc.xmin + (this.dx / 2), this._rc.ymin);
    }
-
    get leftMiddle(): GPoint {
-      return new GPoint(this._rc.xmin, this._rc.ymin + this.dy / 2);
+      return new GPoint(this._rc.xmin, this._rc.ymin + (this.dy / 2));
    }
    get rightMiddle(): GPoint {
-      return new GPoint(this._rc.xmax, this._rc.ymin + this.dy / 2);
+      return new GPoint(this._rc.xmax, this._rc.ymin + (this.dy / 2));
    }
    /**
     * test for equality - checks all fields are the same. 
@@ -294,7 +291,7 @@ export class GRect extends MSerialisable {
 
    /**
     * Test if the point pt is within this rectangle, including its border
-    * @param pt - the point rectangle to test
+    * @param pt - the point to test
     */
    includes(pt: GPoint): boolean {
       return this._rc.xmin <= pt.x && this._rc.ymin <= pt.y && this._rc.xmax >= pt.x && this._rc.ymax >= pt.y;
@@ -302,15 +299,15 @@ export class GRect extends MSerialisable {
 
    /**
     * Test if the point pt is on the left border
-    * @param pt - the point rectangle to test
+    * @param pt - the point to test
     */
    isOnLeftBorder (pt: GPoint): boolean {
       return this._rc.xmin === pt.x && (this._rc.ymin <= pt.y && this._rc.ymax >= pt.y);
    }
 
    /**
-    * Test if the point pt is on the left border
-    * @param pt - the point rectangle to test
+    * Test if the point pt is on the right border
+    * @param pt - the point to test
     */
    isOnRightBorder(pt: GPoint): boolean {
       return this._rc.xmax === pt.x && (this._rc.ymin <= pt.y && this._rc.ymax >= pt.y);
@@ -318,7 +315,7 @@ export class GRect extends MSerialisable {
 
    /**
     * Test if the point pt is on the top border
-    * @param pt - the point rectangle to test
+    * @param pt - the point to test
     */
    isOnTopBorder(pt: GPoint): boolean {
       return this._rc.ymax === pt.y && (this._rc.xmin <= pt.x && this._rc.xmax >= pt.x);
@@ -326,10 +323,86 @@ export class GRect extends MSerialisable {
 
    /**
     * Test if the point pt is on the bottom border
-    * @param pt - the point rectangle to test
+    * @param pt - the point to test
     */
    isOnBottomBorder(pt: GPoint): boolean {
       return this._rc.ymin === pt.y && (this._rc.xmin <= pt.x && this._rc.xmax >= pt.x);
+   }
+
+   /**
+    * Test if the point pt is on any border
+    * @param pt - the point  to test
+    */
+   isOnBorder(pt: GPoint): boolean {
+
+      return this.isOnBottomBorder(pt) ||
+         this.isOnLeftBorder(pt) ||
+         this.isOnRightBorder(pt) ||
+         this.isOnTopBorder(pt);
+   }
+
+   /**
+    * Test if the point pt is on the left grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnLeftGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      if (!GRect.isTallEnoughForMidHandle(this, grabHandleDxDy))
+         return false;
+
+      var halfGrab: number = grabHandleDxDy / 2;
+      var midY: number = (this._rc.ymin + this._rc.ymax) / 2;
+
+      return (Math.abs(pt.y - midY) <= halfGrab) && (Math.abs(pt.x - this._rc.xmin) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the right grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnRightGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      if (!GRect.isTallEnoughForMidHandle(this, grabHandleDxDy))
+         return false;
+
+      var halfGrab: number = grabHandleDxDy / 2;
+      var midY: number = (this._rc.ymin + this._rc.ymax) / 2;
+
+      return (Math.abs(pt.y - midY) <= halfGrab) && (Math.abs(pt.x - this._rc.xmax) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the top grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnTopGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      if (!GRect.isWideEnoughForMidHandle(this, grabHandleDxDy))
+         return false;
+
+      var halfGrab: number = grabHandleDxDy / 2;
+      var midX: number = (this._rc.xmin + this._rc.xmax) / 2;
+
+      return (Math.abs(pt.x - midX) <= halfGrab) && (Math.abs(pt.y - this._rc.ymax) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the bottom grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnBottomGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      if (!GRect.isWideEnoughForMidHandle(this, grabHandleDxDy))
+         return false;
+
+      var halfGrab: number = grabHandleDxDy / 2;
+      var midX: number = (this._rc.xmin + this._rc.xmax) / 2;
+
+      return (Math.abs(pt.x - midX) <= halfGrab) && (Math.abs(pt.y - this._rc.ymin) <= halfGrab);
    }
 
    /**
@@ -338,12 +411,19 @@ export class GRect extends MSerialisable {
     */
    clip(rhs: GRect): GRect {
 
-      let x = Math.max(this._rc.xmin, rhs._rc.xmin);
-      let y = Math.max(this._rc.ymin, rhs._rc.ymin);
-      let dx = Math.min(this._rc.xmax - x, rhs._rc.xmax - x);
-      let dy = Math.min(this._rc.ymax - y, rhs._rc.ymax - y);
+      let clipped = new GRect(rhs);
 
-      return new GRect(x, y, dx, dy);
+      if (clipped._rc.xmin < this._rc.xmin)
+         clipped._rc.xmin = this._rc.xmin;
+      if (clipped._rc.ymin < this._rc.ymin)
+         clipped._rc.ymin = this._rc.ymin;
+
+      if (clipped._rc.xmax > this._rc.xmax)
+         clipped._rc.xmax = this._rc.xmax;
+      if (clipped._rc.ymax > this._rc.ymax)
+         clipped._rc.ymax = this._rc.ymax;
+
+      return clipped;
    }
 
    /**
@@ -367,7 +447,7 @@ export class GRect extends MSerialisable {
     */
    static normaliseFromRectangle(rect: GRect): GRect {    
 
-      return GRect.normaliseFromPoints (rect.topLeft, rect.bottomRight);
+      return GRect.normaliseFromPoints (rect.bottomLeft, rect.topRight);
    }
 
    static createAround (pt: GPoint, dx: number, dy: number): GRect {
@@ -398,7 +478,7 @@ export class GRect extends MSerialisable {
 
       let handles = new Array<GRect>();
 
-      let rc = GRect.createAround(rc_.topLeft, dx_, dy_);
+      let rc = GRect.createAround(rc_.bottomLeft, dx_, dy_);
       handles.push(rc);
       rc = GRect.createAround(rc_.topRight, dx_, dy_);
       handles.push(rc);
@@ -408,7 +488,7 @@ export class GRect extends MSerialisable {
       handles.push(rc);
 
       // Create extra horizontal handles if object is wide enough
-      if (rc_.dx >= dx_ * GRect.minimumRelativeSizeForMidHandles) {
+      if (GRect.isWideEnoughForMidHandle(rc_, dx_)) {
          rc = GRect.createAround(rc_.topMiddle, dx_, dy_);
          handles.push(rc);
          rc = GRect.createAround(rc_.bottomMiddle, dx_, dy_);
@@ -416,7 +496,7 @@ export class GRect extends MSerialisable {
       }
 
       // Create extra vertical handles if object is high enough
-      if (rc_.dy >= dy_ * GRect.minimumRelativeSizeForMidHandles) {
+      if (GRect.isTallEnoughForMidHandle (rc_, dy_)) {
          rc = GRect.createAround(rc_.leftMiddle, dx_, dy_);
          handles.push(rc);
          rc = GRect.createAround(rc_.rightMiddle, dx_, dy_);
@@ -424,5 +504,25 @@ export class GRect extends MSerialisable {
       }
 
       return handles;
+   }
+
+   static isWideEnoughForMidHandle(rc_: GRect, dx_: number): Boolean {
+
+      // Create extra horizontal handles if object is wide enough
+      return (rc_.dx >= dx_ * GRect.minimumRelativeSizeForMidHandlesXY);
+   }
+
+   static isTallEnoughForMidHandle(rc_: GRect, dy_: number): Boolean {
+
+      // Create extra horizontal handles if object is wide enough
+      return (rc_.dy >= dy_ * GRect.minimumRelativeSizeForMidHandlesXY);
+   }
+
+   static defaultGrabHandleDxy(): number {
+      return GRect.defaultGrabHandleDXY;
+   }
+
+   static minimumRelativeSizeForMidHandles (): number { 
+      return GRect.minimumRelativeSizeForMidHandlesXY;
    }
 }

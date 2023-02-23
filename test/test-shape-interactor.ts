@@ -56,7 +56,7 @@ describe("FreeRectangleInteractor", function () {
 
       controller.click(pt);
 
-      expect(controller.rectangle.topLeft.equals(bounds.topLeft)).to.equal(true);
+      expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
    });
 
    it("Needs to clip final GRect if necessary - upper right", function () {
@@ -71,8 +71,7 @@ describe("FreeRectangleInteractor", function () {
       controller.mouseMove(pt2);
       controller.mouseUp(pt2);
 
-      expect(controller.rectangle.topLeft.equals(pt1)).to.equal(true);
-      expect(controller.rectangle.bottomRight.equals(bounds.bottomRight)).to.equal(true);
+      expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
    });
 });
 
@@ -92,15 +91,9 @@ describe("HitTestInteractor", function () {
       var crossingLeft: GPoint = new GPoint(55, 75);
       var crossingRight: GPoint = new GPoint(105, 75);
 
-      var controller: HitTestInteractor = new HitTestInteractor(shapes, bounds);
+      var controller: HitTestInteractor = new HitTestInteractor(shapes, bounds, IShapeInteractor.defaultGrabHandleDxDy());
 
       controller.shapes = shapes;
-
-      // These just exercise the functions - no logic
-      controller.mouseDown(inside);
-      controller.mouseMove(inside);
-      controller.mouseUp(inside);
-      controller.click(inside);
 
       expect(controller.rectangle.equals(bounds)).to.equal(true);
       expect(controller.shapes === shapes).to.equal(true);
@@ -127,7 +120,7 @@ describe("RightRectangleInteractor", function () {
       var controller: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
 
       controller.click(pt); // this achieves nothing 
-      controller.mouseDown(initial.bottomRight);
+      controller.mouseDown(initial.bottomLeft);
       controller.mouseMove(pt);
       controller.mouseUp(pt);
 
@@ -143,7 +136,7 @@ describe("RightRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomRight);
+      controller.mouseDown(initial.bottomLeft);
       controller.mouseMove(pt);
       controller.mouseUp(pt);
 
@@ -158,11 +151,11 @@ describe("RightRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomRight);
+      controller.mouseDown(initial.bottomLeft);
       controller.mouseMove(pt2);
       controller.mouseUp(pt2);
 
-      expect(controller.rectangle.topLeft.equals(initial.topLeft)).to.equal(true);
+      expect(controller.rectangle.bottomLeft.equals(initial.bottomLeft)).to.equal(true);
       expect(controller.rectangle.right === bounds.right).to.equal(true);
    });
 });

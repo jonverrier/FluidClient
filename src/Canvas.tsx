@@ -143,7 +143,9 @@ class CanvasState {
 
       this.shapes = shapes_;
       this.shapeInteractor = null;
-      this.hitTestInteractor = new HitTestInteractor(shapes_, new GRect(0, 0, width_, height_));
+      this.hitTestInteractor = new HitTestInteractor(shapes_,
+                                                     new GRect(0, 0, width_, height_),
+                                                     IShapeInteractor.defaultGrabHandleDxDy());
       this.lastHit = HitTestResult.None;
       this.lastHitShape = null;
    }
@@ -311,14 +313,6 @@ export const Canvas = (props: ICanvasProps) => {
       return new GPoint(x, y);
    }
 
-   const handleCanvasClick = (event: MouseEvent) : void => {
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      return; 
-   };
-
    function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
 
       switch (props.mode) { 
@@ -331,28 +325,48 @@ export const Canvas = (props: ICanvasProps) => {
             // Create new shape - selected
             let shape = new Rectangle(data.eventData, ShapeBorderColour.Black, ShapeBorderStyle.Solid, true);
 
-            // set the version in Cuacus first, which pushes to other clients, then reset our state to match
+            // set the version in Caucus first, which pushes to other clients, then reset our state to match
             props.shapeCaucus.add(shape.id, shape);
             canvasState.shapes.set(shape.id, shape);
             break;
 
          case CanvasMode.Select:
          default:
-            
             if (canvasState.lastHitShape) {
 
-               // If we were resizing a shape, set the new size & then push to Caucus
-               canvasState.lastHitShape.boundingRectangle = data.eventData;
-               props.shapeCaucus.amend(canvasState.lastHitShape.id, canvasState.lastHitShape);
+               if (canvasState.lastHit === HitTestResult.Border) {
+                  // User clicked on a border, not a grab handle
 
-               setCanvasState({
-                  width: canvasState.width, height: canvasState.height,
-                  shapes: canvasState.shapes,
-                  shapeInteractor: null,
-                  hitTestInteractor: canvasState.hitTestInteractor,
-                  lastHit: HitTestResult.None,
-                  lastHitShape: null
-               });
+                  canvasState.shapes.forEach((shape: Shape, key: string) => {
+                     if (shape.isSelected) {
+                        shape.isSelected = false;
+                        // set the version in Caucus first, which pushes to other clients, then reset our state to match
+                        props.shapeCaucus.amend(shape.id, shape);
+                     }
+                  });
+
+                  if (canvasState.lastHitShape.isSelected)
+                     canvasState.lastHitShape.isSelected = true;
+                  else
+                     canvasState.lastHitShape.isSelected = false;
+
+                  // set the version in Caucus, which pushes to other clients
+                  props.shapeCaucus.amend(canvasState.lastHitShape.id, canvasState.lastHitShape);
+               }
+               else {
+                  // If we were resizing a shape, set the new size & then push to Caucus
+                  canvasState.lastHitShape.boundingRectangle = data.eventData;
+                  props.shapeCaucus.amend(canvasState.lastHitShape.id, canvasState.lastHitShape);
+
+                  setCanvasState({
+                     width: canvasState.width, height: canvasState.height,
+                     shapes: canvasState.shapes,
+                     shapeInteractor: null,
+                     hitTestInteractor: canvasState.hitTestInteractor,
+                     lastHit: HitTestResult.None,
+                     lastHitShape: null
+                  });
+               }
             }
             else {
                // Else select items within the selection area and de-select others
@@ -363,9 +377,8 @@ export const Canvas = (props: ICanvasProps) => {
                   else {
                      shape.isSelected = false;
                   }
-                  // set the version in Caucus first, which pushes to other clients, then reset our state to match
+                  // set the version in Caucus first, which pushes to other clients
                   props.shapeCaucus.amend(shape.id, shape);
-                  canvasState.shapes.set(shape.id, shape);
                });
             }
             break;
@@ -480,7 +493,7 @@ export const Canvas = (props: ICanvasProps) => {
             shapeInteractor: null,
             hitTestInteractor: canvasState.hitTestInteractor,
             lastHit: canvasState.lastHit,
-            lastHitShape : canvasState.lastHitShape
+            lastHitShape: canvasState.lastHitShape
          });
       }
    };
@@ -491,7 +504,6 @@ export const Canvas = (props: ICanvasProps) => {
       ref={canvasRef as any}
       width={canvasWidth as any}
       height={canvasHeight as any}
-      onClick={handleCanvasClick}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}

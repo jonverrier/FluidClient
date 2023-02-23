@@ -1,7 +1,8 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GPoint, GRect } from "./Geometry";
-import { Shape, ShapeBorderColour, ShapeBorderStyle, } from "./Shape"; 
+import { GRect } from "./Geometry";
+import { Shape } from "./Shape";
+import { IShapeInteractor } from "./CanvasInteractors"; 
 
 // Signature for the factory function 
 type FactoryFunctionFor<ShapeDrawer> = () => ShapeDrawer;
@@ -73,7 +74,7 @@ export abstract class ShapeRenderer {
 
    // Helper function as many derived classes will need it
    protected drawSelectionBorder(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
+      shape: Shape, grabHandleDxy: number): void {
 
       ctx.save();
 
@@ -87,7 +88,7 @@ export abstract class ShapeRenderer {
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.stroke();
 
-      let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, 8, 8);
+      let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, grabHandleDxy, grabHandleDxy);
 
       handles.forEach((handle: GRect) => {
 
@@ -149,7 +150,7 @@ export class RectangleShapeRenderer extends ShapeRenderer {
       this.drawBorder(ctx, shape);
 
       if (shape.isSelected) {
-         this.drawSelectionBorder(ctx, shape);
+         this.drawSelectionBorder(ctx, shape, IShapeInteractor.defaultGrabHandleDxDy());
       }
    }
 

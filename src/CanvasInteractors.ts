@@ -1,13 +1,14 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { GPoint, GRect } from './Geometry';
-import { Interest, NotificationFor, Notifier, INotifier, ObserverInterest } from './NotificationFramework';
+import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Shape } from './Shape';
 
 export enum HitTestResult {
    None = "None",
    Left = "Left", Right = "Right", Top = "Top", Bottom = "Bottom",
-   TopLeft = "TopLeft", TopRight = "TopRight", BottomLeft = "BottomLeft", BottomRight = "BottomRight"
+   TopLeft = "TopLeft", TopRight = "TopRight", BottomLeft = "BottomLeft", BottomRight = "BottomRight", 
+   Border = "Border"
 }
 
 interface IShapeMover {
@@ -27,6 +28,9 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
    abstract mouseUp(pt: GPoint): boolean;
    abstract rectangle: GRect;
 
+   static defaultGrabHandleDxDy(): number {
+      return defaultGrabHandleDXDY;
+   }
    static defaultDx(): number {
       return defaultDX;
    }
@@ -50,6 +54,8 @@ var defaultDY: number = 50;
 var minimumDX: number = 16;
 var minimumDY: number = 16;
 
+var defaultGrabHandleDXDY: number = 8;
+
 // Interactor that lets the user draw a rectangle from mouse down to mouse up
 export class FreeRectangleInteractor extends IShapeInteractor  {
 
@@ -57,7 +63,7 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
    private _bounds: GRect;
 
    /**
-    * Create a NewRectangleController object
+    * Create a FreeRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
     */
    public constructor(bounds_: GRect) {
@@ -378,12 +384,18 @@ export class HitTestInteractor extends IShapeInteractor {
    private _rectangle: GRect;
    private _lastHitTest: HitTestResult;
    private _lastHitShape: Shape;
+   private _isSelected: boolean;
+   private _grabHandleDxDy: number;
 
    /**
     * Create a HitTestInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
-    */
-   public constructor(shapes_: Map<string, Shape>, rectangle_: GRect) {
+    * @param rectangle_ - the rectangle enclosing the shape
+    * @param grabHandleDxDy_ - size of the grab hadles if it is selected
+    * */
+   public constructor(shapes_: Map<string, Shape>,
+      rectangle_: GRect,
+      grabHandleDxDy_: number) {
 
       super();
 
@@ -391,6 +403,7 @@ export class HitTestInteractor extends IShapeInteractor {
       this._rectangle = rectangle_;
       this._lastHitTest = HitTestResult.None;
       this._lastHitShape = null;
+      this._grabHandleDxDy = grabHandleDxDy_;
    }
 
    click(pt: GPoint): boolean {
@@ -421,27 +434,33 @@ export class HitTestInteractor extends IShapeInteractor {
             // for check the bounding box. If within, do more detailed tests, else skip them
             if (shape.boundingRectangle.includes(pt)) {
 
-               if (shape.boundingRectangle.isOnLeftBorder(pt)) {
+               if (shape.boundingRectangle.isOnLeftGrabHandle(pt, this._grabHandleDxDy)) {
                   hit = true;
                   this._lastHitTest = HitTestResult.Left;
                   this._lastHitShape = shape;
                }
                else
-               if (shape.boundingRectangle.isOnRightBorder(pt)) {
+               if (shape.boundingRectangle.isOnRightGrabHandle(pt, this._grabHandleDxDy)) {
                   hit = true;
                   this._lastHitTest = HitTestResult.Right;
                   this._lastHitShape = shape;
-                  }
+               }
                else
-               if (shape.boundingRectangle.isOnTopBorder(pt)) {
+               if (shape.boundingRectangle.isOnTopGrabHandle(pt, this._grabHandleDxDy)) {
                   hit = true;
                   this._lastHitTest = HitTestResult.Top;
                   this._lastHitShape = shape;
                }
                else
-               if (shape.boundingRectangle.isOnBottomBorder(pt)) {
+               if (shape.boundingRectangle.isOnBottomGrabHandle(pt, this._grabHandleDxDy)) {
                   hit = true;
                   this._lastHitTest = HitTestResult.Bottom;
+                  this._lastHitShape = shape;
+               }
+               else
+               if (shape.boundingRectangle.isOnBorder(pt)) {
+                  hit = true;
+                  this._lastHitTest = HitTestResult.Border;
                   this._lastHitShape = shape;
                }
             }
