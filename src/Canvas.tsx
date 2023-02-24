@@ -312,8 +312,6 @@ export const Canvas = (props: ICanvasProps) => {
       props.shapeCaucus
    );
 
-   console.log("Render hit=" + JSON.stringify(canvasState.lastHit) + "Shape=" + JSON.stringify(canvasState.lastHitShapeId));
-
    const cursorDefaultClasses = cursorDefaultStyles();
    const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
    const cursorLeftClasses = cursorLeftStyles();
@@ -484,12 +482,14 @@ export const Canvas = (props: ICanvasProps) => {
       });
    }
 
-   function interactionEnd(coord: GPoint): void {
+   function interactionEnd(coord: GPoint, postStateChange: boolean): void {
 
-      if (canvasState.shapeInteractor) {
+      let endInteraction = false;
+      if (canvasState.shapeInteractor)
+         endInteraction = true;
 
+      if (!postStateChange && endInteraction)
          canvasState.shapeInteractor.interactionEnd(coord);
-      } 
 
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
@@ -498,6 +498,9 @@ export const Canvas = (props: ICanvasProps) => {
          lastHit: HitTestResult.None,
          lastHitShapeId: null
       });
+
+      if (postStateChange && endInteraction)
+         canvasState.shapeInteractor.interactionEnd(coord);
    }
 
    function interactionUpdate(coord: GPoint): void {
@@ -570,7 +573,7 @@ export const Canvas = (props: ICanvasProps) => {
 
       var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-      interactionEnd(coord);
+      interactionEnd(coord, true);
    };
 
    const handleCanvasTouchStart = (event: TouchEvent): void => {
@@ -601,7 +604,7 @@ export const Canvas = (props: ICanvasProps) => {
 
       var coord: GPoint = getLastTouchPosition(getCanvas(event), event);
 
-      interactionEnd(coord);
+      interactionEnd(coord, true);
    }
 
 
