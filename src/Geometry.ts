@@ -305,8 +305,11 @@ export class GRect extends MSerialisable {
     * Test if the point pt is on the left border
     * @param pt - the point to test
     */
-   isOnLeftBorder (pt: GPoint): boolean {
-      return this._rc.xmin === pt.x && (this._rc.ymin <= pt.y && this._rc.ymax >= pt.y);
+   isOnLeftBorder(pt: GPoint): boolean {
+
+      return ((Math.abs(this._rc.xmin - pt.x) <= 1) &&
+         (this._rc.ymin <= pt.y) &&
+         this._rc.ymax >= pt.y);
    }
 
    /**
@@ -314,7 +317,9 @@ export class GRect extends MSerialisable {
     * @param pt - the point to test
     */
    isOnRightBorder(pt: GPoint): boolean {
-      return this._rc.xmax === pt.x && (this._rc.ymin <= pt.y && this._rc.ymax >= pt.y);
+      return ((Math.abs(this._rc.xmax - pt.x) <= 1) &&
+         (this._rc.ymin <= pt.y) &&
+         (this._rc.ymax >= pt.y));
    }
 
    /**
@@ -322,7 +327,9 @@ export class GRect extends MSerialisable {
     * @param pt - the point to test
     */
    isOnTopBorder(pt: GPoint): boolean {
-      return this._rc.ymax === pt.y && (this._rc.xmin <= pt.x && this._rc.xmax >= pt.x);
+      return ((Math.abs(this._rc.ymax - pt.y) <= 1) &&
+         (this._rc.xmin <= pt.x) &&
+         this._rc.xmax >= pt.x);
    }
 
    /**
@@ -330,7 +337,9 @@ export class GRect extends MSerialisable {
     * @param pt - the point to test
     */
    isOnBottomBorder(pt: GPoint): boolean {
-      return this._rc.ymin === pt.y && (this._rc.xmin <= pt.x && this._rc.xmax >= pt.x);
+      return ((Math.abs(this._rc.ymin - pt.y) <= 1) &&
+         (this._rc.xmin <= pt.x) &&
+         this._rc.xmax >= pt.x);
    }
 
    /**

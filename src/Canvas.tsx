@@ -464,16 +464,16 @@ export const Canvas = (props: ICanvasProps) => {
          bounds,
          shape ? shape.boundingRectangle : new GRect(),
          hit, coord);
-      shapeInteractor.interactionStart(coord);
 
       var notificationRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this));
       shapeInteractor.addObserver(new ObserverInterest(notificationRouter, shapeInteractionCompleteInterest));
 
-      let shapes = canvasState.shapes;
+      shapeInteractor.interactionStart(coord);
 
+      // Force re-render
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
-         shapes: shapes,
+         shapes: canvasState.shapes,
          shapeInteractor: shapeInteractor,
          hitTestInteractor: canvasState.hitTestInteractor,
          lastHit: canvasState.lastHit,
@@ -516,8 +516,8 @@ export const Canvas = (props: ICanvasProps) => {
             lastHitShape: canvasState.lastHitShape
          });
       } else {
-         // Otherwise we do a hit test to see if we should change the cursor
 
+         // Otherwise we do a hit test to see if we should change the cursor
          let more = canvasState.hitTestInteractor.interactionUpdate(coord);
          let hit = HitTestResult.None;
          var shape: Shape = null;
@@ -527,12 +527,10 @@ export const Canvas = (props: ICanvasProps) => {
             shape = canvasState.hitTestInteractor.lastHitShape;
          }
 
-         let shapes = canvasState.shapes;
-
          setCanvasState({
             width: canvasState.width,
             height: canvasState.height,
-            shapes: shapes,
+            shapes: canvasState.shapes,
             shapeInteractor: canvasState.shapeInteractor,
             hitTestInteractor: canvasState.hitTestInteractor,
             lastHit: hit,
@@ -553,6 +551,8 @@ export const Canvas = (props: ICanvasProps) => {
       let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
 
       interactionStart(coord, bounds);
+
+      console.log("Mouse start" + JSON.stringify(coord));
    };
 
    const handleCanvasMouseMove= (event: MouseEvent): void => {
@@ -580,12 +580,14 @@ export const Canvas = (props: ICanvasProps) => {
       event.stopPropagation();
 
       let canvas = getCanvas(event);
-      let coord = getFirstTouchPosition(canvas, event);
+      let coord = getLastTouchPosition(canvas, event);
 
       let clientRect = canvas.getBoundingClientRect();
       let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
 
       interactionStart(coord, bounds);
+
+      console.log("Touch start" + JSON.stringify(coord));
    }
 
    const handleCanvasTouchMove = (event: TouchEvent): void => {
