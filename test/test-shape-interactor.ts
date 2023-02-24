@@ -34,9 +34,9 @@ describe("FreeRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
 
-      controller.mouseDown(pt);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(pt);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.dx === FreeRectangleInteractor.minimumDx()).to.equal(true);
       expect(controller.rectangle.dy === FreeRectangleInteractor.minimumDy()).to.equal(true);
@@ -49,9 +49,9 @@ describe("FreeRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
 
-      controller.mouseDown(pt);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(pt);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
    });
@@ -64,9 +64,9 @@ describe("FreeRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
 
-      controller.mouseDown(pt1);
-      controller.mouseMove(pt2);
-      controller.mouseUp(pt2);
+      controller.interactionStart(pt1);
+      controller.interactionUpdate(pt2);
+      controller.interactionEnd(pt2);
 
       expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
    });
@@ -93,9 +93,9 @@ describe("HitTestInteractor", function () {
       controller.shapes = shapes;
 
       // Not doing anything, just call the functions for coverage
-      expect(controller.mouseMove(inside)).to.equal(false);
-      expect(controller.mouseUp(inside)).to.equal(false);
-      expect(controller.mouseDown(inside)).to.equal(false);
+      expect(controller.interactionUpdate(inside)).to.equal(false);
+      expect(controller.interactionEnd(inside)).to.equal(false);
+      expect(controller.interactionStart(inside)).to.equal(false);
 
       expect(controller.rectangle.equals(bounds)).to.equal(true);
       expect(controller.shapes === shapes).to.equal(true);
@@ -103,20 +103,20 @@ describe("HitTestInteractor", function () {
       expect(controller.lastHitShape === null).to.equal(true);
 
       // Do real hit-testing
-      expect(controller.mouseMove(inside)).to.equal(false);
-      expect(controller.mouseMove(outside)).to.equal(false);
-      expect(controller.mouseMove(crossingLeft)).to.equal(true);
-      expect(controller.mouseMove(crossingRight)).to.equal(true);
+      expect(controller.interactionUpdate(inside)).to.equal(false);
+      expect(controller.interactionUpdate(outside)).to.equal(false);
+      expect(controller.interactionUpdate(crossingLeft)).to.equal(true);
+      expect(controller.interactionUpdate(crossingRight)).to.equal(true);
 
-      expect(controller.mouseMove(shapeRect.topMiddle)).to.equal(true);
-      expect(controller.mouseMove(shapeRect.bottomMiddle)).to.equal(true);
-      expect(controller.mouseMove(shapeRect.leftMiddle)).to.equal(true);
-      expect(controller.mouseMove(shapeRect.rightMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.topMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.bottomMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.leftMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.rightMiddle)).to.equal(true);
 
-      expect(controller.mouseMove(shapeRect.topLeft)).to.equal(true);
-      expect(controller.mouseMove(shapeRect.bottomLeft)).to.equal(true);
-      expect(controller.mouseMove(shapeRect.topRight)).to.equal(true);
-      expect(controller.mouseMove(shapeRect.bottomRight)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.topLeft)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.bottomLeft)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.topRight)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect.bottomRight)).to.equal(true);
 
    });
 });
@@ -131,9 +131,9 @@ describe("RightRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
  
-      controller.mouseDown(initial.bottomLeft);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.bottomLeft);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.dx === 50).to.equal(true);
       expect(controller.rectangle.dy === initial.dy).to.equal(true);
@@ -147,9 +147,9 @@ describe("RightRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomLeft);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.bottomLeft);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.x === bounds.x).to.equal(true);
    });
@@ -162,9 +162,9 @@ describe("RightRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomLeft);
-      controller.mouseMove(pt2);
-      controller.mouseUp(pt2);
+      controller.interactionStart(initial.bottomLeft);
+      controller.interactionUpdate(pt2);
+      controller.interactionEnd(pt2);
 
       expect(controller.rectangle.bottomLeft.equals(initial.bottomLeft)).to.equal(true);
       expect(controller.rectangle.right === bounds.right).to.equal(true);
@@ -181,9 +181,9 @@ describe("LeftRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new LeftRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomLeft);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.bottomLeft);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.dx === 150).to.equal(true);
       expect(controller.rectangle.dy === initial.dy).to.equal(true);
@@ -197,9 +197,9 @@ describe("LeftRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new LeftRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomLeft);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.bottomLeft);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.x === bounds.x).to.equal(true);
    });
@@ -212,9 +212,9 @@ describe("LeftRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new LeftRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomLeft);
-      controller.mouseMove(pt2);
-      controller.mouseUp(pt2);
+      controller.interactionStart(initial.bottomLeft);
+      controller.interactionUpdate(pt2);
+      controller.interactionEnd(pt2);
 
       expect(controller.rectangle.right === bounds.right).to.equal(true);
    });
@@ -230,9 +230,9 @@ describe("TopRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new TopRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.topRight);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.topRight);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.dx === initial.dx).to.equal(true);
       expect(controller.rectangle.top === pt.y).to.equal(true);
@@ -246,9 +246,9 @@ describe("TopRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new TopRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.topRight);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.topRight);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.y === bounds.y).to.equal(true);
    });
@@ -261,9 +261,9 @@ describe("TopRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new TopRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.topRight);
-      controller.mouseMove(pt2);
-      controller.mouseUp(pt2);
+      controller.interactionStart(initial.topRight);
+      controller.interactionUpdate(pt2);
+      controller.interactionEnd(pt2);
 
       expect(controller.rectangle.top === bounds.top).to.equal(true);
    });
@@ -279,9 +279,9 @@ describe("BottomRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new BottomRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomRight);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.bottomRight);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.y === pt.y).to.equal(true);
    });
@@ -294,9 +294,9 @@ describe("BottomRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new BottomRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomRight);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.bottomRight);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.y === bounds.y).to.equal(true);
    });
@@ -309,9 +309,9 @@ describe("BottomRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new BottomRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.bottomRight);
-      controller.mouseMove(pt2);
-      controller.mouseUp(pt2);
+      controller.interactionStart(initial.bottomRight);
+      controller.interactionUpdate(pt2);
+      controller.interactionEnd(pt2);
 
       expect(controller.rectangle.top === bounds.top).to.equal(true);
    });
@@ -326,9 +326,9 @@ describe("RectangleMoveInteractor", function () {
 
       var controller: IShapeInteractor = new RectangleMoveInteractor(bounds, initial, initial.topLeft);
 
-      controller.mouseDown(initial.topLeft);
-      controller.mouseMove(initial.topLeft);
-      controller.mouseUp(initial.topRight);
+      controller.interactionStart(initial.topLeft);
+      controller.interactionUpdate(initial.topLeft);
+      controller.interactionEnd(initial.topRight);
 
       expect(controller.rectangle.dy === initial.dy).to.equal(true);
       expect(controller.rectangle.dx === initial.dx).to.equal(true);
@@ -345,9 +345,9 @@ describe("RectangleMoveInteractor", function () {
 
       var controller: IShapeInteractor = new RectangleMoveInteractor(bounds, initial, initial.bottomLeft);
 
-      controller.mouseDown(initial.bottomLeft);
-      controller.mouseMove(pt);
-      controller.mouseUp(pt);
+      controller.interactionStart(initial.bottomLeft);
+      controller.interactionUpdate(pt);
+      controller.interactionEnd(pt);
 
       expect(controller.rectangle.dy === initial.dy).to.equal(true);
       expect(controller.rectangle.dx === initial.dx).to.equal(true);
@@ -362,9 +362,9 @@ describe("RectangleMoveInteractor", function () {
 
       var controller: IShapeInteractor = new RectangleMoveInteractor(bounds, initial, initial.topRight);
 
-      controller.mouseDown(initial.topRight);
-      controller.mouseMove(pt2);
-      controller.mouseUp(pt2);
+      controller.interactionStart(initial.topRight);
+      controller.interactionUpdate(pt2);
+      controller.interactionEnd(pt2);
 
       expect(controller.rectangle.dy === initial.dy).to.equal(true);
       expect(controller.rectangle.dx === initial.dx).to.equal(true);
@@ -383,9 +383,9 @@ describe("TopLeftRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.topLeft);
-      controller.mouseMove(final);
-      controller.mouseUp(final);
+      controller.interactionStart(initial.topLeft);
+      controller.interactionUpdate(final);
+      controller.interactionEnd(final);
 
       expect(controller.rectangle.topLeft.equals(final)).to.equal(true);
    });   
@@ -398,9 +398,9 @@ describe("TopLeftRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.topLeft);
-      controller.mouseMove(final);
-      controller.mouseUp(final);
+      controller.interactionStart(initial.topLeft);
+      controller.interactionUpdate(final);
+      controller.interactionEnd(final);
 
       expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
    });
@@ -413,9 +413,9 @@ describe("TopLeftRectangleInteractor", function () {
 
       var controller: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
 
-      controller.mouseDown(initial.topLeft);
-      controller.mouseMove(final);
-      controller.mouseUp(final);
+      controller.interactionStart(initial.topLeft);
+      controller.interactionUpdate(final);
+      controller.interactionEnd(final);
 
       expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
    });
@@ -430,9 +430,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.topRight);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.topRight);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.topRight.equals(final)).to.equal(true);
       });
@@ -445,9 +445,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.topRight);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.topRight);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
       });
@@ -460,9 +460,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.topRight);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.topRight);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
       });
@@ -478,9 +478,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new BottomLeftRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.bottomLeft);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.bottomLeft);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.bottomLeft.equals(final)).to.equal(true);
       });
@@ -494,9 +494,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.bottomLeft);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.bottomLeft);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
       });
@@ -509,9 +509,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.bottomLeft);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.bottomLeft);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
       });
@@ -528,9 +528,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new BottomRightRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.bottomRight);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.bottomRight);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.bottomRight.equals(final)).to.equal(true);
       });
@@ -544,9 +544,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.bottomRight);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.bottomRight);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
 
          expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
       });
@@ -559,9 +559,9 @@ describe("TopLeftRectangleInteractor", function () {
 
          var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
 
-         controller.mouseDown(initial.bottomRight);
-         controller.mouseMove(final);
-         controller.mouseUp(final);
+         controller.interactionStart(initial.bottomRight);
+         controller.interactionUpdate(final);
+         controller.interactionEnd(final);
          expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
       });
       

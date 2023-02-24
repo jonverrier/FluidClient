@@ -359,9 +359,9 @@ export const Canvas = (props: ICanvasProps) => {
       }
    }
 
-   function getCanvas(event: MouseEvent): HTMLCanvasElement {
+   function getCanvas(event: MouseEvent | TouchEvent): HTMLCanvasElement {
 
-      var target: HTMLCanvasElement;
+      var target: HTMLCanvasElement = null;
 
       if (event.target)
          target = event.target as HTMLCanvasElement;
@@ -374,6 +374,24 @@ export const Canvas = (props: ICanvasProps) => {
       let rect = canvas.getBoundingClientRect();
       let x = event.clientX - rect.left;
       let y = event.clientY - rect.top;
+
+      return new GPoint(x, y);
+   }
+
+   function getFirstTouchPosition(canvas: HTMLCanvasElement, event: TouchEvent): GPoint {
+
+      let rect = canvas.getBoundingClientRect();
+      let x = event.changedTouches[0].clientX - rect.left;
+      let y = event.changedTouches[0].clientY - rect.top;
+
+      return new GPoint(x, y);
+   }
+
+   function getLastTouchPosition(canvas: HTMLCanvasElement, event: TouchEvent): GPoint {
+
+      let rect = canvas.getBoundingClientRect();
+      let x = event.changedTouches[event.changedTouches.length - 1].clientX - rect.left;
+      let y = event.changedTouches[event.changedTouches.length - 1].clientY - rect.top;
 
       return new GPoint(x, y);
    }
@@ -427,21 +445,12 @@ export const Canvas = (props: ICanvasProps) => {
                });
             }
             break;
+      }
    }
-   }
 
-   const handleCanvasMouseDown = (event: MouseEvent): void => {
+   function interactionStart(coord: GPoint, bounds: GRect) : void {
 
-      event.preventDefault();
-      event.stopPropagation();
-
-      var coord: GPoint = getMousePosition(getCanvas(event), event);
-
-      let canvas = getCanvas(event);
-      let clientRect = canvas.getBoundingClientRect();
-      let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
-
-      let more = canvasState.hitTestInteractor.mouseDown(coord);
+      let more = canvasState.hitTestInteractor.interactionStart(coord);
       let hit = HitTestResult.None;
       var shape: Shape = null;
 
@@ -455,7 +464,7 @@ export const Canvas = (props: ICanvasProps) => {
          bounds,
          shape ? shape.boundingRectangle : new GRect(),
          hit, coord);
-      shapeInteractor.mouseDown(coord);
+      shapeInteractor.interactionStart(coord);
 
       var notificationRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this));
       shapeInteractor.addObserver(new ObserverInterest(notificationRouter, shapeInteractionCompleteInterest));
@@ -468,21 +477,34 @@ export const Canvas = (props: ICanvasProps) => {
          shapeInteractor: shapeInteractor,
          hitTestInteractor: canvasState.hitTestInteractor,
          lastHit: canvasState.lastHit,
-         lastHitShape: canvasState.lastHitShape 
+         lastHitShape: canvasState.lastHitShape
       });
+   }
 
-   };
-
-   const handleCanvasMouseMove= (event: MouseEvent): void => {
-
-      event.preventDefault();
-      event.stopPropagation();
+   function interactionEnd(coord: GPoint): void {
 
       if (canvasState.shapeInteractor) {
-         // if there is a current interactor, pass it the data
-         var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-         canvasState.shapeInteractor.mouseMove(coord);
+         canvasState.shapeInteractor.interactionEnd(coord);
+
+         let shapes = canvasState.shapes;
+         setCanvasState({
+            width: canvasState.width, height: canvasState.height,
+            shapes: shapes,
+            shapeInteractor: null,
+            hitTestInteractor: canvasState.hitTestInteractor,
+            lastHit: canvasState.lastHit,
+            lastHitShape: canvasState.lastHitShape
+         });
+      }
+   }
+
+   function interactionUpdate(coord: GPoint): void {
+
+      if (canvasState.shapeInteractor) {
+
+         // if there is a current interactor, pass it the data
+         canvasState.shapeInteractor.interactionUpdate(coord);
 
          let shapes = canvasState.shapes;
 
@@ -492,13 +514,12 @@ export const Canvas = (props: ICanvasProps) => {
             shapeInteractor: canvasState.shapeInteractor,
             hitTestInteractor: canvasState.hitTestInteractor,
             lastHit: canvasState.lastHit,
-            lastHitShape: canvasState.lastHitShape 
+            lastHitShape: canvasState.lastHitShape
          });
       } else {
          // Otherwise we do a hit test to see if we should change the cursor
-         var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-         let more = canvasState.hitTestInteractor.mouseMove(coord);
+         let more = canvasState.hitTestInteractor.interactionUpdate(coord);
          let hit = HitTestResult.None;
          var shape: Shape = null;
 
@@ -519,6 +540,30 @@ export const Canvas = (props: ICanvasProps) => {
             lastHitShape: shape
          });
       }
+   }
+
+   const handleCanvasMouseDown = (event: MouseEvent): void => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      let canvas = getCanvas(event);
+      var coord: GPoint = getMousePosition(canvas, event);
+
+      let clientRect = canvas.getBoundingClientRect();
+      let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+
+      interactionStart(coord, bounds);
+   };
+
+   const handleCanvasMouseMove= (event: MouseEvent): void => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      var coord: GPoint = getMousePosition(getCanvas(event), event);
+
+      interactionUpdate(coord);
    };
 
    const handleCanvasMouseUp = (event: MouseEvent): void => {
@@ -526,31 +571,53 @@ export const Canvas = (props: ICanvasProps) => {
       event.preventDefault();
       event.stopPropagation();
 
-      if (canvasState.shapeInteractor) {
-         var coord: GPoint = getMousePosition(getCanvas(event), event);
+      var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-         canvasState.shapeInteractor.mouseUp(coord);
-
-         let shapes = canvasState.shapes;
-         setCanvasState({
-            width: canvasState.width, height: canvasState.height,
-            shapes: shapes,
-            shapeInteractor: null,
-            hitTestInteractor: canvasState.hitTestInteractor,
-            lastHit: canvasState.lastHit,
-            lastHitShape: canvasState.lastHitShape
-         });
-      }
+      interactionEnd(coord);
    };
+
+   const handleCanvasTouchStart = (event: TouchEvent): void => {
+
+      event.stopPropagation();
+
+      let canvas = getCanvas(event);
+      let coord = getFirstTouchPosition(canvas, event);
+
+      let clientRect = canvas.getBoundingClientRect();
+      let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+
+      interactionStart(coord, bounds);
+   }
+
+   const handleCanvasTouchMove = (event: TouchEvent): void => {
+
+      event.stopPropagation();
+
+      var coord: GPoint = getLastTouchPosition(getCanvas(event), event);
+
+      interactionUpdate(coord);
+   }
+
+   const handleCanvasTouchEnd = (event: TouchEvent): void => {
+
+      event.stopPropagation();
+
+      var coord: GPoint = getLastTouchPosition(getCanvas(event), event);
+
+      interactionEnd(coord);
+   }
 
    return (<div className={cursorStylesFromModeAndLastHit(props.mode, canvasState.lastHit)}>
       <canvas
-      className="App-canvas"
-      ref={canvasRef as any}
-      width={canvasWidth as any}
-      height={canvasHeight as any}
-      onMouseDown={handleCanvasMouseDown}
-      onMouseMove={handleCanvasMouseMove}
-      onMouseUp={handleCanvasMouseUp}
+         className="App-canvas"
+         ref={canvasRef as any}
+         width={canvasWidth as any}
+         height={canvasHeight as any}
+         onMouseDown={handleCanvasMouseDown}
+         onMouseMove={handleCanvasMouseMove}
+         onMouseUp={handleCanvasMouseUp}
+         onTouchStart={handleCanvasTouchStart as any}
+         onTouchMove={handleCanvasTouchMove as any}
+         onTouchEnd={handleCanvasTouchEnd as any}
    /></div>);
 }

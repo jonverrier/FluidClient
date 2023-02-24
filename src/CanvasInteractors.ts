@@ -13,22 +13,23 @@ export enum HitTestResult {
 
 interface IShapeMover {
 
-   mouseDown(pt: GPoint): boolean;
-   mouseMove(pt: GPoint): boolean;
-   mouseUp(pt: GPoint): boolean;
+   interactionStart(pt: GPoint): boolean;
+   interactionUpdate(pt: GPoint): boolean;
+   interactionEnd(pt: GPoint): boolean;
    rectangle: GRect;
 }
 
 export abstract class IShapeInteractor extends Notifier implements IShapeMover {
 
-   abstract mouseDown(pt: GPoint): boolean;
-   abstract mouseMove(pt: GPoint): boolean;
-   abstract mouseUp(pt: GPoint): boolean;
+   abstract interactionStart(pt: GPoint): boolean;
+   abstract interactionUpdate(pt: GPoint): boolean;
+   abstract interactionEnd(pt: GPoint): boolean;
    abstract rectangle: GRect;
 
-   // TODO - replace with GRECT version
+   // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
+   // Not a property of rectangles
    static defaultGrabHandleDxDy(): number {
-      return defaultGrabHandleDXDY;
+      return GRect.defaultGrabHandleDxy() * 2;
    }
    static defaultDx(): number {
       return defaultDX;
@@ -73,21 +74,21 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
       this._rectangle = new GRect();
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
       var newRect: GRect = new GRect(pt.x, pt.y, 0, 0);
       this._rectangle = this._bounds.clipRectangle(newRect);
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
       var newRect: GRect = new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y);
       this._rectangle = this._bounds.clipRectangle(newRect);
 
       return false; // No need for further call
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
       var newRect: GRect = GRect.normaliseRectangle (new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
       this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
 
@@ -125,21 +126,21 @@ export class RightRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
@@ -186,21 +187,21 @@ export class LeftRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
@@ -247,21 +248,21 @@ export class TopRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
@@ -309,21 +310,21 @@ export class BottomRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
@@ -375,21 +376,21 @@ export class RectangleMoveInteractor extends IShapeInteractor {
       this._initialRect = new GRect(initial_);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
       return false; // No need for further call
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
       this.commonMouseProcessing(pt);
 
@@ -435,22 +436,22 @@ export class TopLeftRectangleInteractor extends IShapeInteractor {
       super();
 
       this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
-      this._freeRectInteractor.mouseDown(initial_.bottomRight);
+      this._freeRectInteractor.interactionStart(initial_.bottomRight);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
-      return this._freeRectInteractor.mouseMove(pt);
+      return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
-      this._freeRectInteractor.mouseUp(pt);
+      this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
       return false;
@@ -480,22 +481,22 @@ export class TopRightRectangleInteractor extends IShapeInteractor {
       super();
 
       this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
-      this._freeRectInteractor.mouseDown(initial_.bottomLeft);
+      this._freeRectInteractor.interactionStart(initial_.bottomLeft);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
-      return this._freeRectInteractor.mouseMove(pt);
+      return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
-      this._freeRectInteractor.mouseUp(pt);
+      this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
       return false;
@@ -525,22 +526,22 @@ export class BottomLeftRectangleInteractor extends IShapeInteractor {
       super();
 
       this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
-      this._freeRectInteractor.mouseDown(initial_.topRight);
+      this._freeRectInteractor.interactionStart(initial_.topRight);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
-      return this._freeRectInteractor.mouseMove(pt);
+      return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
-      this._freeRectInteractor.mouseUp(pt);
+      this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
       return false;
@@ -570,22 +571,22 @@ export class BottomRightRectangleInteractor extends IShapeInteractor {
       super();
 
       this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
-      this._freeRectInteractor.mouseDown(initial_.topLeft);
+      this._freeRectInteractor.interactionStart(initial_.topLeft);
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
 
       return false; // No need for further call
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
 
-      return this._freeRectInteractor.mouseMove(pt);
+      return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
 
-      this._freeRectInteractor.mouseUp(pt);
+      this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
       return false;
@@ -606,7 +607,6 @@ export class HitTestInteractor extends IShapeInteractor {
    private _rectangle: GRect;
    private _lastHitTest: HitTestResult;
    private _lastHitShape: Shape;
-   private _isSelected: boolean;
    private _grabHandleDxDy: number;
 
    /**
@@ -628,15 +628,15 @@ export class HitTestInteractor extends IShapeInteractor {
       this._grabHandleDxDy = grabHandleDxDy_;
    }
 
-   mouseDown(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): boolean {
       return this.commonMouseProcessing(pt);
    }
 
-   mouseMove(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): boolean {
       return this.commonMouseProcessing(pt);
    }
 
-   mouseUp(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): boolean {
       return this.commonMouseProcessing(pt);
    }
 
@@ -650,9 +650,13 @@ export class HitTestInteractor extends IShapeInteractor {
 
          if (!hit) {
             // first check the bounding box. If within, do more detailed tests, else skip them
-            let rcExpanded = GRect.inflate(shape.boundingRectangle, this._grabHandleDxDy);
+            var rc: GRect;
+            if (shape.isSelected)
+               rc = GRect.inflate(shape.boundingRectangle, this._grabHandleDxDy / 2);
+            else
+               rc = shape.boundingRectangle;
 
-            if (rcExpanded.includes(pt)) {
+            if (rc.includes(pt)) {
 
                if (shape.isSelected) {
                   if (shape.boundingRectangle.isOnLeftGrabHandle(pt, this._grabHandleDxDy)) {
