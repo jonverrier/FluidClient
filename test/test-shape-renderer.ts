@@ -4,9 +4,10 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { GPoint, GRect } from '../src/Geometry';
+import { GRect } from '../src/Geometry';
+import { Pen, PenColour, PenStyle } from "../src/Pen";
 import { ShapeRendererFactory, ShapeRenderer, SelectionRectangleRenderer, RectangleShapeRenderer } from '../src/ShapeRenderer';
-import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from '../src/Shape';
+import { Shape, Rectangle, SelectionRectangle } from '../src/Shape';
 
 
 // TODO - get a better Mick wrking
@@ -82,7 +83,7 @@ describe("ShapeRenderer", function () {
       var renderer: ShapeRenderer = new RectangleShapeRenderer();
 
       const rect = new GRect(0, 0, 20, 20);
-      var shape: Shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Dotted, true);
+      var shape: Shape = new Rectangle(rect, new Pen (PenColour.Black, PenStyle.Dotted), true);
 
       var caught: boolean = false;
 

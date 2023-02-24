@@ -5,15 +5,12 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { GPoint, GRect } from '../src/Geometry';
-import { Shape, ShapeBorderColour, ShapeBorderStyle } from '../src/Shape';
 import {
    IShapeInteractor,
    FreeRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
-   RectangleMoveInteractor,
-   HitTestInteractor,
-   EHitTestResult
+   RectangleMoveInteractor
 } from '../src/CanvasInteractors';
 
 describe("IShapeInteractor", function () {
@@ -69,58 +66,6 @@ describe("FreeRectangleInteractor", function () {
       controller.interactionEnd(pt2);
 
       expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
-   });
-});
-
-describe("HitTestInteractor", function () {
-
-   it("Needs to create HitTestInteractor and track to a click", function () {
-
-      let bounds = new GRect(50, 50, 500, 500);
-      let shapeRect1 = new GRect(55, 55, 200, 200);
-      let shapeRect2 = new GRect(100, 100, 50, 50);
-      let shapes = new Map<string, Shape>();
-
-      var shape1: Shape = new Shape(shapeRect1, ShapeBorderColour.Black, ShapeBorderStyle.Solid, true);
-      var shape2: Shape = new Shape(shapeRect2, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
-      shapes.set(shape1.id, shape1);
-      shapes.set(shape2.id, shape2);
-
-      var inside: GPoint = new GPoint(75, 75);
-      var outside: GPoint = new GPoint(300, 300);
-      var crossingLeft: GPoint = new GPoint(55, 75);
-      var crossingRight: GPoint = new GPoint(255, 75);
-
-      var controller: HitTestInteractor = new HitTestInteractor(shapes, bounds, IShapeInteractor.defaultGrabHandleDxDy());
-
-      // Not doing anything, just call the functions for coverage
-      expect(controller.interactionUpdate(inside)).to.equal(false);
-      expect(controller.interactionEnd(inside)).to.equal(false);
-      expect(controller.interactionStart(inside)).to.equal(false);
-
-      expect(controller.rectangle.equals(bounds)).to.equal(true);
-      expect(controller.shapes === shapes).to.equal(true);
-      expect(controller.lastHitTest === EHitTestResult.None).to.equal(true);
-      expect(controller.lastHitShape === null).to.equal(true);
-
-      // Do real hit-testing
-      expect(controller.interactionUpdate(inside)).to.equal(false);
-      expect(controller.interactionUpdate(outside)).to.equal(false);
-      expect(controller.interactionUpdate(crossingLeft)).to.equal(true);
-      expect(controller.interactionUpdate(crossingRight)).to.equal(true);
-
-      expect(controller.interactionUpdate(shapeRect1.topMiddle)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect1.bottomMiddle)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect1.leftMiddle)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect1.rightMiddle)).to.equal(true);
-
-      expect(controller.interactionUpdate(shapeRect1.topLeft)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect1.bottomLeft)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect1.topRight)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect1.bottomRight)).to.equal(true);
-
-      expect(controller.interactionUpdate(shapeRect2.topMiddle)).to.equal(true);
-
    });
 });
 
