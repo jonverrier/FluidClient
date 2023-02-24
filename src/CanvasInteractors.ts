@@ -75,21 +75,21 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
 
    mouseDown(pt: GPoint): boolean {
       var newRect: GRect = new GRect(pt.x, pt.y, 0, 0);
-      this._rectangle = this._bounds.clipRect(newRect);
+      this._rectangle = this._bounds.clipRectangle(newRect);
 
       return false; // No need for further call
    }
 
    mouseMove(pt: GPoint): boolean {
       var newRect: GRect = new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y);
-      this._rectangle = this._bounds.clipRect(newRect);
+      this._rectangle = this._bounds.clipRectangle(newRect);
 
       return false; // No need for further call
    }
 
    mouseUp(pt: GPoint): boolean {
-      var newRect: GRect = GRect.normaliseFromRectangle (new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
-      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      var newRect: GRect = GRect.normaliseRectangle (new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
@@ -106,7 +106,7 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
 
 }
 
-// Interactor that lets the user draw a rectangle with constrained Y values moving right hand border only
+// Interactor that lets the user resize a rectangle with constrained Y values moving right hand border only
 export class RightRectangleInteractor extends IShapeInteractor {
 
    private _rectangle: GRect;
@@ -115,7 +115,7 @@ export class RightRectangleInteractor extends IShapeInteractor {
    /**
     * Create a RightRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
-    * @param rectangle_ - the initial recongle for the object being moved
+    * @param rectangle_ - the initial rectangle for the object being moved
     */
    public constructor(bounds_: GRect, initial_: GRect) {
 
@@ -151,12 +151,12 @@ export class RightRectangleInteractor extends IShapeInteractor {
 
    private commonMouseProcessing (pt: GPoint): void {
 
-      var newRect: GRect = GRect.normaliseFromRectangle(new GRect(this._rectangle.x,
+      var newRect: GRect = GRect.normaliseRectangle(new GRect(this._rectangle.x,
          this._rectangle.y,
          pt.x - (this._rectangle.x),
          this._rectangle.dy));
 
-      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
    }
 
    /**
@@ -167,7 +167,7 @@ export class RightRectangleInteractor extends IShapeInteractor {
    }
 }
 
-// Interactor that lets the user draw a rectangle with constrained Y values moving left hand border only
+// Interactor that lets the user resize a rectangle with constrained Y values moving left hand border only
 export class LeftRectangleInteractor extends IShapeInteractor {
 
    private _rectangle: GRect;
@@ -176,7 +176,7 @@ export class LeftRectangleInteractor extends IShapeInteractor {
    /**
     * Create a LeftRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
-    * @param rectangle_ - the initial recongle for the object being moved
+    * @param rectangle_ - the initial rectangle for the object being moved
     */
    public constructor(bounds_: GRect, initial_: GRect) {
 
@@ -212,12 +212,12 @@ export class LeftRectangleInteractor extends IShapeInteractor {
 
    private commonMouseProcessing(pt: GPoint): void {
 
-      var newRect: GRect = GRect.normaliseFromRectangle(new GRect(pt.x,
+      var newRect: GRect = GRect.normaliseRectangle(new GRect(pt.x,
          this._rectangle.y,
          this._rectangle.dx - (pt.x - this._rectangle.x),
          this._rectangle.dy));
 
-      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
    }
 
    /**
@@ -228,7 +228,7 @@ export class LeftRectangleInteractor extends IShapeInteractor {
    }
 }
 
-// Interactor that lets the user draw a rectangle with constrained X values moving top border only
+// Interactor that lets the user resize a rectangle with constrained X values moving top border only
 export class TopRectangleInteractor extends IShapeInteractor {
 
    private _rectangle: GRect;
@@ -237,7 +237,7 @@ export class TopRectangleInteractor extends IShapeInteractor {
    /**
     * Create a TopRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
-    * @param rectangle_ - the initial recongle for the object being moved
+    * @param rectangle_ - the initial rectangle for the object being moved
     */
    public constructor(bounds_: GRect, initial_: GRect) {
 
@@ -273,12 +273,12 @@ export class TopRectangleInteractor extends IShapeInteractor {
 
    private commonMouseProcessing(pt: GPoint): void {
 
-      var newRect: GRect = GRect.normaliseFromRectangle(new GRect(this._rectangle.x,
+      var newRect: GRect = GRect.normaliseRectangle(new GRect(this._rectangle.x,
          this._rectangle.y,
          this._rectangle.dx,
          (pt.y - this._rectangle.y)));
 
-      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
    }
 
    /**
@@ -289,7 +289,7 @@ export class TopRectangleInteractor extends IShapeInteractor {
    }
 }
 
-// Interactor that lets the user draw a rectangle with constrained X values moving top border only
+// Interactor that lets the user resize a rectangle with constrained X values moving top border only
 export class BottomRectangleInteractor extends IShapeInteractor {
 
    private _rectangle: GRect;
@@ -298,7 +298,7 @@ export class BottomRectangleInteractor extends IShapeInteractor {
    /**
     * Create a BottomRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
-    * @param rectangle_ - the initial recongle for the object being moved
+    * @param rectangle_ - the initial rectangle for the object being moved
     * 
     */
    public constructor(bounds_: GRect, initial_: GRect) {
@@ -335,12 +335,12 @@ export class BottomRectangleInteractor extends IShapeInteractor {
 
    private commonMouseProcessing(pt: GPoint): void {
 
-      var newRect: GRect = GRect.normaliseFromRectangle(new GRect(this._rectangle.x,
+      var newRect: GRect = GRect.normaliseRectangle(new GRect(this._rectangle.x,
          pt.y,
          this._rectangle.dx,
          this._rectangle.dy - (pt.y - this._rectangle.y)));
 
-      this._rectangle = this._bounds.clipRect(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
    }
 
    /**
@@ -362,7 +362,7 @@ export class RectangleMoveInteractor extends IShapeInteractor {
    /**
     * Create a RectangleMoveInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
-    * @param rectangle_ - the initial recongle for the object being moved
+    * @param rectangle_ - the initial rectangle for the object being moved
     * @param start_ -  the start position of the mouse
     */
    public constructor(bounds_: GRect, initial_: GRect, start_: GPoint) {
@@ -403,7 +403,7 @@ export class RectangleMoveInteractor extends IShapeInteractor {
 
       let ptClipped = this._bounds.clipPoint(pt);
 
-      let newRect = GRect.normaliseFromRectangle(new GRect(this._initialRect.x + (ptClipped.x - this._initialPt.x),
+      let newRect = GRect.normaliseRectangle(new GRect(this._initialRect.x + (ptClipped.x - this._initialPt.x),
          this._initialRect.y + (ptClipped.y - this._initialPt.y),
          this._initialRect.dx,
          this._initialRect.dy));
@@ -416,6 +416,96 @@ export class RectangleMoveInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+}
+
+// Interactor that lets the user resize a rectangle from top left corner
+// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+export class TopLeftRectangleInteractor extends IShapeInteractor {
+
+   private _freeRectInteractor: FreeRectangleInteractor;
+
+   /**
+    * Create a TopLeftRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial rectangle for the object being moved
+    */
+   public constructor(bounds_: GRect, initial_: GRect) {
+
+      super();
+
+      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor.mouseDown(initial_.bottomRight);
+   }
+
+   mouseDown(pt: GPoint): boolean {
+
+      return false; // No need for further call
+   }
+
+   mouseMove(pt: GPoint): boolean {
+
+      return this._freeRectInteractor.mouseMove(pt);
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      this._freeRectInteractor.mouseUp(pt);
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
+      return false;
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._freeRectInteractor.rectangle;
+   }
+}
+
+// Interactor that lets the user resize a rectangle from top left corner
+// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+export class TopRightRectangleInteractor extends IShapeInteractor {
+
+   private _freeRectInteractor: FreeRectangleInteractor;
+
+   /**
+    * Create a TopLeftRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial rectangle for the object being moved
+    */
+   public constructor(bounds_: GRect, initial_: GRect) {
+
+      super();
+
+      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor.mouseDown(initial_.bottomLeft);
+   }
+
+   mouseDown(pt: GPoint): boolean {
+
+      return false; // No need for further call
+   }
+
+   mouseMove(pt: GPoint): boolean {
+
+      return this._freeRectInteractor.mouseMove(pt);
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      this._freeRectInteractor.mouseUp(pt);
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
+      return false;
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._freeRectInteractor.rectangle;
    }
 }
 
@@ -469,8 +559,10 @@ export class HitTestInteractor extends IShapeInteractor {
       this._shapes.forEach((shape: Shape, key: string) => {
 
          if (!hit) {
-            // for check the bounding box. If within, do more detailed tests, else skip them
-            if (shape.boundingRectangle.includes(pt)) {
+            // first check the bounding box. If within, do more detailed tests, else skip them
+            let rcExpanded = GRect.inflate(shape.boundingRectangle, this._grabHandleDxDy);
+
+            if (rcExpanded.includes(pt)) {
 
                if (shape.boundingRectangle.isOnLeftGrabHandle(pt, this._grabHandleDxDy)) {
                   hit = true;
@@ -494,6 +586,18 @@ export class HitTestInteractor extends IShapeInteractor {
                   hit = true;
                   this._lastHitTest = HitTestResult.Bottom;
                   this._lastHitShape = shape;
+               }
+               else
+               if (shape.boundingRectangle.isOnTopLeftGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.TopLeft;
+                     this._lastHitShape = shape;
+               }
+               else
+               if (shape.boundingRectangle.isOnTopRightGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.TopRight;
+                     this._lastHitShape = shape;
                }
                else
                if (shape.boundingRectangle.isOnBorder(pt)) {

@@ -14,7 +14,13 @@ import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } fr
 import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from './Shape';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
-import { IShapeInteractor, FreeRectangleInteractor, LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor, RectangleMoveInteractor, shapeInteractionCompleteInterest, HitTestInteractor, HitTestResult } from './CanvasInteractors';
+import {
+   IShapeInteractor,
+   FreeRectangleInteractor,
+   LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
+   TopLeftRectangleInteractor, TopRightRectangleInteractor,
+   RectangleMoveInteractor, shapeInteractionCompleteInterest, HitTestInteractor, HitTestResult
+} from './CanvasInteractors';
 import { RectangleShapeRenderer, SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
 // Scaling Constants for Canvas
@@ -47,13 +53,25 @@ const cursorRightStyles = makeStyles({
 
 const cursorTopStyles = makeStyles({
    root: {
-      cursor: 's-resize' // s-resize because Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
+      cursor: 's-resize' // Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
    },
 });
 
 const cursorBottomStyles = makeStyles({
    root: {
-      cursor: 'n-resize' // n-resize because Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
+      cursor: 'n-resize' // Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
+   },
+});
+
+const cursorTopLeftStyles = makeStyles({
+   root: {
+      cursor: 'nesw-resize' // Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
+   },
+});
+
+const cursorTopRightStyles = makeStyles({
+   root: {
+      cursor: 'nwse-resize' // Geometry coords are 0-0 at lower left - HTML is 0,0 at upper left. 
    },
 });
 
@@ -189,6 +207,12 @@ function shapeInteractorFromMode(mode_: CanvasMode,
             case HitTestResult.Bottom:
                return new BottomRectangleInteractor(bounds_, initial_);
 
+            case HitTestResult.TopLeft:
+               return new TopLeftRectangleInteractor(bounds_, initial_);
+
+            case HitTestResult.TopRight:
+               return new TopRightRectangleInteractor(bounds_, initial_);
+
             case HitTestResult.Border:
                return new RectangleMoveInteractor(bounds_, initial_, pt_);
 
@@ -284,6 +308,8 @@ export const Canvas = (props: ICanvasProps) => {
    const cursorTopClasses = cursorTopStyles();
    const cursorBottomClasses = cursorBottomStyles();
    const cursorBorderClasses = cursorBorderStyles();
+   const cursorTopLeftClasses = cursorTopLeftStyles();
+   const cursorTopRightClasses = cursorTopRightStyles();
 
    // BUILD NOTE
    // Update this for every style of interaction
@@ -294,6 +320,7 @@ export const Canvas = (props: ICanvasProps) => {
 
          default:
             switch (lastHit_) {
+
                case HitTestResult.Left:
                   return cursorLeftClasses.root;
                case HitTestResult.Right:
@@ -302,11 +329,15 @@ export const Canvas = (props: ICanvasProps) => {
                   return cursorTopClasses.root;
                case HitTestResult.Bottom:
                   return cursorBottomClasses.root;
+               case HitTestResult.TopLeft:
+                  return cursorTopLeftClasses.root;
+               case HitTestResult.TopRight:
+                  return cursorTopRightClasses.root;
                case HitTestResult.Border:
                   return cursorBorderClasses.root;
 
                default:
-               return cursorDefaultClasses.root;
+                  return cursorDefaultClasses.root;
             }
       }
    }

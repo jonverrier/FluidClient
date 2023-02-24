@@ -411,10 +411,58 @@ export class GRect extends MSerialisable {
    }
 
    /**
+    * Test if the point pt is on the top left grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnTopLeftGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      var halfGrab: number = grabHandleDxDy / 2;
+
+      return (Math.abs(pt.x - this._rc.xmin) <= halfGrab) && (Math.abs(pt.y - this._rc.ymax) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the top right grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnTopRightGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      var halfGrab: number = grabHandleDxDy / 2;
+
+      return (Math.abs(pt.x - this._rc.xmax) <= halfGrab) && (Math.abs(pt.y - this._rc.ymax) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the bottom left grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnBottomLeftGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      var halfGrab: number = grabHandleDxDy / 2;
+
+      return (Math.abs(pt.x - this._rc.xmin) <= halfGrab) && (Math.abs(pt.y - this._rc.ymin) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the bottom right grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnBottomRightGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      var halfGrab: number = grabHandleDxDy / 2;
+
+      return (Math.abs(pt.x - this._rc.xmax) <= halfGrab) && (Math.abs(pt.y - this._rc.ymin) <= halfGrab);
+   }
+
+   /**
     * Clip rhs to fit withing the current rectangle
     * @param rhs - the rectangle to test
     */
-   clipRect(rhs: GRect): GRect {
+   clipRectangle(rhs: GRect): GRect {
 
       let clipped = new GRect(rhs);
 
@@ -457,7 +505,7 @@ export class GRect extends MSerialisable {
     * @param pt1 - first point
     * @param pt2 - second point
     */
-   static normaliseFromPoints(pt1: GPoint, pt2: GPoint): GRect {
+   static normalisePoints(pt1: GPoint, pt2: GPoint): GRect {
 
       var loX: number = Math.min(pt1.x, pt2.x);
       var loY: number = Math.min(pt1.y, pt2.y);
@@ -471,9 +519,9 @@ export class GRect extends MSerialisable {
     * Create a normalised rectangle, i.e. top left (low) to lower right (hi)
     * @param rect - the rectangle to normalise
     */
-   static normaliseFromRectangle(rect: GRect): GRect {    
+   static normaliseRectangle(rect: GRect): GRect {    
 
-      return GRect.normaliseFromPoints (rect.bottomLeft, rect.topRight);
+      return GRect.normalisePoints (rect.bottomLeft, rect.topRight);
    }
 
    static createAround (pt: GPoint, dx: number, dy: number): GRect {
@@ -542,6 +590,12 @@ export class GRect extends MSerialisable {
 
       // Create extra horizontal handles if object is wide enough
       return (rc_.dy >= dy_ * GRect.minimumRelativeSizeForMidHandlesXY);
+   }
+
+   static inflate(rc: GRect, dxy: number): GRect {
+
+      return new GRect(rc.x - dxy, rc.y - dxy, rc.dx + dxy * 2, rc.dy + dxy * 2);
+
    }
 
    static defaultGrabHandleDxy(): number {
