@@ -6,6 +6,7 @@ import { describe, it } from 'mocha';
 
 import { GPoint, GRect } from '../src/Geometry';
 
+const defaultGrabHandleDxy = 8;
 
 describe("Geometry", function () {
 
@@ -209,8 +210,8 @@ describe("Geometry", function () {
    it("Needs to create grab handles on larger GRect", function () {
 
       var loLeft: GPoint = new GPoint(10, 10);
-      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * GRect.defaultGrabHandleDxy(),
-                                       10 + GRect.minimumRelativeSizeForMidHandles() * GRect.defaultGrabHandleDxy());
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy,
+                                       10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy);
 
       var rc = new GRect(loLeft, hiRight);
 
@@ -220,8 +221,8 @@ describe("Geometry", function () {
    it("Needs to test border intersections", function () {
 
       var loLeft: GPoint = new GPoint(10, 10);
-      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * GRect.defaultGrabHandleDxy(),
-                                       10 + GRect.minimumRelativeSizeForMidHandles() * GRect.defaultGrabHandleDxy());
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy,
+                                       10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy);
 
       var rc = new GRect(loLeft, hiRight);
 
@@ -244,20 +245,20 @@ describe("Geometry", function () {
    it("Needs to test side grab handle intersections", function () {
 
       var loLeft: GPoint = new GPoint(10, 10);
-      var hiRight: GPoint = new GPoint(10 + GRect.defaultGrabHandleDxy() * GRect.minimumRelativeSizeForMidHandles(),
-                                       10 + GRect.defaultGrabHandleDxy() * GRect.minimumRelativeSizeForMidHandles());
+      var hiRight: GPoint = new GPoint(10 + defaultGrabHandleDxy * GRect.minimumRelativeSizeForMidHandles(),
+                                       10 + defaultGrabHandleDxy * GRect.minimumRelativeSizeForMidHandles());
 
       var rc = new GRect(loLeft, hiRight);
 
-      expect(rc.isOnTopGrabHandle(rc.topMiddle, GRect.defaultGrabHandleDxy())).to.equal(true);
-      expect(rc.isOnLeftGrabHandle(rc.leftMiddle, GRect.defaultGrabHandleDxy())).to.equal(true);
-      expect(rc.isOnRightGrabHandle(rc.rightMiddle, GRect.defaultGrabHandleDxy())).to.equal(true);
-      expect(rc.isOnBottomGrabHandle(rc.bottomMiddle, GRect.defaultGrabHandleDxy())).to.equal(true);
+      expect(rc.isOnTopGrabHandle(rc.topMiddle, defaultGrabHandleDxy)).to.equal(true);
+      expect(rc.isOnLeftGrabHandle(rc.leftMiddle, defaultGrabHandleDxy)).to.equal(true);
+      expect(rc.isOnRightGrabHandle(rc.rightMiddle, defaultGrabHandleDxy)).to.equal(true);
+      expect(rc.isOnBottomGrabHandle(rc.bottomMiddle, defaultGrabHandleDxy)).to.equal(true);
 
-      expect(rc.isOnTopGrabHandle(loLeft, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnLeftGrabHandle(hiRight, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnRightGrabHandle(loLeft, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnBottomGrabHandle(hiRight, GRect.defaultGrabHandleDxy())).to.equal(false);
+      expect(rc.isOnTopGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnLeftGrabHandle(hiRight, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnRightGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnBottomGrabHandle(hiRight, defaultGrabHandleDxy)).to.equal(false);
    });
 
    it("Needs to fail grab side handle intersections on small rectangle", function () {
@@ -267,29 +268,29 @@ describe("Geometry", function () {
 
       var rc = new GRect(loLeft, hiRight);
 
-      expect(rc.isOnTopGrabHandle(rc.topMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnLeftGrabHandle(rc.leftMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnRightGrabHandle(rc.rightMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnBottomGrabHandle(rc.bottomMiddle, GRect.defaultGrabHandleDxy())).to.equal(false);
+      expect(rc.isOnTopGrabHandle(rc.topMiddle, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnLeftGrabHandle(rc.leftMiddle, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnRightGrabHandle(rc.rightMiddle, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnBottomGrabHandle(rc.bottomMiddle, defaultGrabHandleDxy)).to.equal(false);
    });
 
    it("Needs to test corner grab handle intersections", function () {
 
       var loLeft: GPoint = new GPoint(10, 10);
-      var hiRight: GPoint = new GPoint(10 + GRect.defaultGrabHandleDxy() * GRect.minimumRelativeSizeForMidHandles(),
-         10 + GRect.defaultGrabHandleDxy() * GRect.minimumRelativeSizeForMidHandles());
+      var hiRight: GPoint = new GPoint(10 + defaultGrabHandleDxy * GRect.minimumRelativeSizeForMidHandles(),
+         10 + defaultGrabHandleDxy * GRect.minimumRelativeSizeForMidHandles());
 
       var rc = new GRect(loLeft, hiRight);
 
-      expect(rc.isOnTopLeftGrabHandle(rc.topLeft, GRect.defaultGrabHandleDxy())).to.equal(true);
-      expect(rc.isOnTopRightGrabHandle(rc.topRight, GRect.defaultGrabHandleDxy())).to.equal(true);
-      expect(rc.isOnBottomRightGrabHandle(rc.bottomRight, GRect.defaultGrabHandleDxy())).to.equal(true);
-      expect(rc.isOnBottomLeftGrabHandle(rc.bottomLeft, GRect.defaultGrabHandleDxy())).to.equal(true);
+      expect(rc.isOnTopLeftGrabHandle(rc.topLeft, defaultGrabHandleDxy)).to.equal(true);
+      expect(rc.isOnTopRightGrabHandle(rc.topRight, defaultGrabHandleDxy)).to.equal(true);
+      expect(rc.isOnBottomRightGrabHandle(rc.bottomRight, defaultGrabHandleDxy)).to.equal(true);
+      expect(rc.isOnBottomLeftGrabHandle(rc.bottomLeft, defaultGrabHandleDxy)).to.equal(true);
 
-      expect(rc.isOnTopLeftGrabHandle(loLeft, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnTopRightGrabHandle(loLeft, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnBottomRightGrabHandle(loLeft, GRect.defaultGrabHandleDxy())).to.equal(false);
-      expect(rc.isOnBottomLeftGrabHandle(hiRight, GRect.defaultGrabHandleDxy())).to.equal(false);
+      expect(rc.isOnTopLeftGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnTopRightGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnBottomRightGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
+      expect(rc.isOnBottomLeftGrabHandle(hiRight, defaultGrabHandleDxy)).to.equal(false);
    });
 });
 

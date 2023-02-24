@@ -109,8 +109,7 @@ export class GPoint extends MSerialisable {
 export class GRect extends MSerialisable {
 
    private _rc: Flatten.Box;
-   private static minimumRelativeSizeForMidHandlesXY = 12; // borders have to be 12x the size of handles to get extra one in the mid point of border. 
-   private static defaultGrabHandleDXY: number = 8;      // Default grab handle is 8 units wide. 
+   private static minimumRelativeSizeForMidHandlesXY = 6; // borders have to be 6x the size of handles to get extra one in the mid point of border. 
 
    /**
     * Create a GRect object
@@ -596,10 +595,6 @@ export class GRect extends MSerialisable {
 
       return new GRect(rc.x - dxy, rc.y - dxy, rc.dx + dxy * 2, rc.dy + dxy * 2);
 
-   }
-
-   static defaultGrabHandleDxy(): number {
-      return GRect.defaultGrabHandleDXY;
    }
 
    static minimumRelativeSizeForMidHandles (): number { 

@@ -506,11 +506,10 @@ export const Canvas = (props: ICanvasProps) => {
          // if there is a current interactor, pass it the data
          canvasState.shapeInteractor.interactionUpdate(coord);
 
-         let shapes = canvasState.shapes;
-
+         // This forces a re-render
          setCanvasState({
             width: canvasState.width, height: canvasState.height,
-            shapes: shapes,
+            shapes: canvasState.shapes,
             shapeInteractor: canvasState.shapeInteractor,
             hitTestInteractor: canvasState.hitTestInteractor,
             lastHit: canvasState.lastHit,
@@ -607,9 +606,11 @@ export const Canvas = (props: ICanvasProps) => {
       interactionEnd(coord);
    }
 
+
    return (<div className={cursorStylesFromModeAndLastHit(props.mode, canvasState.lastHit)}>
       <canvas
-         className="App-canvas"
+         className="App-canvas"      
+         style = {{ touchAction: 'none' }}         
          ref={canvasRef as any}
          width={canvasWidth as any}
          height={canvasHeight as any}

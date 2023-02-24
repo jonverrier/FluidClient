@@ -108,12 +108,12 @@ export const CanvasTools = (props: ICanvasToolsProps) => {
                      <ToolbarRadioButton aria-label="Text" name="mode" value="Text" icon={<DrawText24Regular />}
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
-                  <Tooltip withArrow content="Rub things out." relationship="label" key="8">
+                  <Tooltip withArrow content="Rub things out." relationship="label" key="7">
                      <ToolbarRadioButton aria-label="Rub things out" name="mode" value="Eraser" icon={<Eraser24Regular />}
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <ToolbarDivider />
-                  <Tooltip withArrow content="Choose a pen." relationship="label" key="7">
+                  <Tooltip withArrow content="Choose a pen." relationship="label" key="8">
                      <ToolbarButton aria-label="Choose a pen" icon={<Pen24Regular />}
                         disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>

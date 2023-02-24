@@ -29,7 +29,7 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
    // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
    // Not a property of rectangles
    static defaultGrabHandleDxDy(): number {
-      return GRect.defaultGrabHandleDxy() * 2;
+      return 32;
    }
    static defaultDx(): number {
       return defaultDX;
@@ -704,6 +704,12 @@ export class HitTestInteractor extends IShapeInteractor {
                   if (shape.boundingRectangle.isOnBottomRightGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
                      this._lastHitTest = HitTestResult.BottomRight;
+                     this._lastHitShape = shape;
+                  }
+                  else
+                  if (shape.boundingRectangle.isOnBorder(pt)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.Border;
                      this._lastHitShape = shape;
                   }
                }
