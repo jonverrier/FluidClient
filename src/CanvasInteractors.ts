@@ -741,14 +741,6 @@ export class HitTestInteractor extends IShapeInteractor {
    }
 
    /**
-   * Setters for private variables
-   */
-   set shapes(shapes_: Map<string, Shape>) {
-
-      this._shapes = shapes_;
-   }
-
-   /**
    * Convenience functions for testing
    */
    get shapes(): Map<string, Shape> {

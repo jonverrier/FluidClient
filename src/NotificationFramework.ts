@@ -410,7 +410,7 @@ export class Notifier implements INotifier {
    // Operations
    notifyObservers(interest_: Interest, notificationData_: Notification): void {
 
-      log.debug(tag.notification, "Notification:" + interest_.notificationId + ": " + JSON.stringify (notificationData_));
+      //log.debug(tag.notification, "Notification:" + interest_.notificationId + ": " + JSON.stringify (notificationData_));
 
       this._observerInterests.forEach((observerInterest) => {
 

@@ -90,8 +90,6 @@ describe("HitTestInteractor", function () {
 
       var controller: HitTestInteractor = new HitTestInteractor(shapes, bounds, IShapeInteractor.defaultGrabHandleDxDy());
 
-      controller.shapes = shapes;
-
       // Not doing anything, just call the functions for coverage
       expect(controller.interactionUpdate(inside)).to.equal(false);
       expect(controller.interactionEnd(inside)).to.equal(false);
