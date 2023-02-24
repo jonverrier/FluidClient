@@ -5,7 +5,7 @@ import { Shape } from "./Shape";
 import { IShapeInteractor } from "./CanvasInteractors"; 
 
 // Signature for the factory function 
-type FactoryFunctionFor<ShapeDrawer> = () => ShapeDrawer;
+type FactoryFunctionFor<ShapeRenderer> = () => ShapeRenderer;
 
 var firstFactory: ShapeRendererFactory = null;
 

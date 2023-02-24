@@ -11,7 +11,7 @@
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register",
-      "test-mini": "mocha --debug-brk --require ts-node/register -g Pen",
+      "test-mini": "mocha --debug-brk --require ts-node/register -g Shape",
       "cover": "tsc && nyc mocha",
       "local-server": "npx @fluidframework/azure-local-service@latest"
    },

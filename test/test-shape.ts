@@ -5,8 +5,9 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { GRect } from '../src/Geometry';
-import { Shape, Rectangle, SelectionRectangle } from '../src/Shape';
 import { Pen, PenColour, PenStyle } from "../src/Pen";
+import { Shape, Rectangle, SelectionRectangle } from '../src/Shape';
+import { ShapeFactory } from '../src/ShapeFactory';
 
 describe("Shape", function () {
 
@@ -215,4 +216,17 @@ describe("SelectionRectangle", function () {
 
 });
 
+describe("ShapeFactory", function () {
 
+   it("Needs to create Shape, Rectangle, SelectionRectangle", function () {
+
+      expect(ShapeFactory.create(Shape.shapeID())).to.not.equal(null);
+      expect(ShapeFactory.create(Rectangle.rectangleID())).to.not.equal(null);
+      expect(ShapeFactory.create(SelectionRectangle.selectionRectangleID())).to.not.equal(null);
+   });
+
+   it("Needs to not create unknown shapes", function () {
+
+      expect(ShapeFactory.create("banana")).to.equal(null);
+   });
+});

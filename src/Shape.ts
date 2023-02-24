@@ -5,9 +5,14 @@ import { uuid } from './Uuid';
 import { MSerialisable } from "./SerialisationFramework";
 import { GRect } from "./Geometry";
 import { Pen, PenColour, PenStyle } from "./Pen";
-
+import { ShapeFactory } from './ShapeFactory';
 
 const nullShapeUuid: string = "374cb6a8-b229-4cde-843f-c530df79dca6";
+
+// Keys to use for dynamic creation of Shape subtypes
+const shapeID: string = "Shape";
+const selectionRectangleID: string = "SelectionRectangle";
+const rectangleID: string = "Rectangle";
 
 export class Shape extends MSerialisable {
 
@@ -159,10 +164,13 @@ export class Shape extends MSerialisable {
    }
 
    shapeID(): string {
-      return "Shape";
+      return shapeID;
    }
 
-   // TO DO - will need a way to virtually construct derived types. 
+   static shapeID(): string {
+      return shapeID;
+   }
+
    static factoryFn(): Shape {
       return new Shape();
    }
@@ -179,6 +187,11 @@ export class Shape extends MSerialisable {
       return new Shape(nullShapeUuid, new GRect(0, 0, 0, 0), new Pen (PenColour.Invisible, PenStyle.None), false);
    }
 
+   static createInstance(): Shape {
+      return new Shape();
+   }
+
+   static _factoryForShape: ShapeFactory = new ShapeFactory(shapeID, Shape.createInstance);
 }
 
 export class SelectionRectangle extends Shape {
@@ -216,9 +229,18 @@ export class SelectionRectangle extends Shape {
 
    // Unique ID that is used to look up the associated renderer
    shapeID(): string {
-      return "SelectionRectangle";
+      return selectionRectangleID;
    }
 
+   static selectionRectangleID(): string {
+      return selectionRectangleID;
+   }
+
+   static createInstance(): SelectionRectangle {
+      return new SelectionRectangle();
+   }
+
+   static _factoryForSelectionRectangle : ShapeFactory = new ShapeFactory(selectionRectangleID, Shape.createInstance);
 }
 
 export class Rectangle extends Shape {
@@ -259,6 +281,16 @@ export class Rectangle extends Shape {
 
    // Unique ID that is used to look up the associated renderer
    shapeID(): string {
-      return "Rectangle";
+      return rectangleID;
    }
+
+   static rectangleID(): string {
+      return rectangleID;
+   }
+
+   static createInstance(): Rectangle {
+      return new Rectangle();
+   }
+
+   static _factoryForRectangle: ShapeFactory = new ShapeFactory(rectangleID, Rectangle.createInstance);
 }
