@@ -436,7 +436,7 @@ export const Canvas = (props: ICanvasProps) => {
                   else {
                      shape.isSelected = false;
                   }
-                  // set the version in Caucus first, which pushes to other clients
+                  // set the version in Caucus, which pushes to other clients
                   props.shapeCaucus.amend(shape.id, shape);
                });
             }
@@ -605,6 +605,15 @@ export const Canvas = (props: ICanvasProps) => {
       var coord: GPoint = getLastTouchPosition(getCanvas(event), event);
 
       interactionEnd(coord, true);
+
+      // This forces a re-render
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: canvasState.shapes,
+         shapeInteractor: canvasState.shapeInteractor,
+         lastHit: HitTestResult.None,
+         lastHitShapeId: null
+      });
    }
 
 
