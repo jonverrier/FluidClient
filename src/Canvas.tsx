@@ -406,6 +406,8 @@ export const Canvas = (props: ICanvasProps) => {
       return new GPoint(x, y);
    }
 
+   // This function does not directly reset React state
+   // That is left for the interactionSTart, Update, and End functions
    function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
 
       switch (props.mode) { 
@@ -447,15 +449,6 @@ export const Canvas = (props: ICanvasProps) => {
                   props.shapeCaucus.amend(shape.id, shape);
                });
             }
-
-            /*setCanvasState({
-               width: canvasState.width, height: canvasState.height,
-               shapes: canvasState.shapes,
-               shapeInteractor: null,
-               lastHit: EHitTestResult.None,
-               resizeShapeId: null
-            });
-            */
             break;
       }
    }
@@ -597,18 +590,6 @@ export const Canvas = (props: ICanvasProps) => {
       var coord: GPoint = getLastTouchPosition(getCanvas(event), event);
 
       interactionEnd(coord);
-
-      // This forces a re-render
-      /* Answer is in here somewhere
-      setCanvasState({
-         width: canvasState.width, height: canvasState.height,
-         shapes: canvasState.shapes,
-         shapeInteractor: canvasState.shapeInteractor,
-         lastHit: EHitTestResult.None,
-         resizeShapeId: canvasState.resizeShapeId
-      });
-      */
-      
    }
 
 

@@ -76,17 +76,20 @@ describe("HitTestInteractor", function () {
 
    it("Needs to create HitTestInteractor and track to a click", function () {
 
-      let bounds = new GRect(50, 50, 300, 300);
-      let shapeRect = new GRect(55, 55, 100, 100);
+      let bounds = new GRect(50, 50, 500, 500);
+      let shapeRect1 = new GRect(55, 55, 200, 200);
+      let shapeRect2 = new GRect(100, 100, 50, 50);
       let shapes = new Map<string, Shape>();
 
-      var shape1: Shape = new Shape(shapeRect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
+      var shape1: Shape = new Shape(shapeRect1, ShapeBorderColour.Black, ShapeBorderStyle.Solid, true);
+      var shape2: Shape = new Shape(shapeRect2, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
       shapes.set(shape1.id, shape1);
+      shapes.set(shape2.id, shape2);
 
-      var inside: GPoint = new GPoint(65, 65);
-      var outside: GPoint = new GPoint(49, 49);
+      var inside: GPoint = new GPoint(75, 75);
+      var outside: GPoint = new GPoint(300, 300);
       var crossingLeft: GPoint = new GPoint(55, 75);
-      var crossingRight: GPoint = new GPoint(155, 75);
+      var crossingRight: GPoint = new GPoint(255, 75);
 
       var controller: HitTestInteractor = new HitTestInteractor(shapes, bounds, IShapeInteractor.defaultGrabHandleDxDy());
 
@@ -106,15 +109,17 @@ describe("HitTestInteractor", function () {
       expect(controller.interactionUpdate(crossingLeft)).to.equal(true);
       expect(controller.interactionUpdate(crossingRight)).to.equal(true);
 
-      expect(controller.interactionUpdate(shapeRect.topMiddle)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect.bottomMiddle)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect.leftMiddle)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect.rightMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.topMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.bottomMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.leftMiddle)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.rightMiddle)).to.equal(true);
 
-      expect(controller.interactionUpdate(shapeRect.topLeft)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect.bottomLeft)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect.topRight)).to.equal(true);
-      expect(controller.interactionUpdate(shapeRect.bottomRight)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.topLeft)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.bottomLeft)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.topRight)).to.equal(true);
+      expect(controller.interactionUpdate(shapeRect1.bottomRight)).to.equal(true);
+
+      expect(controller.interactionUpdate(shapeRect2.topMiddle)).to.equal(true);
 
    });
 });
@@ -417,54 +422,54 @@ describe("TopLeftRectangleInteractor", function () {
 
       expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
    });
+});
 
-   describe("TopRightRectangleInteractor", function () {
+describe("TopRightRectangleInteractor", function () {
 
-      it("Needs to create TopRightRectangleInteractor with click and drag", function () {
+   it("Needs to create TopRightRectangleInteractor with click and drag", function () {
 
-         var bounds: GRect = new GRect(50, 50, 300, 300);
-         var initial: GRect = new GRect(100, 100, 50, 50);
-         var final: GPoint = new GPoint(175, 200);
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var initial: GRect = new GRect(100, 100, 50, 50);
+      var final: GPoint = new GPoint(175, 200);
 
-         var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
+      var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
 
-         controller.interactionStart(initial.topRight);
-         controller.interactionUpdate(final);
-         controller.interactionEnd(final);
+      controller.interactionStart(initial.topRight);
+      controller.interactionUpdate(final);
+      controller.interactionEnd(final);
 
-         expect(controller.rectangle.topRight.equals(final)).to.equal(true);
-      });
-
-      it("Needs to clip final GRect if necessary - lower left", function () {
-
-         var bounds: GRect = new GRect(50, 50, 300, 300);
-         var initial: GRect = new GRect(100, 100, 50, 50);
-         var final: GPoint = new GPoint(49, 49);
-
-         var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
-
-         controller.interactionStart(initial.topRight);
-         controller.interactionUpdate(final);
-         controller.interactionEnd(final);
-
-         expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
-      });
-
-      it("Needs to clip final GRect if necessary - upper right", function () {
-
-         var bounds: GRect = new GRect(50, 50, 300, 300);
-         var initial: GRect = new GRect(100, 100, 50, 50);
-         var final: GPoint = new GPoint(351, 351);
-
-         var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
-
-         controller.interactionStart(initial.topRight);
-         controller.interactionUpdate(final);
-         controller.interactionEnd(final);
-
-         expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
-      });
+      expect(controller.rectangle.topRight.equals(final)).to.equal(true);
    });
+
+   it("Needs to clip final GRect if necessary - lower left", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var initial: GRect = new GRect(100, 100, 50, 50);
+      var final: GPoint = new GPoint(49, 49);
+
+      var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
+
+      controller.interactionStart(initial.topRight);
+      controller.interactionUpdate(final);
+      controller.interactionEnd(final);
+
+      expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
+   });
+
+  it("Needs to clip final GRect if necessary - upper right", function () {
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var initial: GRect = new GRect(100, 100, 50, 50);
+      var final: GPoint = new GPoint(351, 351);
+
+      var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
+
+      controller.interactionStart(initial.topRight);
+      controller.interactionUpdate(final);
+      controller.interactionEnd(final);
+
+      expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
+   });
+});
 
    describe("BottomLeftRectangleInteractor", function () {
 
@@ -564,5 +569,3 @@ describe("TopLeftRectangleInteractor", function () {
       });
       
    });
-
-});
