@@ -509,6 +509,96 @@ export class TopRightRectangleInteractor extends IShapeInteractor {
    }
 }
 
+// Interactor that lets the user resize a rectangle from top left corner
+// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+export class BottomLeftRectangleInteractor extends IShapeInteractor {
+
+   private _freeRectInteractor: FreeRectangleInteractor;
+
+   /**
+    * Create a BottomLeftRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial rectangle for the object being moved
+    */
+   public constructor(bounds_: GRect, initial_: GRect) {
+
+      super();
+
+      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor.mouseDown(initial_.topRight);
+   }
+
+   mouseDown(pt: GPoint): boolean {
+
+      return false; // No need for further call
+   }
+
+   mouseMove(pt: GPoint): boolean {
+
+      return this._freeRectInteractor.mouseMove(pt);
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      this._freeRectInteractor.mouseUp(pt);
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
+      return false;
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._freeRectInteractor.rectangle;
+   }
+}
+
+// Interactor that lets the user resize a rectangle from top left corner
+// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+export class BottomRightRectangleInteractor extends IShapeInteractor {
+
+   private _freeRectInteractor: FreeRectangleInteractor;
+
+   /**
+    * Create a BottomRightRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    * @param rectangle_ - the initial rectangle for the object being moved
+    */
+   public constructor(bounds_: GRect, initial_: GRect) {
+
+      super();
+
+      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor.mouseDown(initial_.topLeft);
+   }
+
+   mouseDown(pt: GPoint): boolean {
+
+      return false; // No need for further call
+   }
+
+   mouseMove(pt: GPoint): boolean {
+
+      return this._freeRectInteractor.mouseMove(pt);
+   }
+
+   mouseUp(pt: GPoint): boolean {
+
+      this._freeRectInteractor.mouseUp(pt);
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
+      return false;
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._freeRectInteractor.rectangle;
+   }
+}
+
 // Interactor that works out if the mouse is over a click-able area of the shapes
 export class HitTestInteractor extends IShapeInteractor {
 
@@ -597,6 +687,18 @@ export class HitTestInteractor extends IShapeInteractor {
                if (shape.boundingRectangle.isOnTopRightGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
                      this._lastHitTest = HitTestResult.TopRight;
+                     this._lastHitShape = shape;
+               }
+               else
+               if (shape.boundingRectangle.isOnBottomLeftGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.BottomLeft;
+                     this._lastHitShape = shape;
+               }
+               else
+               if (shape.boundingRectangle.isOnBottomRightGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.BottomRight;
                      this._lastHitShape = shape;
                }
                else

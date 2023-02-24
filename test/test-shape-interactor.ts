@@ -10,7 +10,7 @@ import {
    IShapeInteractor,
    FreeRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
-   TopLeftRectangleInteractor, TopRightRectangleInteractor,
+   TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
    RectangleMoveInteractor,
    HitTestInteractor,
    HitTestResult
@@ -83,7 +83,7 @@ describe("HitTestInteractor", function () {
       var shape1: Shape = new Shape(shapeRect, ShapeBorderColour.Black, ShapeBorderStyle.Solid, false);
       shapes.set(shape1.id, shape1);
 
-      var inside: GPoint = new GPoint(56, 56);
+      var inside: GPoint = new GPoint(65, 65);
       var outside: GPoint = new GPoint(49, 49);
       var crossingLeft: GPoint = new GPoint(55, 75);
       var crossingRight: GPoint = new GPoint(155, 75);
@@ -112,6 +112,11 @@ describe("HitTestInteractor", function () {
       expect(controller.mouseMove(shapeRect.bottomMiddle)).to.equal(true);
       expect(controller.mouseMove(shapeRect.leftMiddle)).to.equal(true);
       expect(controller.mouseMove(shapeRect.rightMiddle)).to.equal(true);
+
+      expect(controller.mouseMove(shapeRect.topLeft)).to.equal(true);
+      expect(controller.mouseMove(shapeRect.bottomLeft)).to.equal(true);
+      expect(controller.mouseMove(shapeRect.topRight)).to.equal(true);
+      expect(controller.mouseMove(shapeRect.bottomRight)).to.equal(true);
 
    });
 });
@@ -461,6 +466,105 @@ describe("TopLeftRectangleInteractor", function () {
 
          expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
       });
+   });
+
+   describe("BottomLeftRectangleInteractor", function () {
+
+      it("Needs to create BottomLeftRectangleInteractor with click and drag", function () {
+
+         var bounds: GRect = new GRect(50, 50, 300, 300);
+         var initial: GRect = new GRect(100, 100, 50, 50);
+         var final: GPoint = new GPoint(75, 75);
+
+         var controller: IShapeInteractor = new BottomLeftRectangleInteractor(bounds, initial);
+
+         controller.mouseDown(initial.bottomLeft);
+         controller.mouseMove(final);
+         controller.mouseUp(final);
+
+         expect(controller.rectangle.bottomLeft.equals(final)).to.equal(true);
+      });
+
+      
+      it("Needs to clip final GRect if necessary - lower left", function () {
+
+         var bounds: GRect = new GRect(50, 50, 300, 300);
+         var initial: GRect = new GRect(100, 100, 50, 50);
+         var final: GPoint = new GPoint(49, 49);
+
+         var controller: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
+
+         controller.mouseDown(initial.bottomLeft);
+         controller.mouseMove(final);
+         controller.mouseUp(final);
+
+         expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
+      });
+
+      it("Needs to clip final GRect if necessary - upper right", function () {
+
+         var bounds: GRect = new GRect(50, 50, 300, 300);
+         var initial: GRect = new GRect(100, 100, 50, 50);
+         var final: GPoint = new GPoint(351, 351);
+
+         var controller: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
+
+         controller.mouseDown(initial.bottomLeft);
+         controller.mouseMove(final);
+         controller.mouseUp(final);
+
+         expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
+      });
+
+   });
+
+   describe("BottomRightRectangleInteractor", function () {
+
+      it("Needs to create BottomRightRectangleInteractor with click and drag", function () {
+
+         var bounds: GRect = new GRect(50, 50, 300, 300);
+         var initial: GRect = new GRect(100, 100, 50, 50);
+         var final: GPoint = new GPoint(200, 75);
+
+         var controller: IShapeInteractor = new BottomRightRectangleInteractor(bounds, initial);
+
+         controller.mouseDown(initial.bottomRight);
+         controller.mouseMove(final);
+         controller.mouseUp(final);
+
+         expect(controller.rectangle.bottomRight.equals(final)).to.equal(true);
+      });
+
+         
+      it("Needs to clip final GRect if necessary - lower left", function () {
+
+         var bounds: GRect = new GRect(50, 50, 300, 300);
+         var initial: GRect = new GRect(100, 100, 50, 50);
+         var final: GPoint = new GPoint(49, 49);
+
+         var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
+
+         controller.mouseDown(initial.bottomRight);
+         controller.mouseMove(final);
+         controller.mouseUp(final);
+
+         expect(controller.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
+      });
+
+      it("Needs to clip final GRect if necessary - upper right", function () {
+
+         var bounds: GRect = new GRect(50, 50, 300, 300);
+         var initial: GRect = new GRect(100, 100, 50, 50);
+         var final: GPoint = new GPoint(351, 351);
+
+         var controller: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
+
+         controller.mouseDown(initial.bottomRight);
+         controller.mouseMove(final);
+         controller.mouseUp(final);
+         expect(controller.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
+      });
+      
    });
 
 });
