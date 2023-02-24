@@ -654,52 +654,54 @@ export class HitTestInteractor extends IShapeInteractor {
 
             if (rcExpanded.includes(pt)) {
 
-               if (shape.boundingRectangle.isOnLeftGrabHandle(pt, this._grabHandleDxDy)) {
-                  hit = true;
-                  this._lastHitTest = HitTestResult.Left;
-                  this._lastHitShape = shape;
-               }
-               else
-               if (shape.boundingRectangle.isOnRightGrabHandle(pt, this._grabHandleDxDy)) {
-                  hit = true;
-                  this._lastHitTest = HitTestResult.Right;
-                  this._lastHitShape = shape;
-               }
-               else
-               if (shape.boundingRectangle.isOnTopGrabHandle(pt, this._grabHandleDxDy)) {
-                  hit = true;
-                  this._lastHitTest = HitTestResult.Top;
-                  this._lastHitShape = shape;
-               }
-               else
-               if (shape.boundingRectangle.isOnBottomGrabHandle(pt, this._grabHandleDxDy)) {
-                  hit = true;
-                  this._lastHitTest = HitTestResult.Bottom;
-                  this._lastHitShape = shape;
-               }
-               else
-               if (shape.boundingRectangle.isOnTopLeftGrabHandle(pt, this._grabHandleDxDy)) {
+               if (shape.isSelected) {
+                  if (shape.boundingRectangle.isOnLeftGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.Left;
+                     this._lastHitShape = shape;
+                  }
+                  else          
+                  if (shape.boundingRectangle.isOnRightGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.Right;
+                     this._lastHitShape = shape;
+                  }
+                  else
+                  if (shape.boundingRectangle.isOnTopGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.Top;
+                     this._lastHitShape = shape;
+                  }
+                  else
+                  if (shape.boundingRectangle.isOnBottomGrabHandle(pt, this._grabHandleDxDy)) {
+                     hit = true;
+                     this._lastHitTest = HitTestResult.Bottom;
+                     this._lastHitShape = shape;
+                  }
+                  else
+                  if (shape.boundingRectangle.isOnTopLeftGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
                      this._lastHitTest = HitTestResult.TopLeft;
                      this._lastHitShape = shape;
-               }
-               else
-               if (shape.boundingRectangle.isOnTopRightGrabHandle(pt, this._grabHandleDxDy)) {
+                  }
+                  else
+                  if (shape.boundingRectangle.isOnTopRightGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
                      this._lastHitTest = HitTestResult.TopRight;
                      this._lastHitShape = shape;
-               }
-               else
-               if (shape.boundingRectangle.isOnBottomLeftGrabHandle(pt, this._grabHandleDxDy)) {
+                  }
+                  else
+                  if (shape.boundingRectangle.isOnBottomLeftGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
                      this._lastHitTest = HitTestResult.BottomLeft;
                      this._lastHitShape = shape;
-               }
-               else
-               if (shape.boundingRectangle.isOnBottomRightGrabHandle(pt, this._grabHandleDxDy)) {
+                  }
+                  else
+                  if (shape.boundingRectangle.isOnBottomRightGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
                      this._lastHitTest = HitTestResult.BottomRight;
                      this._lastHitShape = shape;
+                  }
                }
                else
                if (shape.boundingRectangle.isOnBorder(pt)) {

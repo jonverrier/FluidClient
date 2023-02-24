@@ -60,11 +60,13 @@ export abstract class ShapeRenderer {
 
    // Helper function as many derived classes will need it
    protected drawBorder(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
+      shape: Shape, dashed: boolean): void {
 
       ctx.save();
 
       ctx.strokeStyle = "#393D47";
+      if (dashed)
+         ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.stroke();
@@ -81,9 +83,8 @@ export abstract class ShapeRenderer {
       ctx.strokeStyle = "#393D47";
       ctx.fillStyle = "#393D47";
       ctx.shadowBlur = 8;
-      ctx.shadowColor = "green";
+      ctx.shadowColor = "yellow";
 
-      ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.stroke();
@@ -121,7 +122,7 @@ export class SelectionRectangleRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawBorder(ctx, shape);
+      this.drawBorder(ctx, shape, true);
    }
 
    static createInstance(): RectangleShapeRenderer {
@@ -147,7 +148,7 @@ export class RectangleShapeRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawBorder(ctx, shape);
+      this.drawBorder(ctx, shape, false);
 
       if (shape.isSelected) {
          this.drawSelectionBorder(ctx, shape, IShapeInteractor.defaultGrabHandleDxDy());
