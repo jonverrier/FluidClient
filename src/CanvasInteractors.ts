@@ -4,7 +4,8 @@ import { GPoint, GRect } from './Geometry';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Shape } from './Shape';
 
-export enum HitTestResult {
+export enum EHitTestResult
+{
    None = "None",
    Left = "Left", Right = "Right", Top = "Top", Bottom = "Bottom",
    TopLeft = "TopLeft", TopRight = "TopRight", BottomLeft = "BottomLeft", BottomRight = "BottomRight", 
@@ -605,7 +606,7 @@ export class HitTestInteractor extends IShapeInteractor {
 
    private _shapes: Map<string, Shape>;
    private _rectangle: GRect;
-   private _lastHitTest: HitTestResult;
+   private _lastHitTest: EHitTestResult;
    private _lastHitShape: Shape;
    private _grabHandleDxDy: number;
 
@@ -623,7 +624,7 @@ export class HitTestInteractor extends IShapeInteractor {
 
       this._shapes = shapes_;
       this._rectangle = rectangle_;
-      this._lastHitTest = HitTestResult.None;
+      this._lastHitTest = EHitTestResult.None;
       this._lastHitShape = null;
       this._grabHandleDxDy = grabHandleDxDy_;
    }
@@ -643,7 +644,7 @@ export class HitTestInteractor extends IShapeInteractor {
    private commonMouseProcessing(pt: GPoint): boolean {
 
       let hit: boolean = false;
-      this._lastHitTest = HitTestResult.None;
+      this._lastHitTest = EHitTestResult.None;
       this._lastHitShape = null;
 
       this._shapes.forEach((shape: Shape, key: string) => {
@@ -661,62 +662,62 @@ export class HitTestInteractor extends IShapeInteractor {
                if (shape.isSelected) {
                   if (shape.boundingRectangle.isOnLeftGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.Left;
+                     this._lastHitTest = EHitTestResult.Left;
                      this._lastHitShape = shape;
                   }
                   else          
                   if (shape.boundingRectangle.isOnRightGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.Right;
+                     this._lastHitTest = EHitTestResult.Right;
                      this._lastHitShape = shape;
                   }
                   else
                   if (shape.boundingRectangle.isOnTopGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.Top;
+                     this._lastHitTest = EHitTestResult.Top;
                      this._lastHitShape = shape;
                   }
                   else
                   if (shape.boundingRectangle.isOnBottomGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.Bottom;
+                     this._lastHitTest = EHitTestResult.Bottom;
                      this._lastHitShape = shape;
                   }
                   else
                   if (shape.boundingRectangle.isOnTopLeftGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.TopLeft;
+                     this._lastHitTest = EHitTestResult.TopLeft;
                      this._lastHitShape = shape;
                   }
                   else
                   if (shape.boundingRectangle.isOnTopRightGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.TopRight;
+                     this._lastHitTest = EHitTestResult.TopRight;
                      this._lastHitShape = shape;
                   }
                   else
                   if (shape.boundingRectangle.isOnBottomLeftGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.BottomLeft;
+                     this._lastHitTest = EHitTestResult.BottomLeft;
                      this._lastHitShape = shape;
                   }
                   else
                   if (shape.boundingRectangle.isOnBottomRightGrabHandle(pt, this._grabHandleDxDy)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.BottomRight;
+                     this._lastHitTest = EHitTestResult.BottomRight;
                      this._lastHitShape = shape;
                   }
                   else
                   if (shape.boundingRectangle.isOnBorder(pt)) {
                      hit = true;
-                     this._lastHitTest = HitTestResult.Border;
+                     this._lastHitTest = EHitTestResult.Border;
                      this._lastHitShape = shape;
                   }
                }
                else
                if (shape.boundingRectangle.isOnBorder(pt)) {
                   hit = true;
-                  this._lastHitTest = HitTestResult.Border;
+                  this._lastHitTest = EHitTestResult.Border;
                   this._lastHitShape = shape;
                }
             }
@@ -730,7 +731,7 @@ export class HitTestInteractor extends IShapeInteractor {
    /**
    * Getters for private variables
    */
-   get lastHitTest(): HitTestResult {
+   get lastHitTest(): EHitTestResult {
 
       return this._lastHitTest;
    }

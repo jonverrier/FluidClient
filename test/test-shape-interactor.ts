@@ -13,7 +13,7 @@ import {
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
    RectangleMoveInteractor,
    HitTestInteractor,
-   HitTestResult
+   EHitTestResult
 } from '../src/CanvasInteractors';
 
 describe("IShapeInteractor", function () {
@@ -97,7 +97,7 @@ describe("HitTestInteractor", function () {
 
       expect(controller.rectangle.equals(bounds)).to.equal(true);
       expect(controller.shapes === shapes).to.equal(true);
-      expect(controller.lastHitTest === HitTestResult.None).to.equal(true);
+      expect(controller.lastHitTest === EHitTestResult.None).to.equal(true);
       expect(controller.lastHitShape === null).to.equal(true);
 
       // Do real hit-testing

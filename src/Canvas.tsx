@@ -19,7 +19,7 @@ import {
    FreeRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
-   RectangleMoveInteractor, shapeInteractionCompleteInterest, HitTestInteractor, HitTestResult
+   RectangleMoveInteractor, shapeInteractionCompleteInterest, HitTestInteractor, EHitTestResult
 } from './CanvasInteractors';
 import { RectangleShapeRenderer, SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
 
@@ -168,18 +168,18 @@ class CanvasState {
    width: number;
    height: number;
    shapes: Map<string, Shape>;
+   lastHit: EHitTestResult;
    shapeInteractor: IShapeInteractor;
-   lastHit: HitTestResult;
-   lastHitShapeId: string
+   resizeShapeId: string
 
-   constructor(width_: number, height_: number, shapes_: Map<string, Shape>) {
+   constructor(width_: number, height_: number, shapes_: Map<string, Shape>, lastHit_: EHitTestResult) {
+
       this.width = width_;
       this.height = height_;
-
       this.shapes = shapes_;
+      this.lastHit = lastHit_;
+      this.resizeShapeId = null;
       this.shapeInteractor = null;
-      this.lastHit = HitTestResult.None;
-      this.lastHitShapeId = null;
    }
 }
 
@@ -194,7 +194,7 @@ export interface ICanvasProps {
 function shapeInteractorFromMode(mode_: CanvasMode,
    bounds_: GRect,
    initial_: GRect,
-   hitTest_: HitTestResult,
+   hitTest_: EHitTestResult,
    pt_: GPoint): IShapeInteractor {
 
    switch (mode_) {
@@ -204,27 +204,27 @@ function shapeInteractorFromMode(mode_: CanvasMode,
       case CanvasMode.Select:
          switch (hitTest_) { 
 
-            case HitTestResult.Left:
+            case EHitTestResult.Left:
                return new LeftRectangleInteractor(bounds_, initial_);
-            case HitTestResult.Right:
+            case EHitTestResult.Right:
                return new RightRectangleInteractor(bounds_, initial_);
-            case HitTestResult.Top:
+            case EHitTestResult.Top:
                return new TopRectangleInteractor(bounds_, initial_);
-            case HitTestResult.Bottom:
+            case EHitTestResult.Bottom:
                return new BottomRectangleInteractor(bounds_, initial_);
-            case HitTestResult.TopLeft:
+            case EHitTestResult.TopLeft:
                return new TopLeftRectangleInteractor(bounds_, initial_);
-            case HitTestResult.TopRight:
+            case EHitTestResult.TopRight:
                return new TopRightRectangleInteractor(bounds_, initial_);
-            case HitTestResult.BottomLeft:
+            case EHitTestResult.BottomLeft:
                return new BottomLeftRectangleInteractor(bounds_, initial_);
-            case HitTestResult.BottomRight:
+            case EHitTestResult.BottomRight:
                return new BottomRightRectangleInteractor(bounds_, initial_);
-            case HitTestResult.Border:
+            case EHitTestResult.Border:
                return new RectangleMoveInteractor(bounds_, initial_, pt_);
 
             default:
-            case HitTestResult.None:
+            case EHitTestResult.None:
                return new FreeRectangleInteractor(bounds_);
       }
 
@@ -247,9 +247,11 @@ export const Canvas = (props: ICanvasProps) => {
    var shapeInteractionRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this));
    var shapeInteractionInterest = new ObserverInterest(shapeInteractionRouter, shapeInteractionCompleteInterest);
 
-   function useCanvas(ref: React.MutableRefObject<any>, shapes_: Map<string, Shape>, caucus: CaucusOf<Shape>): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
+   function useCanvas(ref: React.MutableRefObject<any>,
+      shapes_: Map<string, Shape>,
+      lastHit_: EHitTestResult): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
 
-      const [canvasState, setCanvasState] = useState<CanvasState>(new CanvasState(canvasWidth, canvasHeight, shapes_));
+      const [canvasState, setCanvasState] = useState<CanvasState>(new CanvasState(canvasWidth, canvasHeight, shapes_, lastHit_));
 
       useEffect(() => {
 
@@ -301,16 +303,23 @@ export const Canvas = (props: ICanvasProps) => {
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
          shapes: shapes,
-         shapeInteractor: canvasState.shapeInteractor,
          lastHit: canvasState.lastHit,
-         lastHitShapeId: canvasState.lastHitShapeId
+         shapeInteractor: canvasState.shapeInteractor,
+         resizeShapeId: canvasState.resizeShapeId
       });
    }
 
    const [canvasState, setCanvasState] = useCanvas(canvasRef,
       props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>,
-      props.shapeCaucus
+      lastHit
    );
+
+   var lastHit: EHitTestResult = EHitTestResult.None;
+   let hitTestInteractor = new HitTestInteractor(canvasState.shapes,
+      new GRect(0, 0, canvasState.width, canvasState.height),
+      IShapeInteractor.defaultGrabHandleDxDy());
+   let resizeShapeId = canvasState.resizeShapeId;
+   
 
    const cursorDefaultClasses = cursorDefaultStyles();
    const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
@@ -324,13 +333,10 @@ export const Canvas = (props: ICanvasProps) => {
    const cursorBottomLeftClasses = cursorBottomLeftStyles();
    const cursorBottomRightClasses = cursorBottomRightStyles();
 
-   var hitTestInteractor = new HitTestInteractor(canvasState.shapes,
-      new GRect(0, 0, canvasState.width, canvasState.height),
-      IShapeInteractor.defaultGrabHandleDxDy());
 
    // BUILD NOTE
    // Update this for every style of interaction
-   function cursorStylesFromModeAndLastHit(mode_: CanvasMode, lastHit_: HitTestResult): string {
+   function cursorStylesFromModeAndLastHit(mode_: CanvasMode, lastHit_: EHitTestResult): string {
       switch (mode_) {
          case CanvasMode.Rectangle:
             return cursorDrawRectangleClasses.root;
@@ -338,23 +344,23 @@ export const Canvas = (props: ICanvasProps) => {
          default:
             switch (lastHit_) {
 
-               case HitTestResult.Left:
+               case EHitTestResult.Left:
                   return cursorLeftClasses.root;
-               case HitTestResult.Right:
+               case EHitTestResult.Right:
                   return cursorRightClasses.root;
-               case HitTestResult.Top:
+               case EHitTestResult.Top:
                   return cursorTopClasses.root;
-               case HitTestResult.Bottom:
+               case EHitTestResult.Bottom:
                   return cursorBottomClasses.root;
-               case HitTestResult.TopLeft:
+               case EHitTestResult.TopLeft:
                   return cursorTopLeftClasses.root;
-               case HitTestResult.TopRight:
+               case EHitTestResult.TopRight:
                   return cursorTopRightClasses.root;
-               case HitTestResult.BottomLeft:
+               case EHitTestResult.BottomLeft:
                   return cursorBottomLeftClasses.root;
-               case HitTestResult.BottomRight:
+               case EHitTestResult.BottomRight:
                   return cursorBottomRightClasses.root;
-               case HitTestResult.Border:
+               case EHitTestResult.Border:
                   return cursorBorderClasses.root;
 
                default:
@@ -419,13 +425,14 @@ export const Canvas = (props: ICanvasProps) => {
 
          case CanvasMode.Select:
          default:
-            if (canvasState.lastHitShapeId) {
+            if (resizeShapeId) {
 
                // If we are here, User clicked on a border, or a grab handle
                // Set the new size & then push to Caucus
-               let shape = canvasState.shapes.get(canvasState.lastHitShapeId);
+               let shape = canvasState.shapes.get(resizeShapeId);
                shape.boundingRectangle = data.eventData;
-               props.shapeCaucus.amend(canvasState.lastHitShapeId, shape);
+               props.shapeCaucus.amend(resizeShapeId, shape);
+               resizeShapeId = null;
             }
             else {
                // Else select items within the selection area and de-select others
@@ -441,13 +448,14 @@ export const Canvas = (props: ICanvasProps) => {
                });
             }
 
-            setCanvasState({
+            /*setCanvasState({
                width: canvasState.width, height: canvasState.height,
                shapes: canvasState.shapes,
                shapeInteractor: null,
-               lastHit: HitTestResult.None,
-               lastHitShapeId: null
+               lastHit: EHitTestResult.None,
+               resizeShapeId: null
             });
+            */
             break;
       }
    }
@@ -455,19 +463,23 @@ export const Canvas = (props: ICanvasProps) => {
    function interactionStart(coord: GPoint, bounds: GRect) : void {
 
       let more = hitTestInteractor.interactionStart(coord);
-      let hit = HitTestResult.None;
-      var shape: Shape = null;
+      let resizeShape: Shape = null;
 
       if (more) {
-         hit = hitTestInteractor.lastHitTest;
-         shape = hitTestInteractor.lastHitShape;
+         lastHit = hitTestInteractor.lastHitTest;
+         resizeShape = hitTestInteractor.lastHitShape;
+         resizeShapeId = resizeShape.id;
+      }
+      else {
+         lastHit = EHitTestResult.None;
+         resizeShapeId = null;
       }
 
       // Create the right interactor, and hook up to notifications of when the interaction is complete
       let shapeInteractor = shapeInteractorFromMode(props.mode,
          bounds,
-         shape ? shape.boundingRectangle : new GRect(),
-         hit, coord);
+         resizeShape ? resizeShape.boundingRectangle : new GRect(),
+         lastHit, coord);
 
       shapeInteractor.addObserver(shapeInteractionInterest);
       shapeInteractor.interactionStart(coord);
@@ -476,70 +488,50 @@ export const Canvas = (props: ICanvasProps) => {
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
          shapes: canvasState.shapes,
+         lastHit: lastHit,
          shapeInteractor: shapeInteractor,
-         lastHit: hit,
-         lastHitShapeId: shape ? shape.id : null
+         resizeShapeId: resizeShapeId
       });
    }
 
-   function interactionEnd(coord: GPoint, postStateChange: boolean): void {
+   function interactionEnd(coord: GPoint): void {
 
-      let endInteraction = false;
       if (canvasState.shapeInteractor)
-         endInteraction = true;
-
-      if (!postStateChange && endInteraction)
          canvasState.shapeInteractor.interactionEnd(coord);
 
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
          shapes: canvasState.shapes,
+         lastHit: EHitTestResult.None,
          shapeInteractor: null,
-         lastHit: HitTestResult.None,
-         lastHitShapeId: null
+         resizeShapeId: resizeShapeId
       });
-
-      if (postStateChange && endInteraction)
-         canvasState.shapeInteractor.interactionEnd(coord);
    }
 
    function interactionUpdate(coord: GPoint): void {
+
+      let more = hitTestInteractor.interactionStart(coord);
+
+      if (more) {
+         lastHit = hitTestInteractor.lastHitTest;
+      }
+      else {
+         lastHit = EHitTestResult.None;
+      }
 
       if (canvasState.shapeInteractor) {
 
          // if there is a current interactor, pass it the data
          canvasState.shapeInteractor.interactionUpdate(coord);
+      } 
 
-         // This forces a re-render
-         setCanvasState({
-            width: canvasState.width, height: canvasState.height,
-            shapes: canvasState.shapes,
-            shapeInteractor: canvasState.shapeInteractor,
-            lastHit: canvasState.lastHit,
-            lastHitShapeId: canvasState.lastHitShapeId
-         });
-
-      } else {
-
-         // Otherwise we do a hit test to see if we should change the cursor
-         let more = hitTestInteractor.interactionUpdate(coord);
-         let hit = HitTestResult.None;
-         var shapeId: string = null;
-
-         if (more) {
-            hit = hitTestInteractor.lastHitTest;
-            shapeId = hitTestInteractor.lastHitShape.id;
-         }
-
-         setCanvasState({
-            width: canvasState.width,
-            height: canvasState.height,
-            shapes: canvasState.shapes,
-            shapeInteractor: canvasState.shapeInteractor,
-            lastHit: hit,
-            lastHitShapeId: shapeId 
-         });
-      }
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: canvasState.shapes,
+         lastHit: lastHit,
+         shapeInteractor: canvasState.shapeInteractor,
+         resizeShapeId: canvasState.resizeShapeId
+      });
    }
 
    const handleCanvasMouseDown = (event: MouseEvent): void => {
@@ -573,7 +565,7 @@ export const Canvas = (props: ICanvasProps) => {
 
       var coord: GPoint = getMousePosition(getCanvas(event), event);
 
-      interactionEnd(coord, true);
+      interactionEnd(coord);
    };
 
    const handleCanvasTouchStart = (event: TouchEvent): void => {
@@ -604,16 +596,19 @@ export const Canvas = (props: ICanvasProps) => {
 
       var coord: GPoint = getLastTouchPosition(getCanvas(event), event);
 
-      interactionEnd(coord, true);
+      interactionEnd(coord);
 
       // This forces a re-render
+      /* Answer is in here somewhere
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
          shapes: canvasState.shapes,
          shapeInteractor: canvasState.shapeInteractor,
-         lastHit: HitTestResult.None,
-         lastHitShapeId: null
+         lastHit: EHitTestResult.None,
+         resizeShapeId: canvasState.resizeShapeId
       });
+      */
+      
    }
 
 
