@@ -504,7 +504,7 @@ export class GRect extends MSerialisable {
 
       let handles = new Array<GRect>();
 
-      let rc = GRect.createAround(rc_.bottomLeft, dx_, dy_);
+      let rc = GRect.createAround(rc_.topLeft, dx_, dy_);
       handles.push(rc);
       rc = GRect.createAround(rc_.topRight, dx_, dy_);
       handles.push(rc);

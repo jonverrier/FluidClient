@@ -59,7 +59,7 @@ const cursorBottomStyles = makeStyles({
 
 const cursorBorderStyles = makeStyles({
    root: {
-      cursor: 'nesw-resize' 
+      cursor: 'move' 
    },
 });
 
@@ -351,39 +351,19 @@ export const Canvas = (props: ICanvasProps) => {
          default:
             if (canvasState.lastHitShape) {
 
-               if (canvasState.lastHit === HitTestResult.Border) {
-                  // User clicked on a border, not a grab handle
+               // If we are here, User clicked on a border, or a grab handle
+               // Set the new size & then push to Caucus
+               canvasState.lastHitShape.boundingRectangle = data.eventData;
+               props.shapeCaucus.amend(canvasState.lastHitShape.id, canvasState.lastHitShape);
 
-                  canvasState.shapes.forEach((shape: Shape, key: string) => {
-                     if (shape.isSelected) {
-                        shape.isSelected = false;
-                        // set the version in Caucus first, which pushes to other clients, then reset our state to match
-                        props.shapeCaucus.amend(shape.id, shape);
-                     }
-                  });
-
-                  if (canvasState.lastHitShape.isSelected)
-                     canvasState.lastHitShape.isSelected = true;
-                  else
-                     canvasState.lastHitShape.isSelected = false;
-
-                  // set the version in Caucus, which pushes to other clients
-                  props.shapeCaucus.amend(canvasState.lastHitShape.id, canvasState.lastHitShape);
-               }
-               else {
-                  // If we were resizing a shape, set the new size & then push to Caucus
-                  canvasState.lastHitShape.boundingRectangle = data.eventData;
-                  props.shapeCaucus.amend(canvasState.lastHitShape.id, canvasState.lastHitShape);
-
-                  setCanvasState({
-                     width: canvasState.width, height: canvasState.height,
-                     shapes: canvasState.shapes,
-                     shapeInteractor: null,
-                     hitTestInteractor: canvasState.hitTestInteractor,
-                     lastHit: HitTestResult.None,
-                     lastHitShape: null
-                  });
-               }
+               setCanvasState({
+                  width: canvasState.width, height: canvasState.height,
+                  shapes: canvasState.shapes,
+                  shapeInteractor: null,
+                  hitTestInteractor: canvasState.hitTestInteractor,
+                  lastHit: HitTestResult.None,
+                  lastHitShape: null
+               });
             }
             else {
                // Else select items within the selection area and de-select others
