@@ -53,7 +53,8 @@ export class SelectionRectangle extends Shape {
       return new SelectionRectangle();
    }
 
-   static _factoryForSelectionRectangle : ShapeFactory = new ShapeFactory(selectionRectangleID, Shape.createInstance);
+   static _factoryForSelectionRectangle: ShapeFactory = new ShapeFactory(selectionRectangleID,
+                                                                         SelectionRectangle.createInstance);
 }
 
 export class Rectangle extends Shape {
@@ -105,5 +106,6 @@ export class Rectangle extends Shape {
       return new Rectangle();
    }
 
-   static _factoryForRectangle: ShapeFactory = new ShapeFactory(rectangleID, Rectangle.createInstance);
+   static _factoryForRectangle: ShapeFactory = new ShapeFactory(rectangleID,
+                                                                Rectangle.createInstance);
 }
