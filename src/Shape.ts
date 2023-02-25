@@ -5,14 +5,52 @@ import { uuid } from './Uuid';
 import { MSerialisable } from "./SerialisationFramework";
 import { GRect } from "./Geometry";
 import { Pen, PenColour, PenStyle } from "./Pen";
-import { ShapeFactory } from './ShapeFactory';
 
 const nullShapeUuid: string = "374cb6a8-b229-4cde-843f-c530df79dca6";
 
 // Keys to use for dynamic creation of Shape subtypes
 const shapeID: string = "Shape";
-const selectionRectangleID: string = "SelectionRectangle";
-const rectangleID: string = "Rectangle";
+
+// Signature for the factory function 
+type FactoryFunctionFor<Shape> = () => Shape;
+
+var firstFactory: ShapeFactory = null;
+
+export class ShapeFactory {
+
+   _className: string;
+   _factoryMethod: FactoryFunctionFor<Shape>;
+   _nextFactory: ShapeFactory;
+
+   constructor(className_: string, factoryMethod_: FactoryFunctionFor<Shape>) {
+      this._className = className_;
+      this._factoryMethod = factoryMethod_;
+      this._nextFactory = null;
+
+      if (firstFactory === null) {
+         firstFactory = this;
+      } else {
+         var nextFactory: ShapeFactory = firstFactory;
+
+         while (nextFactory._nextFactory) {
+            nextFactory = nextFactory._nextFactory;
+         }
+         nextFactory._nextFactory = this;
+      }
+   }
+
+   static create(className: string): Shape {
+      var nextFactory: ShapeFactory = firstFactory;
+
+      while (nextFactory) {
+         if (nextFactory._className === className) {
+            return nextFactory._factoryMethod();
+         }
+         nextFactory = nextFactory._nextFactory;
+      }
+      return null;
+   }
+}
 
 export class Shape extends MSerialisable {
 
@@ -150,7 +188,7 @@ export class Shape extends MSerialisable {
 
    streamToJSON(): string {
 
-      return JSON.stringify({ id: this._id, boundingRectangle: this._boundingRectangle, pen: this._pen.streamToJSON(), isSelected: this._isSelected });
+      return JSON.stringify({ shapeID: this.shapeID(), id: this._id, boundingRectangle: this._boundingRectangle, pen: this._pen.streamToJSON(), isSelected: this._isSelected });
    }
 
    streamFromJSON(stream: string): void {
@@ -160,7 +198,13 @@ export class Shape extends MSerialisable {
       let pen = new Pen();
       pen.streamFromJSON(obj.pen);
 
-      this.assign(new Shape(obj.id, obj.boundingRectangle, pen, obj.isSelected));
+      // Dynamically create subtype based on shapeID
+      let shape: Shape = ShapeFactory.create(obj.shapeId);
+
+      this._id = obj.id;
+      this._boundingRectangle = new GRect(obj.boundingRectangle);
+      this._pen = pen;
+      this._isSelected = obj.isSelected;
    }
 
    shapeID(): string {
@@ -194,103 +238,3 @@ export class Shape extends MSerialisable {
    static _factoryForShape: ShapeFactory = new ShapeFactory(shapeID, Shape.createInstance);
 }
 
-export class SelectionRectangle extends Shape {
-
-   /**
-    * Create a SelectionRectangle object
-    * @param boundingRectangle_ - boundingRectangle
-    */
-   public constructor(boundingRectangle_: GRect)
-
-   /**
-    * Create a Rectangle object
-    * @param rectangle_ - object to copy 
-    */
-   public constructor(rectangle_: Rectangle)
-
-   /**
-    * Create an empty Rectangle object - required for particiation in serialisation framework
-    */
-   constructor();
-
-   constructor(...arr: any[]) {
-
-      if (arr.length === 1) { // Construct from individual parameters
-         if (Shape.isMyType(arr[0]))
-            super(arr[0]);
-         else
-            super(arr[0], new Pen (PenColour.Border, PenStyle.Dashed), false);
-         return;
-      }
-      else {
-         super(new GRect(), new Pen (PenColour.Border, PenStyle.Dashed), false);
-      }
-   }
-
-   // Unique ID that is used to look up the associated renderer
-   shapeID(): string {
-      return selectionRectangleID;
-   }
-
-   static selectionRectangleID(): string {
-      return selectionRectangleID;
-   }
-
-   static createInstance(): SelectionRectangle {
-      return new SelectionRectangle();
-   }
-
-   static _factoryForSelectionRectangle : ShapeFactory = new ShapeFactory(selectionRectangleID, Shape.createInstance);
-}
-
-export class Rectangle extends Shape {
-
-   /**
-    * Create a Rectangle object
-    * @param boundingRectangle_ - boundingRectangle
-    * @param pen_ - pen
-    * @param isSelected_ - true if object is selected and needs to draw and hit-test grab handles
-    */
-   public constructor(boundingRectangle_: GRect, pen_: Pen, isSelected_: boolean)
-
-   /**
-    * Create a Rectangle object
-    * @param rectangle_ - object to copy 
-    */
-   public constructor(rectangle_: Rectangle)
-
-   /**
-    * Create an empty Rectangle object - required for particiation in serialisation framework
-    */
-   constructor();
-
-   constructor(...arr: any[]) {
-
-      if (arr.length === 3) { // Construct from individual coordinates
-         super(arr[0], arr[1], arr[2]);
-         return;
-      }
-      else
-      if (arr.length === 1) {
-         super(arr[0]);
-      }
-      else {
-         super();
-      }
-   }
-
-   // Unique ID that is used to look up the associated renderer
-   shapeID(): string {
-      return rectangleID;
-   }
-
-   static rectangleID(): string {
-      return rectangleID;
-   }
-
-   static createInstance(): Rectangle {
-      return new Rectangle();
-   }
-
-   static _factoryForRectangle: ShapeFactory = new ShapeFactory(rectangleID, Rectangle.createInstance);
-}

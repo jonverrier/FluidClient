@@ -12,7 +12,8 @@ import {
 import { GPoint, GRect } from './Geometry';
 import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } from './NotificationFramework';
 import { Pen, PenColour, PenStyle } from "./Pen";
-import { Shape, Rectangle, SelectionRectangle } from './Shape';
+import { Shape} from './Shape';
+import { Rectangle, SelectionRectangle } from './Rectangle';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
 import {
@@ -22,8 +23,9 @@ import {
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
    RectangleMoveInteractor, shapeInteractionCompleteInterest
 } from './CanvasInteractors';
-import { HitTester, HitTestResult, EHitTest } from './ShapeHitTester';
-import { RectangleShapeRenderer, SelectionRectangleRenderer, ShapeRendererFactory } from './ShapeRenderer';
+import { ShapeGroupHitTester, EHitTest } from './ShapeHitTester';
+import { ShapeRendererFactory } from './ShapeRenderer';
+import { RectangleShapeRenderer, SelectionRectangleRenderer } from "./RectangleRenderer"; 
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -131,11 +133,6 @@ function drawShapes (ctx: CanvasRenderingContext2D,
       shapes.forEach((shape: Shape, key: string) => { 
 
          let renderer = ShapeRendererFactory.create(shape.shapeID());
-
-         // TODO - this is a plug until can dynamically create shapes and shape renderers
-         // And can plug that unto the CaucusOf<Shape>s
-         if (!renderer)
-            renderer = new RectangleShapeRenderer();
 
          renderer.draw(ctx, shape);
       });
@@ -317,8 +314,9 @@ export const Canvas = (props: ICanvasProps) => {
    );
 
    var lastHit: EHitTest = EHitTest.None;
-   let hitTestInteractor = new HitTester(canvasState.shapes,
-      IShapeInteractor.defaultGrabHandleDxDy());
+   let hitTestInteractor = new ShapeGroupHitTester(canvasState.shapes,
+      IShapeInteractor.defaultGrabHandleDxDy(),
+      IShapeInteractor.defaultHitTestTolerance());
    let resizeShapeId = canvasState.resizeShapeId;
    
 

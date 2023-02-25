@@ -6,9 +6,10 @@ import { describe, it } from 'mocha';
 
 import { GRect } from '../src/Geometry';
 import { Pen, PenColour, PenStyle } from "../src/Pen";
-import { ShapeRendererFactory, ShapeRenderer, SelectionRectangleRenderer, RectangleShapeRenderer } from '../src/ShapeRenderer';
-import { Shape, Rectangle, SelectionRectangle } from '../src/Shape';
-
+import { Shape } from '../src/Shape';
+import { Rectangle, SelectionRectangle } from '../src/Rectangle';
+import { ShapeRenderer, ShapeRendererFactory } from '../src/ShapeRenderer';
+import { RectangleShapeRenderer, SelectionRectangleRenderer } from "../src/RectangleRenderer"; 
 
 // TODO - get a better Mick wrking
 // e.g. https://www.npmjs.com/package/jest-canvas-mock

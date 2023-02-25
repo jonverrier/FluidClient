@@ -47,7 +47,7 @@ export class ShapeRendererFactory {
 
 
 /// <summary>
-/// ShapeRenderer - common super class for shape drawers
+/// ShapeRenderer - common super class for shape renderers
 /// <summary>
 export abstract class ShapeRenderer {
 
@@ -106,58 +106,3 @@ export abstract class ShapeRenderer {
       shape: Shape): void;
 }
 
-/// <summary>
-/// SelectionRectangleRenderer - draws Rectangle shapes
-/// <summary>
-export class SelectionRectangleRenderer extends ShapeRenderer {
-
-   /**
-    * Create an empty SelectionRectangleRenderer object 
-    */
-   constructor() {
-
-      super();
-   }
-
-   draw(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
-
-      this.drawBorder(ctx, shape, true);
-   }
-
-   static createInstance(): RectangleShapeRenderer {
-      return new RectangleShapeRenderer();
-   }
-
-   private static _factoryForSelectionRectangle: ShapeRendererFactory = new ShapeRendererFactory("SelectionRectangle", SelectionRectangleRenderer.createInstance);
-}
-
-/// <summary>
-/// RectangleShapeRenderer - draws Rectangle shapes
-/// <summary>
-export class RectangleShapeRenderer extends ShapeRenderer {
-
-   /**
-    * Create an empty RectangleShapeRenderer object 
-    */
-   constructor() {
-
-      super();
-   }
-
-   draw(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
-
-      this.drawBorder(ctx, shape, false);
-
-      if (shape.isSelected) {
-         this.drawSelectionBorder(ctx, shape, IShapeInteractor.defaultGrabHandleDxDy());
-      }
-   }
-
-   static createInstance(): RectangleShapeRenderer {
-      return new RectangleShapeRenderer();
-   }
-
-   private static _factoryForRectangle: ShapeRendererFactory = new ShapeRendererFactory("Rectangle", RectangleShapeRenderer.createInstance);
-}

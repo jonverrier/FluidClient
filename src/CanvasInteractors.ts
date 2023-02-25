@@ -21,7 +21,11 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
    // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
    // Not a property of rectangles
    static defaultGrabHandleDxDy(): number {
-      return 32;
+      return 16;
+   }
+   // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
+   static defaultHitTestTolerance(): number {
+      return 2;
    }
    static defaultDx(): number {
       return defaultDX;
@@ -40,13 +44,11 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
 export var shapeInteractionComplete: string = "ShapeInteractionComplete";
 export var shapeInteractionCompleteInterest = new Interest(shapeInteractionComplete);
 
-var defaultDX: number = 100;
-var defaultDY: number = 50;
+var defaultDX: number = 96;
+var defaultDY: number = 48;
 
-var minimumDX: number = 16;
-var minimumDY: number = 16;
-
-var defaultGrabHandleDXDY: number = 8;
+var minimumDX: number = 48;
+var minimumDY: number = 48;
 
 // Interactor that lets the user draw a rectangle from mouse down to mouse up
 export class FreeRectangleInteractor extends IShapeInteractor  {

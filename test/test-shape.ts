@@ -6,8 +6,8 @@ import { describe, it } from 'mocha';
 
 import { GRect } from '../src/Geometry';
 import { Pen, PenColour, PenStyle } from "../src/Pen";
-import { Shape, Rectangle, SelectionRectangle } from '../src/Shape';
-import { ShapeFactory } from '../src/ShapeFactory';
+import { Shape, ShapeFactory } from '../src/Shape';
+import { Rectangle, SelectionRectangle } from '../src/Rectangle';
 
 describe("Shape", function () {
 
