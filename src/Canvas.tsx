@@ -9,7 +9,8 @@ import {
 } from '@fluentui/react-components';
 
 // Local
-import { GPoint, GRect } from './Geometry';
+import { GPoint } from './GeometryPoint';
+import { GRect } from './GeometryRectangle';
 import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } from './NotificationFramework';
 import { Pen, PenColour, PenStyle } from "./Pen";
 import { Shape} from './Shape';

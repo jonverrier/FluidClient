@@ -4,7 +4,6 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { GRect } from '../src/Geometry';
 import { Pen, PenColour, PenStyle} from '../src/Pen';
 
 

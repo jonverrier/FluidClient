@@ -1,6 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GPoint, GRect } from './Geometry';
+import { GPoint } from './GeometryPoint';
+import { GRect } from './GeometryRectangle';
 import { Shape } from './Shape';
 import { Rectangle } from './Rectangle';
 
@@ -209,7 +210,7 @@ export class RectangleHitTester extends ShapeHitTester {
                testResult = { hitTest: EHitTest.BottomRight, hitShape: shape };
             }
             else
-            if (shape.boundingRectangle.isOnBorder(pt)) {
+            if (shape.boundingRectangle.isOnBorder(pt, this.tolerance)) {
                testResult = { hitTest: EHitTest.Border, hitShape: shape };
             }
          }

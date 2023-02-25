@@ -4,7 +4,9 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { GPoint, GRect } from '../src/Geometry';
+import { GPoint } from '../src/GeometryPoint';
+import { GRect } from '../src/GeometryRectangle';
+
 import { Pen, PenColour, PenStyle } from "../src/Pen";
 import { Shape } from '../src/Shape';
 import { ShapeGroupHitTester, ShapeHitTester, ShapeHitTesterFactory } from '../src/ShapeHitTester';

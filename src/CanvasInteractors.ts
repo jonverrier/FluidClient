@@ -1,6 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GPoint, GRect } from './Geometry';
+import { GPoint } from './GeometryPoint';
+import { GRect } from './GeometryRectangle';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 
 interface IShapeMover {

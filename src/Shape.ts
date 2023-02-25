@@ -3,7 +3,7 @@
 import { InvalidParameterError } from './Errors';
 import { uuid } from './Uuid';
 import { MSerialisable } from "./SerialisationFramework";
-import { GRect } from "./Geometry";
+import { GRect } from './GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "./Pen";
 
 const nullShapeUuid: string = "374cb6a8-b229-4cde-843f-c530df79dca6";

@@ -1,8 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GRect } from "./Geometry";
+import { GRect } from "./GeometryRectangle";
 import { Shape } from "./Shape";
-import { IShapeInteractor } from "./CanvasInteractors"; 
 
 // Signature for the factory function 
 type FactoryFunctionFor<ShapeRenderer> = () => ShapeRenderer;

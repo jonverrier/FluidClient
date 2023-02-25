@@ -1,6 +1,6 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GRect } from "./Geometry";
+import { GRect } from './GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "./Pen";
 import { Shape, ShapeFactory } from './Shape';
 
