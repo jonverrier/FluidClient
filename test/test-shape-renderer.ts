@@ -4,10 +4,12 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { GPoint, GRect } from '../src/Geometry';
-import { ShapeRendererFactory, ShapeRenderer, SelectionRectangleRenderer, RectangleShapeRenderer } from '../src/ShapeRenderer';
-import { Shape, ShapeBorderColour, ShapeBorderStyle, Rectangle, SelectionRectangle } from '../src/Shape';
-
+import { GRect } from '../src/Geometry';
+import { Pen, PenColour, PenStyle } from "../src/Pen";
+import { Shape } from '../src/Shape';
+import { Rectangle, SelectionRectangle } from '../src/Rectangle';
+import { ShapeRenderer, ShapeRendererFactory } from '../src/ShapeRenderer';
+import { RectangleShapeRenderer, SelectionRectangleRenderer } from "../src/RectangleRenderer"; 
 
 // TODO - get a better Mick wrking
 // e.g. https://www.npmjs.com/package/jest-canvas-mock
@@ -82,7 +84,7 @@ describe("ShapeRenderer", function () {
       var renderer: ShapeRenderer = new RectangleShapeRenderer();
 
       const rect = new GRect(0, 0, 20, 20);
-      var shape: Shape = new Rectangle(rect, ShapeBorderColour.Black, ShapeBorderStyle.Dotted, true);
+      var shape: Shape = new Rectangle(rect, new Pen (PenColour.Black, PenStyle.Dotted), true);
 
       var caught: boolean = false;
 

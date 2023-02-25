@@ -4,38 +4,77 @@ import { InvalidParameterError } from './Errors';
 import { uuid } from './Uuid';
 import { MSerialisable } from "./SerialisationFramework";
 import { GRect } from "./Geometry";
-
-export enum ShapeBorderColour { Red = "Red", Blue = "Blue", Green = "Green", Black = "Black", Border = "Border", Invisible="Invisible"};
-export enum ShapeBorderStyle { Solid="Solid", Dashed="Dashed", Dotted="Dotted", None="None"}; 
+import { Pen, PenColour, PenStyle } from "./Pen";
 
 const nullShapeUuid: string = "374cb6a8-b229-4cde-843f-c530df79dca6";
+
+// Keys to use for dynamic creation of Shape subtypes
+const shapeID: string = "Shape";
+
+// Signature for the factory function 
+type FactoryFunctionFor<Shape> = () => Shape;
+
+var firstFactory: ShapeFactory = null;
+
+export class ShapeFactory {
+
+   _className: string;
+   _factoryMethod: FactoryFunctionFor<Shape>;
+   _nextFactory: ShapeFactory;
+
+   constructor(className_: string, factoryMethod_: FactoryFunctionFor<Shape>) {
+      this._className = className_;
+      this._factoryMethod = factoryMethod_;
+      this._nextFactory = null;
+
+      if (firstFactory === null) {
+         firstFactory = this;
+      } else {
+         var nextFactory: ShapeFactory = firstFactory;
+
+         while (nextFactory._nextFactory) {
+            nextFactory = nextFactory._nextFactory;
+         }
+         nextFactory._nextFactory = this;
+      }
+   }
+
+   static create(className: string): Shape {
+      var nextFactory: ShapeFactory = firstFactory;
+
+      while (nextFactory) {
+         if (nextFactory._className === className) {
+            return nextFactory._factoryMethod();
+         }
+         nextFactory = nextFactory._nextFactory;
+      }
+      return null;
+   }
+}
 
 export class Shape extends MSerialisable {
 
    _id: string;
    _boundingRectangle: GRect;
-   _borderColour: ShapeBorderColour;
-   _borderStyle: ShapeBorderStyle;
+   _pen: Pen;
    _isSelected: boolean;
 
    /**
     * Create a Shape object
     * @param uuid - uuid for the shape (e.g we create a local copy of a shpe created remotely and need to retain the ID)
     * @param boundingRectangle_ - boundingRectangle
-    * @param borderColour_ - colour
-    * @param borderStyle_ - style
+    * @param pen_ - pen
     * @param isSelected_ - true if object is selected and needs to draw and hit-test grab handles
     */
-   public constructor(uuid: string, boundingRectangle_: GRect, borderColour_: ShapeBorderColour, borderStyle_: ShapeBorderStyle, isSelected_: boolean)
+   public constructor(uuid: string, boundingRectangle_: GRect, pen_: Pen, isSelected_: boolean)
 
    /**
     * Create a Shape object
     * @param boundingRectangle_ - boundingRectangle
-    * @param borderColour_ - colour
-    * @param borderStyle_ - style
+    * @param pen_ - pen
     * @param isSelected_ - true if object is selected and needs to draw and hit-test grab handles
     */
-   public constructor(boundingRectangle_: GRect, borderColour_: ShapeBorderColour, borderStyle_: ShapeBorderStyle, isSelected_: boolean)
+   public constructor(boundingRectangle_: GRect, pen_: Pen, isSelected_: boolean)
 
    /**
     * Create a Shape object
@@ -52,21 +91,19 @@ export class Shape extends MSerialisable {
 
       super();
 
-      if (arr.length === 5) { // Construct from individual parameters including ID
+      if (arr.length === 4) { // Construct from individual parameters including ID
          this._id = arr[0];
          this._boundingRectangle = new GRect(arr[1]);
-         this._borderColour = arr[2];
-         this._borderStyle = arr[3]
-         this._isSelected = arr[4];
+         this._pen = arr[2];
+         this._isSelected = arr[3];
          return;
       }
       else
-         if (arr.length === 4) { // Construct from individual parameters
+         if (arr.length === 3) { // Construct from individual parameters
          this._id = uuid();
          this._boundingRectangle = new GRect (arr[0]);
-         this._borderColour = arr[1];
-         this._borderStyle = arr[2]
-         this._isSelected = arr[3];
+         this._pen = new Pen (arr[1]);
+         this._isSelected = arr[2];
          return;
       }
       else
@@ -74,8 +111,7 @@ export class Shape extends MSerialisable {
          if (Shape.isMyType(arr[0])) { // Copy Constructor
             this._id = arr[0]._id;
             this._boundingRectangle = new GRect(arr[0]._boundingRectangle);
-            this._borderColour = arr[0]._borderColour;
-            this._borderStyle = arr[0]._borderStyle;
+            this._pen = new Pen (arr[0]._pen);
             this._isSelected = arr[0]._isSelected;
             return;
          }
@@ -87,8 +123,7 @@ export class Shape extends MSerialisable {
       if (arr.length === 0) { // Empty Constructor
          this._id = uuid();
          this._boundingRectangle = new GRect;
-         this._borderColour = ShapeBorderColour.Black;
-         this._borderStyle = ShapeBorderStyle.Solid;
+         this._pen = new Pen();
          this._isSelected = false;
          return;
       }
@@ -107,11 +142,8 @@ export class Shape extends MSerialisable {
    get boundingRectangle (): GRect {
       return this._boundingRectangle;
    }
-   get borderColour(): ShapeBorderColour {
-      return this._borderColour;
-   }
-   get borderStyle(): ShapeBorderStyle {
-      return this._borderStyle;
+   get pen(): Pen {
+      return this._pen;
    }
    get isSelected(): boolean {
       return this._isSelected;
@@ -120,11 +152,8 @@ export class Shape extends MSerialisable {
    set boundingRectangle(rect_: GRect)  {
       this._boundingRectangle = rect_;
    }
-   set borderColour(borderColour_: ShapeBorderColour) {
-      this._borderColour = borderColour_;
-   }
-   set borderStyle(borderStyle_: ShapeBorderStyle)  {
-      this._borderStyle = borderStyle_;
+   set pen(pen_: Pen) {
+      this._pen = pen_;
    }
    set isSelected(isSelected_: boolean)  {
       this._isSelected = isSelected_;
@@ -139,8 +168,7 @@ export class Shape extends MSerialisable {
 
       return (this._id === rhs._id &&
          this._boundingRectangle.equals(rhs._boundingRectangle) && 
-         this._borderColour === rhs._borderColour &&
-         this._borderStyle === rhs._borderStyle &&
+         this._pen.equals (rhs._pen) &&
          this._isSelected === rhs._isSelected);
    }
 
@@ -152,8 +180,7 @@ export class Shape extends MSerialisable {
 
       this._id = rhs._id;
       this._boundingRectangle = new GRect (rhs._boundingRectangle);
-      this._borderColour = rhs._borderColour;
-      this._borderStyle = rhs._borderStyle;
+      this._pen = new Pen (rhs._pen);
       this._isSelected = rhs._isSelected;
 
       return this;
@@ -161,25 +188,33 @@ export class Shape extends MSerialisable {
 
    streamToJSON(): string {
 
-      return JSON.stringify({ id: this._id, boundingRectangle: this._boundingRectangle, borderColour: this._borderColour, borderStyle: this._borderStyle, isSelected: this._isSelected });
+      return JSON.stringify({ shapeID: this.shapeID(), id: this._id, boundingRectangle: this._boundingRectangle, pen: this._pen.streamToJSON(), isSelected: this._isSelected });
    }
 
    streamFromJSON(stream: string): void {
 
       const obj = JSON.parse(stream);
 
-      let typedColour: ShapeBorderColour = ShapeBorderColour[obj.borderColour as keyof typeof ShapeBorderColour];
+      let pen = new Pen();
+      pen.streamFromJSON(obj.pen);
 
-      let typedStyle: ShapeBorderStyle = ShapeBorderStyle[obj.borderStyle as keyof typeof ShapeBorderStyle]; 
+      // Dynamically create subtype based on shapeID
+      let shape: Shape = ShapeFactory.create(obj.shapeId);
 
-      this.assign(new Shape(obj.id, obj.boundingRectangle, typedColour, typedStyle, obj.isSelected));
+      this._id = obj.id;
+      this._boundingRectangle = new GRect(obj.boundingRectangle);
+      this._pen = pen;
+      this._isSelected = obj.isSelected;
    }
 
    shapeID(): string {
-      return "Shape";
+      return shapeID;
    }
 
-   // TO DO - will need a way to virtually construct derived types. 
+   static shapeID(): string {
+      return shapeID;
+   }
+
    static factoryFn(): Shape {
       return new Shape();
    }
@@ -193,90 +228,13 @@ export class Shape extends MSerialisable {
    }
 
    static nullShape(): Shape {
-      return new Shape(nullShapeUuid, new GRect(0, 0, 0, 0), ShapeBorderColour.Invisible, ShapeBorderStyle.None, false);
+      return new Shape(nullShapeUuid, new GRect(0, 0, 0, 0), new Pen (PenColour.Invisible, PenStyle.None), false);
    }
 
+   static createInstance(): Shape {
+      return new Shape();
+   }
+
+   static _factoryForShape: ShapeFactory = new ShapeFactory(shapeID, Shape.createInstance);
 }
 
-export class SelectionRectangle extends Shape {
-
-   /**
-    * Create a SelectionRectangle object
-    * @param boundingRectangle_ - boundingRectangle
-    */
-   public constructor(boundingRectangle_: GRect)
-
-   /**
-    * Create a Rectangle object
-    * @param rectangle_ - object to copy 
-    */
-   public constructor(rectangle_: Rectangle)
-
-   /**
-    * Create an empty Rectangle object - required for particiation in serialisation framework
-    */
-   constructor();
-
-   constructor(...arr: any[]) {
-
-      if (arr.length === 1) { // Construct from individual coordinates
-         if (Shape.isMyType(arr[0]))
-            super(arr[0]);
-         else
-            super(arr[0], ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
-         return;
-      }
-      else {
-         super(new GRect(), ShapeBorderColour.Border, ShapeBorderStyle.Dashed, false);
-      }
-   }
-
-   // Unique ID that is used to look up the associated renderer
-   shapeID(): string {
-      return "SelectionRectangle";
-   }
-
-}
-
-export class Rectangle extends Shape {
-
-   /**
-    * Create a Rectangle object
-    * @param boundingRectangle_ - boundingRectangle
-    * @param borderColour_ - colour
-    * @param borderStyle_ - style
-    * @param isSelected_ - true if object is selected and needs to draw and hit-test grab handles
-    */
-   public constructor(boundingRectangle_: GRect, borderColour_: ShapeBorderColour, borderStyle_: ShapeBorderStyle, isSelected_: boolean)
-
-   /**
-    * Create a Rectangle object
-    * @param rectangle_ - object to copy 
-    */
-   public constructor(rectangle_: Rectangle)
-
-   /**
-    * Create an empty Rectangle object - required for particiation in serialisation framework
-    */
-   constructor();
-
-   constructor(...arr: any[]) {
-
-      if (arr.length === 4) { // Construct from individual coordinates
-         super(arr[0], arr[1], arr[2], arr[3]);
-         return;
-      }
-      else
-      if (arr.length === 1) {
-         super(arr[0]);
-      }
-      else {
-         super();
-      }
-   }
-
-   // Unique ID that is used to look up the associated renderer
-   shapeID(): string {
-      return "Rectangle";
-   }
-}

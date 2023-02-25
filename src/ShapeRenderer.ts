@@ -1,10 +1,11 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GPoint, GRect } from "./Geometry";
-import { Shape, ShapeBorderColour, ShapeBorderStyle, } from "./Shape"; 
+import { GRect } from "./Geometry";
+import { Shape } from "./Shape";
+import { IShapeInteractor } from "./CanvasInteractors"; 
 
 // Signature for the factory function 
-type FactoryFunctionFor<ShapeDrawer> = () => ShapeDrawer;
+type FactoryFunctionFor<ShapeRenderer> = () => ShapeRenderer;
 
 var firstFactory: ShapeRendererFactory = null;
 
@@ -46,7 +47,7 @@ export class ShapeRendererFactory {
 
 
 /// <summary>
-/// ShapeRenderer - common super class for shape drawers
+/// ShapeRenderer - common super class for shape renderers
 /// <summary>
 export abstract class ShapeRenderer {
 
@@ -59,11 +60,13 @@ export abstract class ShapeRenderer {
 
    // Helper function as many derived classes will need it
    protected drawBorder(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
+      shape: Shape, dashed: boolean): void {
 
       ctx.save();
 
       ctx.strokeStyle = "#393D47";
+      if (dashed)
+         ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.stroke();
@@ -73,21 +76,20 @@ export abstract class ShapeRenderer {
 
    // Helper function as many derived classes will need it
    protected drawSelectionBorder(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
+      shape: Shape, grabHandleDxy: number): void {
 
       ctx.save();
 
       ctx.strokeStyle = "#393D47";
       ctx.fillStyle = "#393D47";
       ctx.shadowBlur = 8;
-      ctx.shadowColor = "green";
+      ctx.shadowColor = "yellow";
 
-      ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.stroke();
 
-      let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, 8, 8);
+      let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, grabHandleDxy, grabHandleDxy);
 
       handles.forEach((handle: GRect) => {
 
@@ -104,58 +106,3 @@ export abstract class ShapeRenderer {
       shape: Shape): void;
 }
 
-/// <summary>
-/// SelectionRectangleRenderer - draws Rectangle shapes
-/// <summary>
-export class SelectionRectangleRenderer extends ShapeRenderer {
-
-   /**
-    * Create an empty SelectionRectangleRenderer object 
-    */
-   constructor() {
-
-      super();
-   }
-
-   draw(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
-
-      this.drawBorder(ctx, shape);
-   }
-
-   static createInstance(): RectangleShapeRenderer {
-      return new RectangleShapeRenderer();
-   }
-
-   private static _factoryForSelectionRectangle: ShapeRendererFactory = new ShapeRendererFactory("SelectionRectangle", SelectionRectangleRenderer.createInstance);
-}
-
-/// <summary>
-/// RectangleShapeRenderer - draws Rectangle shapes
-/// <summary>
-export class RectangleShapeRenderer extends ShapeRenderer {
-
-   /**
-    * Create an empty RectangleShapeRenderer object 
-    */
-   constructor() {
-
-      super();
-   }
-
-   draw(ctx: CanvasRenderingContext2D,
-      shape: Shape): void {
-
-      this.drawBorder(ctx, shape);
-
-      if (shape.isSelected) {
-         this.drawSelectionBorder(ctx, shape);
-      }
-   }
-
-   static createInstance(): RectangleShapeRenderer {
-      return new RectangleShapeRenderer();
-   }
-
-   private static _factoryForRectangle: ShapeRendererFactory = new ShapeRendererFactory("Rectangle", RectangleShapeRenderer.createInstance);
-}
