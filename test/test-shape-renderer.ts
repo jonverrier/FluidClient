@@ -10,8 +10,9 @@ import { Shape } from '../src/Shape';
 import { Rectangle, SelectionRectangle } from '../src/Rectangle';
 import { ShapeRenderer, ShapeRendererFactory } from '../src/ShapeRenderer';
 import { RectangleShapeRenderer, SelectionRectangleRenderer } from "../src/RectangleRenderer"; 
+import { SelectionLineRenderer } from "../src/LineRenderer"; 
 
-// TODO - get a better Mick wrking
+// TODO - get a better Mock wrking
 // e.g. https://www.npmjs.com/package/jest-canvas-mock
 // https://github.com/playcanvas/canvas-mock
 // Current issue is they dont play nice with CommonJS/Browser build. 
@@ -27,7 +28,9 @@ class MockCtx {
    fillRect(x: number, y: number, dx: number, dy: number) { };
    rect(x: number, y: number, dx: number, dy: number) { };
    stroke() { };
-   setLineDash(arr : number[]) { };
+   setLineDash(arr: number[]) { };
+   moveTo(x: number, y: number) { };
+   lineTo(x: number, y: number) { };
 }
 
 // import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
@@ -98,5 +101,28 @@ describe("ShapeRenderer", function () {
 
       expect(caught === false).to.equal(true);
    });
+
+   it("Needs to draw a SelectionLine", function () {
+
+      const ctx: any = new MockCtx();
+
+      var renderer: ShapeRenderer = new SelectionLineRenderer();
+
+      const rect = new GRect(0, 0, 20, 20);
+      var shape: Shape = new SelectionRectangle(rect);
+
+      var caught: boolean = false;
+
+      try {
+         renderer.draw(ctx, shape)
+      }
+      catch (e) {
+         // TODO - this is a pretty dumb test - just check there are no exceptions
+         caught = true;
+      }
+
+      expect(caught === false).to.equal(true);
+   });
+
 });
 

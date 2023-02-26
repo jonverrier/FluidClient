@@ -1,6 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { GPoint } from './GeometryPoint';
+import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 
@@ -18,6 +19,7 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
    abstract interactionUpdate(pt: GPoint): boolean;
    abstract interactionEnd(pt: GPoint): boolean;
    abstract rectangle: GRect;
+   abstract line: GLine;
 
    // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
    // Not a property of rectangles
@@ -99,6 +101,9 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
    get rectangle(): GRect {
       return this._rectangle;
    }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
+   }
 
 }
 
@@ -161,6 +166,9 @@ export class RightRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._rectangle;
    }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle with constrained Y values moving left hand border only
@@ -221,6 +229,9 @@ export class LeftRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
 }
 
@@ -283,6 +294,9 @@ export class TopRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._rectangle;
    }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle with constrained X values moving top border only
@@ -344,6 +358,9 @@ export class BottomRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
 }
 
@@ -413,6 +430,9 @@ export class RectangleMoveInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._rectangle;
    }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle from top left corner
@@ -457,6 +477,9 @@ export class TopLeftRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
    }
 }
 
@@ -503,6 +526,9 @@ export class TopRightRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
    }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle from top left corner
@@ -548,6 +574,9 @@ export class BottomLeftRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
    }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle from top left corner
@@ -592,5 +621,62 @@ export class BottomRightRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
+   }
+}
+
+// Interactor that lets the user draw a rectangle from mouse down to mouse up
+export class LineInteractor extends IShapeInteractor {
+
+   private _line: GLine;
+   private _bounds: GRect;
+
+   /**
+    * Create a FreeRectangleInteractor object
+    * @param bounds_ - a GRect object defining the limits within which the shape can be created
+    */
+   public constructor(bounds_: GRect) {
+
+      super();
+
+      this._bounds = new GRect(bounds_);
+      this._line = new GLine();
+   }
+
+   interactionStart(pt: GPoint): boolean {
+      pt = this._bounds.clipPoint(pt);
+      this._line = new GLine(pt, pt);
+
+      return false; // No need for further call
+   }
+
+   interactionUpdate(pt: GPoint): boolean {
+      pt = this._bounds.clipPoint(pt);
+      this._line = new GLine(this._line.start, pt);
+
+      return false; // No need for further call
+   }
+
+   interactionEnd(pt: GPoint): boolean {
+      pt = this._bounds.clipPoint(pt);
+      this._line = new GLine(this._line.start, pt);
+
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest,
+            new GRect(this._line.start, this._line.end)));
+
+      return false; // No need for further call
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return new GRect(this._line.start, this._line.end);
+   }
+   get line(): GLine {
+      return this._line;
    }
 }

@@ -93,11 +93,13 @@ export const CanvasTools = (props: ICanvasToolsProps) => {
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <Tooltip withArrow content="Draw a box." relationship="label" key="3">
-                     <ToolbarRadioButton aria-label="Box" name="mode" value="Rectangle" icon={<Square24Regular />} onClick={() => { handleToolSelect(CanvasMode.Rectangle) }} 
+                  <ToolbarRadioButton aria-label="Box" name="mode" value="Rectangle" icon={<Square24Regular />}
+                     onClick={() => { handleToolSelect(CanvasMode.Rectangle) }} 
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <Tooltip withArrow content="Draw a straight line or an arrow." relationship="label" key="4">
-                     <ToolbarRadioButton aria-label="Line" name="mode" value="Line" icon={<Line24Regular />}
+                  <ToolbarRadioButton aria-label="Line" name="mode" value="Line" icon={<Line24Regular />}
+                     onClick={() => { handleToolSelect(CanvasMode.Line) }}
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <Tooltip withArrow content="Draw a circle or an ellipse." relationship="label" key="5">

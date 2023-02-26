@@ -1,6 +1,8 @@
 // Copyright (c) 2023 TXPCo Ltd
 
+import { GPoint } from "./GeometryPoint";
 import { GRect } from "./GeometryRectangle";
+import { GLine } from "./GeometryLine";
 import { Shape } from "./Shape";
 
 // Signature for the factory function 
@@ -55,6 +57,56 @@ export abstract class ShapeRenderer {
     */
    constructor() {
 
+   }
+
+   // Helper function as many derived classes will need it
+   protected drawLine(ctx: CanvasRenderingContext2D,
+      shape: Shape, dashed: boolean): void {
+
+      ctx.save();
+
+      ctx.strokeStyle = "#393D47";
+      if (dashed)
+         ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
+      ctx.lineTo(shape.boundingRectangle.x + shape.boundingRectangle.dx,
+                 shape.boundingRectangle.y + shape.boundingRectangle.dy);
+      ctx.stroke();
+
+      ctx.restore();
+   }
+
+   // Helper function as many derived classes will need it
+   protected drawLineSelectionBorder(ctx: CanvasRenderingContext2D,
+      shape: Shape, grabHandleDxy: number): void {
+
+      ctx.save();
+
+      ctx.strokeStyle = "#393D47";
+      ctx.fillStyle = "#393D47";
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = "yellow";
+
+      ctx.beginPath();
+      ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
+      ctx.lineTo(shape.boundingRectangle.x + shape.boundingRectangle.dx,
+         shape.boundingRectangle.y + shape.boundingRectangle.dy);
+      ctx.stroke();
+
+      let handles = GLine.createGrabHandlesAround(new GLine(new GPoint(shape.boundingRectangle.x, shape.boundingRectangle.y),
+                                                            new GPoint(shape.boundingRectangle.x+shape.boundingRectangle.dx, 
+                                                                       shape.boundingRectangle.y+shape.boundingRectangle.dy)),
+                                                  grabHandleDxy, grabHandleDxy);
+
+      handles.forEach((handle: GRect) => {
+
+         ctx.beginPath();
+         ctx.fillRect(handle.x, handle.y, handle.dx, handle.dy);
+         ctx.stroke();
+      });
+
+      ctx.restore();
    }
 
    // Helper function as many derived classes will need it

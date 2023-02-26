@@ -15,6 +15,7 @@ import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } fr
 import { Pen, PenColour, PenStyle } from "./Pen";
 import { Shape} from './Shape';
 import { Rectangle, SelectionRectangle } from './Rectangle';
+import { Line, SelectionLine } from './Line';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
 import {
@@ -22,11 +23,14 @@ import {
    FreeRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
-   RectangleMoveInteractor, shapeInteractionCompleteInterest
+   RectangleMoveInteractor,
+   LineInteractor,
+   shapeInteractionCompleteInterest
 } from './CanvasInteractors';
 import { ShapeGroupHitTester, EHitTest } from './ShapeHitTester';
 import { ShapeRendererFactory } from './ShapeRenderer';
-import { RectangleShapeRenderer, SelectionRectangleRenderer } from "./RectangleRenderer"; 
+import { SelectionRectangleRenderer } from "./RectangleRenderer"; 
+import { SelectionLineRenderer } from "./LineRenderer"; 
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -163,6 +167,25 @@ function drawSelectionRect(ctx: CanvasRenderingContext2D,
    return promise;
 };
 
+function drawSelectionLine(ctx: CanvasRenderingContext2D,
+   selectionRect: GRect)
+   : Promise<void> {
+   var promise: Promise<void>;
+
+   promise = new Promise<void>((resolve, reject) => {
+
+      var border: Shape = new SelectionRectangle(selectionRect);
+
+      let renderer = new SelectionLineRenderer();
+
+      renderer.draw(ctx, border);
+
+      resolve();
+   });
+
+   return promise;
+};
+
 class CanvasState {
 
    width: number;
@@ -200,6 +223,9 @@ function shapeInteractorFromMode(mode_: CanvasMode,
    switch (mode_) {
       case CanvasMode.Rectangle:
          return new FreeRectangleInteractor(bounds_);
+
+      case CanvasMode.Line:
+         return new LineInteractor(bounds_);
 
       case CanvasMode.Select:
          switch (hitTest_) { 
@@ -274,9 +300,18 @@ export const Canvas = (props: ICanvasProps) => {
 
          }).then(() => {
 
-            // then draw selection rectangle
+            // then draw selection 
             if (canvasState.shapeInteractor) {
-               drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+               switch (props.mode) {
+                  case CanvasMode.Line:
+                     drawSelectionLine(ctx, canvasState.shapeInteractor.rectangle);
+                     break;
+
+                  case CanvasMode.Rectangle:
+                  case CanvasMode.Select:
+                     drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+                     break;
+               }
             }
          });
          return () => {
@@ -338,6 +373,9 @@ export const Canvas = (props: ICanvasProps) => {
    // Update this for every style of interaction
    function cursorStylesFromModeAndLastHit(mode_: CanvasMode, lastHit_: EHitTest): string {
       switch (mode_) {
+         case CanvasMode.Line:
+            return cursorDrawRectangleClasses.root;
+
          case CanvasMode.Rectangle:
             return cursorDrawRectangleClasses.root;
 
@@ -411,6 +449,20 @@ export const Canvas = (props: ICanvasProps) => {
    function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
 
       switch (props.mode) { 
+         case CanvasMode.Line:
+            // Clear previous selections
+            canvasState.shapes.forEach((shape: Shape, key: string) => {
+               shape.isSelected = false;
+               props.shapeCaucus.amend(shape.id, shape);
+            });
+            // Create new shape - selected
+            let line = new Line(data.eventData, new Pen(PenColour.Black, PenStyle.Solid), true);
+
+            // set the version in Caucus first, which pushes to other clients, then reset our state to match
+            props.shapeCaucus.add(line.id, line);
+            canvasState.shapes.set(line.id, line);
+            break;
+
          case CanvasMode.Rectangle:
             // Clear previous selections
             canvasState.shapes.forEach((shape: Shape, key: string) => {
@@ -418,11 +470,11 @@ export const Canvas = (props: ICanvasProps) => {
                props.shapeCaucus.amend (shape.id, shape);
             });
             // Create new shape - selected
-            let shape = new Rectangle(data.eventData, new Pen (PenColour.Black, PenStyle.Solid), true);
+            let rectangle = new Rectangle(data.eventData, new Pen (PenColour.Black, PenStyle.Solid), true);
 
             // set the version in Caucus first, which pushes to other clients, then reset our state to match
-            props.shapeCaucus.add(shape.id, shape);
-            canvasState.shapes.set(shape.id, shape);
+            props.shapeCaucus.add(rectangle.id, rectangle);
+            canvasState.shapes.set(rectangle.id, rectangle);
             break;
 
          case CanvasMode.Select:
@@ -560,7 +612,7 @@ export const Canvas = (props: ICanvasProps) => {
       event.stopPropagation();
 
       let canvas = getCanvas(event);
-      let coord = getLastTouchPosition(canvas, event);
+      let coord = getFirstTouchPosition(canvas, event);
 
       let clientRect = canvas.getBoundingClientRect();
       let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);

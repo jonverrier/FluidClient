@@ -131,5 +131,15 @@ export class GLine extends MSerialisable {
       this.assign(new GLine(obj.start.x, obj.start.y, obj.end.x, obj.end.y));
    }
 
-   
+   static createGrabHandlesAround(line_: GLine, dx_: number, dy_: number): Array<GRect> {
+
+      let handles = new Array<GRect>();
+
+      let rc = GRect.createAround(line_.start, dx_, dy_);
+      handles.push(rc);
+      rc = GRect.createAround(line_.end, dx_, dy_);
+      handles.push(rc);
+
+      return handles;
+   }   
 }
