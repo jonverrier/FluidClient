@@ -8,9 +8,10 @@ import { GRect } from '../src/GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "../src/Pen";
 import { Shape } from '../src/Shape';
 import { Rectangle, SelectionRectangle } from '../src/Rectangle';
+import { Line, SelectionLine } from '../src/Line';
 import { ShapeRenderer, ShapeRendererFactory } from '../src/ShapeRenderer';
 import { RectangleShapeRenderer, SelectionRectangleRenderer } from "../src/RectangleRenderer"; 
-import { SelectionLineRenderer } from "../src/LineRenderer"; 
+import { SelectionLineRenderer, LineShapeRenderer } from "../src/LineRenderer"; 
 
 // TODO - get a better Mock wrking
 // e.g. https://www.npmjs.com/package/jest-canvas-mock
@@ -39,14 +40,28 @@ describe("ShapeRenderer", function () {
 
    it("Needs to create SelectionRectangle Renderer", function () {
 
-      var renderer: ShapeRenderer = ShapeRendererFactory.create("SelectionRectangle");
+      var renderer: ShapeRenderer = ShapeRendererFactory.create(SelectionRectangle.selectionRectangleID());
 
       expect(renderer === null).to.equal(false);
    });
 
    it("Needs to create Rectangle Renderer", function () {
 
-      var renderer: ShapeRenderer = ShapeRendererFactory.create("Rectangle");
+      var renderer: ShapeRenderer = ShapeRendererFactory.create(Rectangle.rectangleID());
+
+      expect(renderer === null).to.equal(false);
+   });
+
+   it("Needs to create SelectionLine Renderer", function () {
+
+      var renderer: ShapeRenderer = ShapeRendererFactory.create(SelectionLine.selectionLineID());
+
+      expect(renderer === null).to.equal(false);
+   });
+
+   it("Needs to create Line Renderer", function () {
+
+      var renderer: ShapeRenderer = ShapeRendererFactory.create(Line.lineID());
 
       expect(renderer === null).to.equal(false);
    });
@@ -110,6 +125,29 @@ describe("ShapeRenderer", function () {
 
       const rect = new GRect(0, 0, 20, 20);
       var shape: Shape = new SelectionRectangle(rect);
+
+      var caught: boolean = false;
+
+      try {
+         renderer.draw(ctx, shape)
+      }
+      catch (e) {
+         // TODO - this is a pretty dumb test - just check there are no exceptions
+         caught = true;
+      }
+
+      expect(caught === false).to.equal(true);
+   });
+
+   it("Needs to draw a Line", function () {
+
+      const ctx: any = new MockCtx();
+
+      var renderer: ShapeRenderer = new LineShapeRenderer();
+
+      const rect = new GRect(0, 0, 20, 20);
+      var shape: Shape = new SelectionRectangle(rect);
+      shape.isSelected = true;
 
       var caught: boolean = false;
 

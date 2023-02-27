@@ -344,6 +344,36 @@ describe("Geometry", function () {
 
       expect(line1.equals(line2)).to.equal(true);
    });
+
+   it("Needs to create grab handles on GLine", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy,
+         10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy);
+
+      var line = new GLine(loLeft, hiRight);
+
+      expect(GLine.createGrabHandlesAround(line, 4, 4).length === 2).to.equal(true);
+   });
+
+   it("Needs GLine to test border intersections", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy,
+         10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy);
+
+      var line = new GLine(loLeft, hiRight);
+
+      expect(line.isOnLine(hiRight, 1)).to.equal(true);
+      expect(line.isOnLine(loLeft, 1)).to.equal(true);
+      expect(line.isOnStartGrabHandle(loLeft, 1)).to.equal(true);
+      expect(line.isOnEndGrabHandle(hiRight, 1)).to.equal(true);
+
+      var ptMad = new GPoint(1000, 1000);
+      expect(line.isOnLine(ptMad, 1)).to.equal(false);
+      expect(line.isOnStartGrabHandle(ptMad, 1)).to.equal(false);
+      expect(line.isOnEndGrabHandle(ptMad, 1)).to.equal(false);
+   });
 });
 
 
