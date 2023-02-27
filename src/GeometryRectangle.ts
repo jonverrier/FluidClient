@@ -3,10 +3,10 @@
 import Flatten from '@flatten-js/core'
 
 import { InvalidParameterError } from './Errors';
-import { MSerialisable } from "./SerialisationFramework";
+import { MStreamable } from "./StreamingFramework";
 import { GPoint } from './GeometryPoint';
 
-export class GRect extends MSerialisable {
+export class GRect extends MStreamable {
 
    private _rc: Flatten.Box;
    private static minimumRelativeSizeForMidHandlesXY = 6; // borders have to be 6x the size of handles to get extra one in the mid point of border. 
@@ -169,7 +169,7 @@ export class GRect extends MSerialisable {
    /**
     * Stream out to JSON
     */
-   streamToJSON(): string {
+   streamOut(): string {
 
       return JSON.stringify({ x: this._rc.xmin, y: this._rc.ymin, dx: this._rc.xmax - this._rc.xmin, dy: this._rc.ymax - this._rc.ymin });
    }
@@ -178,7 +178,7 @@ export class GRect extends MSerialisable {
     * Stream in from JSON
     * @param stream - the stream to read in from  
     */
-   streamFromJSON(stream: string): void {
+   streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 

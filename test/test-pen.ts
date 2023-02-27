@@ -45,13 +45,13 @@ describe("Pen", function () {
 
       var pen1: Pen = new Pen(PenColour.Blue, PenStyle.Solid);
 
-      var stream: string = pen1.streamToJSON();
+      var stream: string = pen1.streamOut();
 
       var pen2: Pen = new Pen(); 
 
       expect(pen1.equals(pen2)).to.equal(false);
 
-      pen2.streamFromJSON(stream);
+      pen2.streamIn(stream);
 
       expect(pen1.equals(pen2)).to.equal(true);
    });

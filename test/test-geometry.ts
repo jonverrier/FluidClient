@@ -47,13 +47,13 @@ describe("Geometry", function () {
 
       var point1: GPoint = new GPoint(1, 2);
 
-      var stream: string = point1.streamToJSON();
+      var stream: string = point1.streamOut();
 
       var point2: GPoint = new GPoint(); 
 
       expect(point1.equals(point2)).to.equal(false);
 
-      point2.streamFromJSON(stream);
+      point2.streamIn(stream);
 
       expect(point1.equals(point2)).to.equal(true);
    });
@@ -110,13 +110,13 @@ describe("Geometry", function () {
 
       var rect1: GRect = new GRect(1, 2, 3, 4);
 
-      var stream: string = rect1.streamToJSON();
+      var stream: string = rect1.streamOut();
 
       var rect2: GRect = new GRect();
 
       expect(rect1.equals(rect2)).to.equal(false);
 
-      rect2.streamFromJSON(stream);
+      rect2.streamIn(stream);
 
       expect(rect1.equals(rect2)).to.equal(true);
    });
@@ -334,13 +334,13 @@ describe("Geometry", function () {
 
       var line1: GLine = new GLine(1, 2, 3, 4);
 
-      var stream: string = line1.streamToJSON();
+      var stream: string = line1.streamOut();
 
       var line2: GLine = new GLine();
 
       expect(line1.equals(line2)).to.equal(false);
 
-      line2.streamFromJSON(stream);
+      line2.streamIn(stream);
 
       expect(line1.equals(line2)).to.equal(true);
    });

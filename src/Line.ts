@@ -2,6 +2,7 @@
 
 import { GRect } from './GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "./Pen";
+import { MDynamicStreamable, DynamicStreamableFactory } from './StreamingFramework';
 import { Shape, ShapeFactory } from './Shape';
 
 const selectionLineID: string = "SelectionLine";
@@ -29,10 +30,12 @@ export class SelectionLine extends Shape {
    constructor(...arr: any[]) {
 
       if (arr.length === 1) { // Construct from individual parameters
-         if (Shape.isMyType(arr[0]))
+         if (Shape.isMyType(arr[0])) {
             super(arr[0]);
-         else
-            super(arr[0], new Pen (PenColour.Border, PenStyle.Dashed), false);
+         }
+         else {
+            super(arr[0], new Pen(PenColour.Border, PenStyle.Dashed), false);
+         }
          return;
       }
       else {
@@ -93,6 +96,20 @@ export class Line extends Shape {
       }
    }
 
+   /**
+    * Dynamic creation for Streaming framework
+    */
+   className(): string {
+
+      return lineID;
+   }
+
+   static createDynamicInstance(): MDynamicStreamable {
+      return new Line();
+   }
+
+   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(lineID, Line.createDynamicInstance);
+
    // Unique ID that is used to look up the associated renderer
    shapeID(): string {
       return lineID;
@@ -107,5 +124,6 @@ export class Line extends Shape {
    }
 
    static _factoryForLine: ShapeFactory = new ShapeFactory(lineID,
-                                                           Line.createInstance);
+      Line.createInstance);
+
 }

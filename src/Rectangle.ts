@@ -2,6 +2,7 @@
 
 import { GRect } from './GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "./Pen";
+import { MDynamicStreamable, DynamicStreamableFactory } from './StreamingFramework';
 import { Shape, ShapeFactory } from './Shape';
 
 const selectionRectangleID: string = "SelectionRectangle";
@@ -96,6 +97,25 @@ export class Rectangle extends Shape {
    // Unique ID that is used to look up the associated renderer
    shapeID(): string {
       return rectangleID;
+   }
+
+   /**
+    * Dynamic creation for Streaming framework
+    */
+   className(): string {
+
+      return rectangleID;
+   }
+
+   static createDynamicInstance(): MDynamicStreamable {
+      return new Rectangle();
+   }
+
+   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(rectangleID, Rectangle.createDynamicInstance);
+
+   streamOut(): string {
+
+      return JSON.stringify({ shapeID: this.shapeID(), id: this._id, boundingRectangle: this._boundingRectangle, pen: this._pen.streamOut(), isSelected: this._isSelected });
    }
 
    static rectangleID(): string {

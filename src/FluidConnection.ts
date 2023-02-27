@@ -104,8 +104,8 @@ export class FluidConnection extends Notifier {
    private setupAfterConnection(id: string): void {
 
       // Create caucuses so they exist when observers are notified of connection
-      this._participantCaucus = new CaucusOf<Persona>(this._container.initialObjects.participantMap as SharedMap, Persona.factoryFn);
-      this._shapeCaucus = new CaucusOf<Shape>(this._container.initialObjects.shapeMap as SharedMap, Shape.factoryFn);
+      this._participantCaucus = new CaucusOf<Persona>(this._container.initialObjects.participantMap as SharedMap);
+      this._shapeCaucus = new CaucusOf<Shape>(this._container.initialObjects.shapeMap as SharedMap);
 
       // Notify observers we are connected
       // They can then hook up their own observers to the caucus,
@@ -113,7 +113,7 @@ export class FluidConnection extends Notifier {
       this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
 
       // Connect our own user ID to the caucus
-      var storedVal: string = this._localUser.streamToJSON();
+      var storedVal: string = this._localUser.flatten();
       (this._container.initialObjects.participantMap as SharedMap).set(this._localUser.id, storedVal);
 
       // <<--- Begin Workaround ---> 
@@ -131,7 +131,7 @@ export class FluidConnection extends Notifier {
 
       // Now we write in the null shape
       var nullShape: Shape = Shape.nullShape();
-      var stream: string = nullShape.streamToJSON();
+      var stream: string = nullShape.flatten();
       (this._container.initialObjects.shapeMap as SharedMap).set(nullShape.id, stream);
       // <<--- End Workaround --->
       //////////////////////////////

@@ -2,15 +2,18 @@
 
 import { GPoint } from './GeometryPoint';
 import { GRect } from './GeometryRectangle';
+import { GLine } from './GeometryLine';
 import { Shape } from './Shape';
 import { Rectangle } from './Rectangle';
+import { Line } from './Line';
 
 export enum EHitTest
 {
    None = "None",
    Left = "Left", Right = "Right", Top = "Top", Bottom = "Bottom",
    TopLeft = "TopLeft", TopRight = "TopRight", BottomLeft = "BottomLeft", BottomRight = "BottomRight", 
-   Border = "Border"
+   Border = "Border",
+   Start = "Start", End = "End", Line="Line"
 }
 
 // Result of a hit test
@@ -168,11 +171,10 @@ export class RectangleHitTester extends ShapeHitTester {
       var testResult: HitTestResult = ShapeGroupHitTester.noHit();
 
       // first check the bounding box. If within, do more detailed tests, else skip them
-      var rc: GRect;
+      // first check the bounding box. If within, do more detailed tests, else skip them
+      var rc: GRect = GRect.normaliseRectangle(shape.boundingRectangle);
       if (shape.isSelected)
-         rc = GRect.inflate(shape.boundingRectangle, this.grabHandleDxDy / 2);
-      else
-         rc = shape.boundingRectangle;
+         rc = GRect.inflate(rc, this.grabHandleDxDy / 2);
 
       if (rc.includes(pt)) {
 
@@ -232,4 +234,68 @@ export class RectangleHitTester extends ShapeHitTester {
 
    // TODO - this is a workaround until Caucus can dynamically create the right subtype of shape
    static _factoryForShape: ShapeHitTesterFactory = new ShapeHitTesterFactory(Shape.shapeID(), RectangleHitTester.createInstance);
+}
+
+/// <summary>
+/// LineHitTester - common super class for shape renderers
+/// <summary>
+export class LineHitTester extends ShapeHitTester {
+
+   /**
+    * Create a LineHitTester object 
+    * @param grabHandleDxDy_ - size of the grab hadles if it is selected
+    * @param tolerance_ - how close it needs to be * 
+    */
+   constructor(grabHandleDxDy_: number,
+      tolerance_: number) {
+
+      super(grabHandleDxDy_,
+         tolerance_);
+
+   }
+
+   // to be overriden by derived classes. 
+   hitTest(shape: Shape, pt: GPoint): HitTestResult {
+
+      var testResult: HitTestResult = ShapeGroupHitTester.noHit();
+
+      // first check the bounding box. If within, do more detailed tests, else skip them
+      var rc: GRect = GRect.normaliseRectangle(shape.boundingRectangle);
+      if (shape.isSelected)
+         rc = GRect.inflate(rc, this.grabHandleDxDy / 2);
+
+      if (rc.includes(pt)) {
+
+         var rc: GRect = shape.boundingRectangle;
+         var line = new GLine (new GPoint(rc.x, rc.y), new GPoint(rc.x + rc.dx, rc.y + rc.dy));
+
+         // Test all grab handles, then all borders
+         if (shape.isSelected) {
+            if (line.isOnStartGrabHandle(pt, this.grabHandleDxDy)) {
+               testResult = { hitTest: EHitTest.Start, hitShape: shape };
+            }
+            else
+            if (line.isOnEndGrabHandle(pt, this.grabHandleDxDy)) {
+               testResult = { hitTest: EHitTest.End, hitShape: shape };
+            }
+            else
+            if (line.isOnLine(pt, this.tolerance)) {
+               testResult = { hitTest: EHitTest.Line, hitShape: shape };
+            }               
+         }
+         else
+         // Only test the border if not selected
+         if (line.isOnLine(pt, this.tolerance)) {
+            testResult = { hitTest: EHitTest.Line, hitShape: shape };
+         }
+      }
+
+      return testResult;
+   }
+
+   static createInstance(grabHandleDxDy_: number, tolerance_: number): ShapeHitTester {
+      return new LineHitTester(grabHandleDxDy_, tolerance_);
+   }
+
+   static _factoryForLine: ShapeHitTesterFactory = new ShapeHitTesterFactory(Line.lineID(), LineHitTester.createInstance);
 }

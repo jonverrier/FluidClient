@@ -9,11 +9,11 @@ import { GRect } from '../src/GeometryRectangle';
 
 import {
    IShapeInteractor,
-   FreeRectangleInteractor,
+   NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
    RectangleMoveInteractor,
-   LineInteractor
+   NewLineInteractor
 } from '../src/CanvasInteractors';
 
 describe("IShapeInteractor", function () {
@@ -32,14 +32,14 @@ describe("FreeRectangleInteractor", function () {
       var bounds: GRect = new GRect(50, 50, 300, 300);
       var pt: GPoint = new GPoint(100, 100);
 
-      var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
+      var controller: IShapeInteractor = new NewRectangleInteractor(bounds);
 
       controller.interactionStart(pt);
       controller.interactionUpdate(pt);
       controller.interactionEnd(pt);
 
-      expect(controller.rectangle.dx === FreeRectangleInteractor.minimumDx()).to.equal(true);
-      expect(controller.rectangle.dy === FreeRectangleInteractor.minimumDy()).to.equal(true);
+      expect(controller.rectangle.dx === NewRectangleInteractor.minimumDx()).to.equal(true);
+      expect(controller.rectangle.dy === NewRectangleInteractor.minimumDy()).to.equal(true);
       expect(controller.rectangle.bottomLeft.equals(controller.line.start)).to.equal(true);
       expect(controller.rectangle.topRight.equals(controller.line.end)).to.equal(true);
    });
@@ -49,7 +49,7 @@ describe("FreeRectangleInteractor", function () {
       var bounds: GRect = new GRect(50, 50, 300, 300);
       var pt: GPoint = new GPoint(49, 49);
 
-      var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
+      var controller: IShapeInteractor = new NewRectangleInteractor(bounds);
 
       controller.interactionStart(pt);
       controller.interactionUpdate(pt);
@@ -64,7 +64,7 @@ describe("FreeRectangleInteractor", function () {
       var pt1: GPoint = new GPoint(251, 251);
       var pt2: GPoint = new GPoint(351, 351);
 
-      var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
+      var controller: IShapeInteractor = new NewRectangleInteractor(bounds);
 
       controller.interactionStart(pt1);
       controller.interactionUpdate(pt2);
@@ -545,7 +545,7 @@ describe("LineInteractor", function () {
       var bounds: GRect = new GRect(50, 50, 300, 300);
       var pt: GPoint = new GPoint(100, 100);
 
-      var controller: IShapeInteractor = new LineInteractor(bounds);
+      var controller: IShapeInteractor = new NewLineInteractor(bounds);
 
       controller.interactionStart(pt);
       controller.interactionUpdate(pt);
@@ -564,7 +564,7 @@ describe("LineInteractor", function () {
       var bounds: GRect = new GRect(50, 50, 300, 300);
       var pt: GPoint = new GPoint(49, 49);
 
-      var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
+      var controller: IShapeInteractor = new NewRectangleInteractor(bounds);
 
       controller.interactionStart(pt);
       controller.interactionUpdate(pt);
@@ -579,7 +579,7 @@ describe("LineInteractor", function () {
       var pt1: GPoint = new GPoint(251, 251);
       var pt2: GPoint = new GPoint(351, 351);
 
-      var controller: IShapeInteractor = new FreeRectangleInteractor(bounds);
+      var controller: IShapeInteractor = new NewRectangleInteractor(bounds);
 
       controller.interactionStart(pt1);
       controller.interactionUpdate(pt2);

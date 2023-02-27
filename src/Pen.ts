@@ -1,12 +1,12 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { InvalidParameterError } from './Errors';
-import { MSerialisable } from "./SerialisationFramework";
+import { MStreamable } from "./StreamingFramework";
 
 export enum PenColour { Red = "Red", Blue = "Blue", Green = "Green", Black = "Black", Border = "Border", Invisible="Invisible"};
 export enum PenStyle { Solid="Solid", Dashed="Dashed", Dotted="Dotted", None="None"}; 
 
-export class Pen extends MSerialisable {
+export class Pen extends MStreamable {
 
    _colour: PenColour;
    _style: PenStyle;
@@ -100,12 +100,12 @@ export class Pen extends MSerialisable {
       return this;
    }
 
-   streamToJSON(): string {
+   streamOut(): string {
 
       return JSON.stringify({ colour: this._colour, style: this._style});
    }
 
-   streamFromJSON(stream: string): void {
+   streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 

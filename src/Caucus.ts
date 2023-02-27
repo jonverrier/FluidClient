@@ -2,14 +2,10 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { SharedMap, IValueChanged } from "fluid-framework";
 
-import { MSerialisable } from './SerialisationFramework';
+import { MDynamicStreamable } from './StreamingFramework';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
-import { log, tag } from 'missionlog';
 
-// Signature for the factory function 
-export type CaucusFactoryFunctionFor<AType> = () => AType;
-
-export class CaucusOf<AType extends MSerialisable> extends Notifier {
+export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
    public static caucusMemberAddedNotificationId = "caucusMemberAdded";
    public static caucusMemberAddedInterest = new Interest(CaucusOf.caucusMemberAddedNotificationId);
@@ -22,13 +18,11 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
    private _localCopy: Map<string, AType>;
    private _shared: SharedMap;
-   private _factoryFn : CaucusFactoryFunctionFor<AType>;
 
-   constructor(shared_: SharedMap, factoryFn_: CaucusFactoryFunctionFor<AType>) {
+   constructor(shared_: SharedMap) {
       super();
 
       this._shared = shared_;
-      this._factoryFn = factoryFn_;
       this._localCopy = new Map<string, AType>();
 
       (this._shared as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
@@ -60,7 +54,7 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
    add(key: string, element: AType): void {
 
-      let stream = element.streamToJSON();
+      let stream = element.flatten ();
 
       this._shared.set(key, stream);
    }
@@ -72,7 +66,7 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
    amend(key: string, element: AType) {
 
-      let stream = element.streamToJSON();
+      let stream = element.flatten();
 
       this._shared.set(key, stream);
    }
@@ -81,9 +75,8 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
       let element = this._shared.get(key);
       if (element) {
-         let object = this._factoryFn();
 
-         object.streamFromJSON(element);
+         let object = MDynamicStreamable.resurrect(element) as AType;
 
          return object;
       }
@@ -97,9 +90,7 @@ export class CaucusOf<AType extends MSerialisable> extends Notifier {
 
       this._shared.forEach((value: any, key: string, map: Map<string, any>) => {
 
-         let object = this._factoryFn();
-
-         object.streamFromJSON(value);
+         let object = MDynamicStreamable.resurrect(value) as AType;
 
          this._localCopy.set(key, object);
       }); 

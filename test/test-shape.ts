@@ -6,6 +6,7 @@ import { describe, it } from 'mocha';
 
 import { GRect } from '../src/GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "../src/Pen";
+import { MDynamicStreamable } from '../src/StreamingFramework';
 import { Shape, ShapeFactory } from '../src/Shape';
 import { Rectangle, SelectionRectangle } from '../src/Rectangle';
 import { Line, SelectionLine } from '../src/Line';
@@ -61,23 +62,32 @@ describe("Shape", function () {
 
       var shape1: Shape = new Shape(rect, new Pen (PenColour.Black, PenStyle.Solid), false);
 
-      var stream: string = shape1.streamToJSON();
+      var stream: string = shape1.streamOut();
 
       var shape2: Shape = new Shape(); 
 
       expect(shape1.equals(shape2)).to.equal(false);
 
-      shape2.streamFromJSON(stream);
+      shape2.streamIn(stream);
 
       expect(shape1.equals(shape2)).to.equal(true);
    });
 
-   it("Needs to construct from factoryFn", function () {
+   it("Needs to dynamically create Shape to and from JSON()", function () {
 
-      var shape1: Shape = Shape.factoryFn();
-      var shape2 = new Shape(shape1);
+      var rect: GRect = new GRect(1, 2, 3, 4);
 
-      expect(shape1.equals (shape2) === true).to.equal(true);
+      var shape1: Shape = new Shape(rect, new Pen(PenColour.Black, PenStyle.Solid), false);
+
+      var stream: string = shape1.flatten();
+
+      var shape2: Shape = new Shape();
+
+      expect(shape1.equals(shape2)).to.equal(false);
+
+      shape2 = MDynamicStreamable.resurrect (stream) as Shape;
+
+      expect(shape1.equals(shape2)).to.equal(true);
    });
 
    it("Needs to create and test for nullShape", function () {
@@ -141,17 +151,33 @@ describe("Rectangle", function () {
 
       var shape1: Rectangle = new Rectangle(rect, new Pen (PenColour.Black, PenStyle.Solid), false);
 
-      var stream: string = shape1.streamToJSON();
+      var stream: string = shape1.streamOut();
 
       var shape2: Rectangle = new Rectangle();
 
       expect(shape1.equals(shape2)).to.equal(false);
 
-      shape2.streamFromJSON(stream);
+      shape2.streamIn(stream);
 
       expect(shape1.equals(shape2)).to.equal(true);
    });
 
+   it("Needs to dynamically create Rectangle to and from JSON()", function () {
+
+      var rect: GRect = new GRect(1, 2, 3, 4);
+
+      var shape1: Rectangle = new Rectangle(rect, new Pen(PenColour.Black, PenStyle.Solid), false);
+
+      var stream: string = shape1.flatten();
+
+      var shape2: Rectangle = new Rectangle();
+
+      expect(shape1.equals(shape2)).to.equal(false);
+
+      shape2 = MDynamicStreamable.resurrect(stream) as Rectangle;
+
+      expect(shape1.equals(shape2)).to.equal(true);
+   });
 });
 
 
@@ -204,13 +230,13 @@ describe("SelectionRectangle", function () {
 
       var shape1: SelectionRectangle = new SelectionRectangle(rect);
 
-      var stream: string = shape1.streamToJSON();
+      var stream: string = shape1.streamOut();
 
       var shape2: SelectionRectangle = new SelectionRectangle();
 
       expect(shape1.equals(shape2)).to.equal(false);
 
-      shape2.streamFromJSON(stream);
+      shape2.streamIn(stream);
 
       expect(shape1.equals(shape2)).to.equal(true);
    });
@@ -268,17 +294,33 @@ describe("Line", function () {
 
       var shape1: Line = new Line(rect, new Pen(PenColour.Black, PenStyle.Solid), false);
 
-      var stream: string = shape1.streamToJSON();
+      var stream: string = shape1.streamOut();
 
       var shape2: Line = new Line();
 
       expect(shape1.equals(shape2)).to.equal(false);
 
-      shape2.streamFromJSON(stream);
+      shape2.streamIn(stream);
 
       expect(shape1.equals(shape2)).to.equal(true);
    });
 
+   it("Needs to dynamically create Line to and from JSON()", function () {
+
+      var rect: GRect = new GRect(1, 2, 3, 4);
+
+      var shape1: Line = new Line(rect, new Pen(PenColour.Black, PenStyle.Solid), false);
+
+      var stream: string = shape1.flatten();
+
+      var shape2: Line = new Line();
+
+      expect(shape1.equals(shape2)).to.equal(false);
+
+      shape2 = MDynamicStreamable.resurrect(stream) as Line;
+
+      expect(shape1.equals(shape2)).to.equal(true);
+   });
 });
 
 describe("SelectionLine", function () {
@@ -330,13 +372,13 @@ describe("SelectionLine", function () {
 
       var shape1: SelectionLine = new SelectionLine(rect);
 
-      var stream: string = shape1.streamToJSON();
+      var stream: string = shape1.streamOut();
 
       var shape2: SelectionLine = new SelectionLine();
 
       expect(shape1.equals(shape2)).to.equal(false);
 
-      shape2.streamFromJSON(stream);
+      shape2.streamIn(stream);
 
       expect(shape1.equals(shape2)).to.equal(true);
    });

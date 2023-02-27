@@ -3,11 +3,11 @@
 import Flatten from '@flatten-js/core'
 
 import { InvalidParameterError } from './Errors';
-import { MSerialisable } from "./SerialisationFramework";
+import { MStreamable } from "./StreamingFramework";
 import { GPoint } from './GeometryPoint';
 import { GRect } from './GeometryRectangle';
 
-export class GLine extends MSerialisable {
+export class GLine extends MStreamable {
 
    private _line: Flatten.Segment; 
 
@@ -115,7 +115,7 @@ export class GLine extends MSerialisable {
    /**
     * Stream out to JSON
     */
-   streamToJSON(): string {
+   streamOut(): string {
 
       return JSON.stringify({ start: { x: this._line.start.x, y: this._line.start.y },  end: { x: this._line.end.x, y: this._line.end.y } });
    }
@@ -124,11 +124,47 @@ export class GLine extends MSerialisable {
     * Stream in from JSON
     * @param stream - the stream to read in from  
     */
-   streamFromJSON(stream: string): void {
+   streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 
       this.assign(new GLine(obj.start.x, obj.start.y, obj.end.x, obj.end.y));
+   }
+
+   /**
+    * Test if the point pt is on the start grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnStartGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      var halfGrab: number = grabHandleDxDy / 2;
+
+      return (Math.abs(pt.y - this._line.start.y) <= halfGrab) && (Math.abs(pt.x - this._line.start.x) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the end grab handle
+    * @param pt - the point to test
+    * @param grabHandleDxDy - the size of grab handles to use
+    */
+   isOnEndGrabHandle(pt: GPoint, grabHandleDxDy: number): boolean {
+
+      var halfGrab: number = grabHandleDxDy / 2;
+
+      return (Math.abs(pt.y - this._line.end.y) <= halfGrab) && (Math.abs(pt.x - this._line.end.x) <= halfGrab);
+   }
+
+   /**
+    * Test if the point pt is on the line
+    * @param pt - the point to test
+    * @param tolerance - the size of grab handles to use
+    */
+   isOnLine(pt: GPoint, tolerance: number): boolean {
+
+      let distance = this._line.distanceTo(new Flatten.Point(pt.x, pt.y));
+
+      return distance[0] <= tolerance;
    }
 
    static createGrabHandlesAround(line_: GLine, dx_: number, dy_: number): Array<GRect> {

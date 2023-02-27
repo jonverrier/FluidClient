@@ -10,21 +10,22 @@ import {
 
 // Local
 import { GPoint } from './GeometryPoint';
+import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
 import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } from './NotificationFramework';
 import { Pen, PenColour, PenStyle } from "./Pen";
 import { Shape} from './Shape';
 import { Rectangle, SelectionRectangle } from './Rectangle';
-import { Line, SelectionLine } from './Line';
+import { Line } from './Line';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
 import {
    IShapeInteractor,
-   FreeRectangleInteractor,
+   NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
    RectangleMoveInteractor,
-   LineInteractor,
+   NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor,
    shapeInteractionCompleteInterest
 } from './CanvasInteractors';
 import { ShapeGroupHitTester, EHitTest } from './ShapeHitTester';
@@ -222,10 +223,10 @@ function shapeInteractorFromMode(mode_: CanvasMode,
 
    switch (mode_) {
       case CanvasMode.Rectangle:
-         return new FreeRectangleInteractor(bounds_);
+         return new NewRectangleInteractor(bounds_);
 
       case CanvasMode.Line:
-         return new LineInteractor(bounds_);
+         return new NewLineInteractor(bounds_);
 
       case CanvasMode.Select:
          switch (hitTest_) { 
@@ -248,10 +249,20 @@ function shapeInteractorFromMode(mode_: CanvasMode,
                return new BottomRightRectangleInteractor(bounds_, initial_);
             case EHitTest.Border:
                return new RectangleMoveInteractor(bounds_, initial_, pt_);
+            case EHitTest.Line:
+               return new LineMoveInteractor(bounds_, new GLine(new GPoint(initial_.x, initial_.y),
+                                                                new GPoint(initial_.x + initial_.dx, initial_.y + initial_.dy)), 
+                                             pt_);
+            case EHitTest.Start:
+               return new LineStartInteractor(bounds_, new GLine(new GPoint(initial_.x, initial_.y),
+                                                                 new GPoint(initial_.x + initial_.dx, initial_.y + initial_.dy)));
+            case EHitTest.End:
+               return new LineEndInteractor(bounds_, new GLine(new GPoint(initial_.x, initial_.y),
+                                                               new GPoint(initial_.x + initial_.dx, initial_.y + initial_.dy)));
 
             default:
             case EHitTest.None:
-               return new FreeRectangleInteractor(bounds_);
+               return new NewRectangleInteractor(bounds_);
       }
 
       default:
@@ -308,8 +319,16 @@ export const Canvas = (props: ICanvasProps) => {
                      break;
 
                   case CanvasMode.Rectangle:
-                  case CanvasMode.Select:
                      drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+                     break;
+
+                  case CanvasMode.Select:
+                  default:
+                     if (lastHit === EHitTest.Start || lastHit === EHitTest.End || lastHit === EHitTest.Line) {
+                        drawSelectionLine(ctx, canvasState.shapeInteractor.rectangle);
+                     } else {
+                        drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+                     }
                      break;
                }
             }
@@ -349,15 +368,22 @@ export const Canvas = (props: ICanvasProps) => {
       lastHit
    );
 
-   var lastHit: EHitTest = EHitTest.None;
+   var lastHit: EHitTest; 
+
+   // Dont reset the hit test if there is an interaction going on
+   if (canvasState.shapeInteractor) {
+      lastHit = canvasState.lastHit;
+   } else {
+      lastHit = EHitTest.None;
+   }
+   
    let hitTestInteractor = new ShapeGroupHitTester(canvasState.shapes,
       IShapeInteractor.defaultGrabHandleDxDy(),
       IShapeInteractor.defaultHitTestTolerance());
    let resizeShapeId = canvasState.resizeShapeId;
    
-
    const cursorDefaultClasses = cursorDefaultStyles();
-   const cursorDrawRectangleClasses = cursorDrawRectangleStyles();
+   const cursorDrawClasses = cursorDrawRectangleStyles();
    const cursorLeftClasses = cursorLeftStyles();
    const cursorRightClasses = cursorRightStyles();
    const cursorTopClasses = cursorTopStyles();
@@ -368,16 +394,15 @@ export const Canvas = (props: ICanvasProps) => {
    const cursorBottomLeftClasses = cursorBottomLeftStyles();
    const cursorBottomRightClasses = cursorBottomRightStyles();
 
-
    // BUILD NOTE
    // Update this for every style of interaction
    function cursorStylesFromModeAndLastHit(mode_: CanvasMode, lastHit_: EHitTest): string {
       switch (mode_) {
          case CanvasMode.Line:
-            return cursorDrawRectangleClasses.root;
+            return cursorDrawClasses.root;
 
          case CanvasMode.Rectangle:
-            return cursorDrawRectangleClasses.root;
+            return cursorDrawClasses.root;
 
          default:
             switch (lastHit_) {
@@ -399,6 +424,10 @@ export const Canvas = (props: ICanvasProps) => {
                case EHitTest.BottomRight:
                   return cursorBottomRightClasses.root;
                case EHitTest.Border:
+                  return cursorBorderClasses.root;
+               case EHitTest.Start:
+               case EHitTest.End:
+               case EHitTest.Line:
                   return cursorBorderClasses.root;
 
                default:
@@ -445,7 +474,7 @@ export const Canvas = (props: ICanvasProps) => {
    }
 
    // This function does not directly reset React state
-   // That is left for the interactionSTart, Update, and End functions
+   // That is left for the interactionStart, Update, and End functions
    function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
 
       switch (props.mode) { 
@@ -555,14 +584,16 @@ export const Canvas = (props: ICanvasProps) => {
 
    function interactionUpdate(coord: GPoint): void {
 
-      let hitTest = hitTestInteractor.hitTest(coord);
-      lastHit = hitTest.hitTest; 
-
       if (canvasState.shapeInteractor) {
 
          // if there is a current interactor, pass it the data
          canvasState.shapeInteractor.interactionUpdate(coord);
-      } 
+
+      } else {
+         // otherwise do a new hit test
+         let hitTest = hitTestInteractor.hitTest(coord);
+         lastHit = hitTest.hitTest; 
+      }
 
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
