@@ -26,28 +26,22 @@ export class NewRectangleInteractor extends IShapeInteractor  {
       this._rectangle = new GRect();
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
       var newRect: GRect = new GRect(pt.x, pt.y, 0, 0);
       this._rectangle = this._bounds.clipRectangle(newRect);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
       var newRect: GRect = new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y);
       this._rectangle = this._bounds.clipRectangle(newRect);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
       var newRect: GRect = GRect.normaliseRectangle(new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
       this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, IShapeInteractor.minimumDx(), IShapeInteractor.minimumDy()));
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    /**
@@ -88,21 +82,17 @@ export class RightRectangleInteractor extends IShapeInteractor {
       return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing (pt: GPoint): void {
@@ -145,28 +135,22 @@ export class LeftRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -209,28 +193,22 @@ export class TopRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -274,28 +252,22 @@ export class BottomRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -343,28 +315,22 @@ export class RectangleMoveInteractor extends IShapeInteractor {
       this._initialRect = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -409,22 +375,19 @@ export class TopLeftRectangleInteractor extends IShapeInteractor {
       this._freeRectInteractor.interactionStart(initial_.bottomRight);
    }
 
-   interactionStart(pt: GPoint): boolean {
-
-      return false; // No need for further call
+   interactionStart(pt: GPoint): void {
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
    }
 
    /**
@@ -462,17 +425,16 @@ export class TopRightRectangleInteractor extends IShapeInteractor {
       return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
-      return this._freeRectInteractor.interactionUpdate(pt);
+      this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
    }
 
    /**
@@ -505,22 +467,20 @@ export class BottomLeftRectangleInteractor extends IShapeInteractor {
       this._freeRectInteractor.interactionStart(initial_.topRight);
    }
 
-   interactionStart(pt: GPoint): boolean {
-
-      return false; // No need for further call
+   interactionStart(pt: GPoint): void {
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
+
    }
 
    /**
@@ -553,22 +513,19 @@ export class BottomRightRectangleInteractor extends IShapeInteractor {
       this._freeRectInteractor.interactionStart(initial_.topLeft);
    }
 
-   interactionStart(pt: GPoint): boolean {
-
-      return false; // No need for further call
+   interactionStart(pt: GPoint): void {
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
    }
 
    /**

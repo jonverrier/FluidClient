@@ -24,29 +24,24 @@ export class NewLineInteractor extends IShapeInteractor {
       this._line = new GLine();
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(pt, pt);
 
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(this._line.start, pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(this._line.start, pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest,
             new GRect(this._line.start, this._line.end)));
-
-      return false; // No need for further call
    }
 
    /**
@@ -79,29 +74,23 @@ export class LineStartInteractor extends IShapeInteractor {
       this._line = new GLine(line_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(pt, this._line.end);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(pt, this._line.end);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(pt, this._line.end);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest,
             new GRect(this._line.start, this._line.end)));
-
-      return false; // No need for further call
    }
 
    /**
@@ -134,29 +123,23 @@ export class LineEndInteractor extends IShapeInteractor {
       this._line = new GLine(line_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(this._line.start, pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(this._line.start, pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
       pt = this._bounds.clipPoint(pt);
       this._line = new GLine(this._line.start, pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest,
             new GRect(this._line.start, this._line.end)));
-
-      return false; // No need for further call
    }
 
    /**
@@ -194,28 +177,22 @@ export class LineMoveInteractor extends IShapeInteractor {
       this._updated = new GLine(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this.rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {

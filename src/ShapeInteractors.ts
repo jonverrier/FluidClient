@@ -16,17 +16,17 @@ var minimumDY: number = 48;
 
 interface IShapeMover {
 
-   interactionStart(pt: GPoint): boolean;
-   interactionUpdate(pt: GPoint): boolean;
-   interactionEnd(pt: GPoint): boolean;
+   interactionStart(pt: GPoint): void;
+   interactionUpdate(pt: GPoint): void;
+   interactionEnd(pt: GPoint): void;
    rectangle: GRect;
 }
 
 export abstract class IShapeInteractor extends Notifier implements IShapeMover {
 
-   abstract interactionStart(pt: GPoint): boolean;
-   abstract interactionUpdate(pt: GPoint): boolean;
-   abstract interactionEnd(pt: GPoint): boolean;
+   abstract interactionStart(pt: GPoint): void;
+   abstract interactionUpdate(pt: GPoint): void;
+   abstract interactionEnd(pt: GPoint): void;
    abstract rectangle: GRect;
    abstract line: GLine;
 

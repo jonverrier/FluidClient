@@ -2,4 +2,4 @@
 
 // Standalone file to avoid circular dependencies between CanvasTools and Canvas itself. 
 
-export enum CanvasMode {Select="Select", Rectangle="Rectangle", Line="Line" }
+export enum CanvasMode {Select="Select", Rectangle="Rectangle", Line="Line", Text="Text" }
