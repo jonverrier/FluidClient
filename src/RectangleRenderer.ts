@@ -1,7 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { Shape } from "./Shape";
-import { IShapeInteractor } from "./CanvasInteractors"; 
+import { IShapeInteractor } from "./ShapeInteractor"; 
 import { ShapeRenderer, ShapeRendererFactory } from "./ShapeRenderer"; 
 import { Rectangle, SelectionRectangle } from "./Rectangle";
 

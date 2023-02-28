@@ -41,6 +41,10 @@ const textColumnStyles = makeStyles({
    root: {
       display: 'flex',
       flexDirection: 'column',
+      "& > label": {
+         display: "block",
+         marginBottom: tokens.spacingVerticalMNudge,
+      },
       marginLeft: '0',
       marginRight: '0',
       marginTop: '0',
@@ -52,8 +56,6 @@ const textColumnStyles = makeStyles({
       width: '100%'
    },
    textarea: {
-      boxSizing: 'border-box',
-      height: '100%'
    },
 });
 
@@ -98,7 +100,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
          width: props.boundary.dx.toString() + 'px',
          height: props.boundary.dy.toString() + 'px'
       }}>  
-         <div className={rightColumnClasses.root}>
+         <div className={rightColumnClasses.root} >
             <Toolbar >
                <Tooltip withArrow content="Ok" relationship="label" key="1">
                   <ToolbarButton aria-label="Ok" icon={<CheckmarkSquare24Regular />}
@@ -114,13 +116,16 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
          </div>
          <div className={textColumnClasses.root}>
          <Textarea
-            id={"CanvasTextEdit"}
-            appearance="outline"
+               id={"CanvasTextEdit"}
+               appearance="outline"
                placeholder="Type here..."
                textarea={{ className: textColumnClasses.textarea }}
-            resize="none"
+               resize="none"
                value={value}
                onChange={onChange}
+               style={{
+                  height: (props.boundary.dy).toString() + 'px'
+               }}
             />
          </div>
       </div>

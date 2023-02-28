@@ -13,7 +13,7 @@ import { Shape } from '../src/Shape';
 import { Rectangle } from '../src/Rectangle';
 import { Line } from '../src/Line';
 import { ShapeGroupHitTester, ShapeHitTester, ShapeHitTesterFactory } from '../src/ShapeHitTester';
-import { IShapeInteractor} from '../src/CanvasInteractors';
+import { IShapeInteractor } from '../src/ShapeInteractor';
 
 
 

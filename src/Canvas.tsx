@@ -278,6 +278,7 @@ function shapeInteractorFromMode(mode_: ECanvasMode,
 export const Canvas = (props: ICanvasProps) => {
 
    const canvasRef = useRef(null);
+   const canvasId = "innerCanvasId";
 
    // Set up variables needed to hook into Notification Framework
    var caucusRouter: NotificationRouterFor<string>;
@@ -446,6 +447,19 @@ export const Canvas = (props: ICanvasProps) => {
                   return cursorDefaultClasses.root;
             }
       }
+   }
+
+   function getCanvasFromId (id: string): HTMLCanvasElement {
+
+      return document.getElementById(id) as HTMLCanvasElement;
+   }
+
+   function getCanvasOffsetFromId (id: string): GPoint {
+
+      let canvas = getCanvasFromId(id);
+      let rect = canvas.getBoundingClientRect();
+
+      return new GPoint(rect.left, rect.top);
    }
 
    function getCanvas(event: MouseEvent | TouchEvent): HTMLCanvasElement {
@@ -716,11 +730,21 @@ export const Canvas = (props: ICanvasProps) => {
 
    }
 
+   // Calculate position for the text edit UI
+   var rc: GRect;
+
+   if (canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()) {
+      rc = new GRect (canvasState.shapeInteractor.rectangle);
+      var pt: GPoint = getCanvasOffsetFromId(canvasId);
+      rc.y = rc.y + pt.y;
+      //rc.x += pt.x;
+   }
+
    return (
       <div>
          <div className={cursorStylesFromModeAndLastHit(props.mode, canvasState.lastHit)}>
             {canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI() ?
-               <CanvasTextEdit onToolSelect={onTextEditSelect} initialText={"Hello in text area"} boundary={canvasState.shapeInteractor.rectangle} /> :
+               <CanvasTextEdit onToolSelect={onTextEditSelect} initialText={"Hello in text area"} boundary={rc} /> :
                <div></div>
             }
             <canvas
@@ -729,6 +753,7 @@ export const Canvas = (props: ICanvasProps) => {
                ref={canvasRef as any}
                width={canvasWidth as any}
                height={canvasHeight as any}
+               id={canvasId}
                onMouseDown={handleCanvasMouseDown}
                onMouseMove={handleCanvasMouseMove}
                onMouseUp={handleCanvasMouseUp}
