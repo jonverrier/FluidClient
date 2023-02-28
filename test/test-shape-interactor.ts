@@ -8,14 +8,14 @@ import { GPoint } from '../src/GeometryPoint';
 import { GLine } from '../src/GeometryLine';
 import { GRect } from '../src/GeometryRectangle';
 
+import { IShapeInteractor, shapeInteractionCompleteInterest } from '../src/ShapeInteractors';
 import {
-   IShapeInteractor,
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
-   RectangleMoveInteractor,
-   NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor
-} from '../src/CanvasInteractors';
+   RectangleMoveInteractor
+} from '../src/RectangleInteractors';
+import { NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor } from '../src/LineInteractors';
 
 describe("IShapeInteractor", function () {
 

@@ -19,15 +19,14 @@ import { Rectangle, SelectionRectangle } from './Rectangle';
 import { Line } from './Line';
 import { CaucusOf } from './Caucus';
 import { CanvasMode } from './CanvasModes';
+import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractors';
 import {
-   IShapeInteractor,
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
    TopLeftRectangleInteractor, TopRightRectangleInteractor, BottomLeftRectangleInteractor, BottomRightRectangleInteractor,
-   RectangleMoveInteractor,
-   NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor,
-   shapeInteractionCompleteInterest
-} from './CanvasInteractors';
+   RectangleMoveInteractor
+} from './RectangleInteractors';
+import { NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor } from './LineInteractors';
 import { ShapeGroupHitTester, EHitTest } from './ShapeHitTester';
 import { ShapeRendererFactory } from './ShapeRenderer';
 import { SelectionRectangleRenderer } from "./RectangleRenderer"; 
