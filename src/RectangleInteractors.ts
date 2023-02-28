@@ -4,7 +4,7 @@ import { GPoint } from './GeometryPoint';
 import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
 import { NotificationFor } from './NotificationFramework';
-import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractors';
+import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractor';
 
 
 

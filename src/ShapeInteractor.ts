@@ -20,6 +20,7 @@ interface IShapeMover {
    interactionUpdate(pt: GPoint): void;
    interactionEnd(pt: GPoint): void;
    rectangle: GRect;
+   line: GLine;
 }
 
 export abstract class IShapeInteractor extends Notifier implements IShapeMover {
@@ -29,13 +30,15 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
    abstract interactionEnd(pt: GPoint): void;
    abstract rectangle: GRect;
    abstract line: GLine;
+   hasUI(): boolean { return false; }; // Override if interactor needs to provide JSX for UI
 
    // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
-   // Not a property of rectangles
+   // not a property of the actual shape. 
    static defaultGrabHandleDxDy(): number {
       return 16;
    }
-   // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
+   // Going to keep this in the interactor - may need to change depending if we are in touch or mouse mode, which is an interaction thing,
+   // not a property of the actual shape. 
    static defaultHitTestTolerance(): number {
       return 2;
    }

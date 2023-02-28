@@ -8,7 +8,7 @@ import { GPoint } from '../src/GeometryPoint';
 import { GLine } from '../src/GeometryLine';
 import { GRect } from '../src/GeometryRectangle';
 
-import { IShapeInteractor, shapeInteractionCompleteInterest } from '../src/ShapeInteractors';
+import { IShapeInteractor } from '../src/ShapeInteractors';
 import {
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
@@ -39,8 +39,8 @@ describe("FreeRectangleInteractor", function () {
       interactor.interactionUpdate(pt);
       interactor.interactionEnd(pt);
 
-      expect(interactor.rectangle.dx === NewRectangleInteractor.minimumDx()).to.equal(true);
-      expect(interactor.rectangle.dy === NewRectangleInteractor.minimumDy()).to.equal(true);
+      expect(interactor.rectangle.dx === IShapeInteractor.minimumDx()).to.equal(true);
+      expect(interactor.rectangle.dy === IShapeInteractor.minimumDy()).to.equal(true);
       expect(interactor.rectangle.bottomLeft.equals(interactor.line.start)).to.equal(true);
       expect(interactor.rectangle.topRight.equals(interactor.line.end)).to.equal(true);
    });

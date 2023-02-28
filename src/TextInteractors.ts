@@ -4,16 +4,16 @@ import { GPoint } from './GeometryPoint';
 import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
 import { NotificationFor } from './NotificationFramework';
-import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractors';
+import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractor';
 
 // Interactor that lets the user draw a rectangle from mouse down to mouse up
-export class TextInteractor extends IShapeInteractor {
+export class NewTextInteractor extends IShapeInteractor {
 
    private _rectangle: GRect;
    private _bounds: GRect;
 
    /**
-    * Create a TextInteractor object
+    * Create a NewTextInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
     */
    public constructor(bounds_: GRect) {
@@ -40,7 +40,6 @@ export class TextInteractor extends IShapeInteractor {
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
    }
 
    /**
@@ -52,5 +51,54 @@ export class TextInteractor extends IShapeInteractor {
    get line(): GLine {
       return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
+
+   /**
+    * Let the calling component know we have a UI to complete the interaction, which it will need to render
+    */
+   hasUI(): boolean {
+      return false;
+   }; 
 }
 
+// Interactor that lets the user edit text
+export class TextEditInteractor extends IShapeInteractor {
+
+   private _rectangle: GRect;
+
+   /**
+    * Create a TextEditInteractor object
+    * @param rectangle_ - a GRect object defining the boundary of the text edit object
+    */
+   public constructor(rectangle_: GRect) {
+
+      super();
+
+      this._rectangle = new GRect(rectangle_);
+   }
+
+   interactionStart(pt: GPoint): void {
+   }
+
+   interactionUpdate(pt: GPoint): void {
+   }
+
+   interactionEnd(pt: GPoint): void {
+   }
+
+   /**
+   * Convenience function for testing
+   */
+   get rectangle(): GRect {
+      return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
+   }
+
+   /**
+    * Let the calling component know we have a UI for text editing, which it will need to render
+    */
+   hasUI(): boolean {
+      return true;
+   }; 
+}

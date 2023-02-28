@@ -22,7 +22,7 @@ import { Toolbar, ToolbarButton, ToolbarRadioButton, ToolbarDivider, ToolbarProp
 // Local 
 import { Shape } from './Shape';
 import { CaucusOf } from './Caucus';
-import { CanvasMode } from './CanvasModes';
+import { ECanvasMode } from './CanvasModes';
 
 const headerStyles = makeStyles({
    root: {
@@ -41,7 +41,7 @@ const midColumnStyles = makeStyles({
    },
 });
 
-type OnToolSelect = (tool: CanvasMode) => void;
+type OnToolSelect = (tool: ECanvasMode) => void;
 
 export interface ICanvasToolsProps {
 
@@ -53,7 +53,7 @@ export const CanvasTools = (props: ICanvasToolsProps) => {
    const headerClasses = headerStyles();
    const midColumnClasses = midColumnStyles();
 
-   const handleToolSelect = (mode: CanvasMode): void => {
+   const handleToolSelect = (mode: ECanvasMode): void => {
       props.onToolSelect(mode);
    };
 
@@ -84,23 +84,23 @@ export const CanvasTools = (props: ICanvasToolsProps) => {
                <Toolbar checkedValues={checkedValues} onCheckedValueChange={onChange}>
                   <Tooltip withArrow content="Select." relationship="label" key="1">
                     <ToolbarRadioButton aria-label="Select" name="mode" value="Select" icon={<Cursor24Regular />}
-                     onClick={() => { handleToolSelect(CanvasMode.Select) }}
+                     onClick={() => { handleToolSelect(ECanvasMode.Select) }}
                      disabled={!enableTools(props.shapeCaucus)}
                      />
                   </Tooltip>
                   <Tooltip withArrow content="Draw a box." relationship="label" key="3">
                   <ToolbarRadioButton aria-label="Box" name="mode" value="Rectangle" icon={<Square24Regular />}
-                     onClick={() => { handleToolSelect(CanvasMode.Rectangle) }} 
+                     onClick={() => { handleToolSelect(ECanvasMode.Rectangle) }} 
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <Tooltip withArrow content="Draw a line." relationship="label" key="4">
                   <ToolbarRadioButton aria-label="Line" name="mode" value="Line" icon={<Line24Regular />}
-                     onClick={() => { handleToolSelect(CanvasMode.Line) }}
+                     onClick={() => { handleToolSelect(ECanvasMode.Line) }}
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <Tooltip withArrow content="Write text." relationship="label" key="6">
                   <ToolbarRadioButton aria-label="Text" name="mode" value="Text" icon={<DrawText24Regular />}
-                     onClick={() => { handleToolSelect(CanvasMode.Text) }} 
+                     onClick={() => { handleToolSelect(ECanvasMode.Text) }} 
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <Tooltip withArrow content="Rub things out." relationship="label" key="7">
