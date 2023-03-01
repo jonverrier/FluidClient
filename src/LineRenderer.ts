@@ -28,8 +28,8 @@ export class SelectionLineRenderer extends ShapeRenderer {
       return new SelectionLineRenderer();
    }
 
-   private static _factoryForSelectionRectangle: ShapeRendererFactory = new ShapeRendererFactory(SelectionLine.selectionLineID(),
-                                                                                                 SelectionLineRenderer.createInstance);
+   private static _factoryForSelectionLine: ShapeRendererFactory = new ShapeRendererFactory(SelectionLine.selectionLineID(),
+                                                                                            SelectionLineRenderer.createInstance);
 }
 
 /// <summary>
@@ -59,6 +59,6 @@ export class LineShapeRenderer extends ShapeRenderer {
       return new LineShapeRenderer();
    }
 
-   private static _factoryForRectangle: ShapeRendererFactory = new ShapeRendererFactory(Line.lineID(),
-                                                                                        LineShapeRenderer.createInstance);
+   private static _factoryForLine: ShapeRendererFactory = new ShapeRendererFactory(Line.lineID(),
+                                                                                   LineShapeRenderer.createInstance);
 }

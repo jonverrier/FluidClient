@@ -71,7 +71,8 @@ export abstract class ShapeRenderer {
       ctx.beginPath();
       ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
       ctx.lineTo(shape.boundingRectangle.x + shape.boundingRectangle.dx,
-                 shape.boundingRectangle.y + shape.boundingRectangle.dy);
+         shape.boundingRectangle.y + shape.boundingRectangle.dy);
+      ctx.closePath();
       ctx.stroke();
 
       ctx.restore();
@@ -92,6 +93,7 @@ export abstract class ShapeRenderer {
       ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
       ctx.lineTo(shape.boundingRectangle.x + shape.boundingRectangle.dx,
          shape.boundingRectangle.y + shape.boundingRectangle.dy);
+      ctx.closePath();
       ctx.stroke();
 
       let handles = GLine.createGrabHandlesAround(new GLine(new GPoint(shape.boundingRectangle.x, shape.boundingRectangle.y),
@@ -103,6 +105,7 @@ export abstract class ShapeRenderer {
 
          ctx.beginPath();
          ctx.fillRect(handle.x, handle.y, handle.dx, handle.dy);
+         ctx.closePath();
          ctx.stroke();
       });
 
@@ -120,6 +123,7 @@ export abstract class ShapeRenderer {
          ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+      ctx.closePath();
       ctx.stroke();
 
       ctx.restore();
@@ -138,6 +142,7 @@ export abstract class ShapeRenderer {
 
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+      ctx.closePath();
       ctx.stroke();
 
       let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, grabHandleDxy, grabHandleDxy);
@@ -146,6 +151,7 @@ export abstract class ShapeRenderer {
 
          ctx.beginPath();
          ctx.fillRect(handle.x, handle.y, handle.dx, handle.dy);
+         ctx.closePath();
          ctx.stroke();
       });
 

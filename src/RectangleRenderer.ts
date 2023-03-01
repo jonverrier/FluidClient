@@ -60,10 +60,6 @@ export class RectangleShapeRenderer extends ShapeRenderer {
       return new RectangleShapeRenderer();
    }
 
-   // TODO - workaround while getting Text to work 
-   private static _factoryForText: ShapeRendererFactory = new ShapeRendererFactory(TextShape.textID(),
-                                                                                   RectangleShapeRenderer.createInstance);
-
    // Caucus may contain a 'Shape' element while going through handshake process - we write a null shape on joining to kick start it
    private static _factoryForShape: ShapeRendererFactory = new ShapeRendererFactory(Shape.shapeID(),
                                                                                     RectangleShapeRenderer.createInstance);

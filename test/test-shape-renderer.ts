@@ -12,7 +12,8 @@ import { Line, SelectionLine } from '../src/Line';
 import { TextShape } from '../src/Text';
 import { ShapeRenderer, ShapeRendererFactory } from '../src/ShapeRenderer';
 import { RectangleShapeRenderer, SelectionRectangleRenderer } from "../src/RectangleRenderer"; 
-import { SelectionLineRenderer, LineShapeRenderer } from "../src/LineRenderer"; 
+import { SelectionLineRenderer, LineShapeRenderer } from "../src/LineRenderer";
+import { TextShapeRenderer } from "../src/TextRenderer";
 
 // TODO - get a better Mock wrking
 // e.g. https://www.npmjs.com/package/jest-canvas-mock
@@ -33,6 +34,11 @@ class MockCtx {
    setLineDash(arr: number[]) { };
    moveTo(x: number, y: number) { };
    lineTo(x: number, y: number) { };
+   textAlign: string; 
+   textBaseline: string;
+   clip() { }
+   fillText(textShape: string, x: number, y: number, dx: number) { };
+   fill() { };
 }
 
 // import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
@@ -76,6 +82,13 @@ describe("ShapeRenderer", function () {
    it("Needs to create Line Renderer", function () {
 
       var renderer: ShapeRenderer = ShapeRendererFactory.create(Line.lineID());
+
+      expect(renderer === null).to.equal(false);
+   });
+
+   it("Needs to create TextShape Renderer", function () {
+
+      var renderer: ShapeRenderer = ShapeRendererFactory.create(TextShape.textID());
 
       expect(renderer === null).to.equal(false);
    });
@@ -161,6 +174,29 @@ describe("ShapeRenderer", function () {
 
       const rect = new GRect(0, 0, 20, 20);
       var shape: Shape = new SelectionRectangle(rect);
+      shape.isSelected = true;
+
+      var caught: boolean = false;
+
+      try {
+         renderer.draw(ctx, shape)
+      }
+      catch (e) {
+         // TODO - this is a pretty dumb test - just check there are no exceptions
+         caught = true;
+      }
+
+      expect(caught === false).to.equal(true);
+   });
+
+   it("Needs to draw a TextShape", function () {
+
+      const ctx: any = new MockCtx();
+
+      var renderer: ShapeRenderer = new TextShapeRenderer();
+
+      const rect = new GRect(0, 0, 20, 20);
+      var shape: Shape = new TextShape("Hello", rect, new Pen(PenColour.Black, PenStyle.Dotted), true);
       shape.isSelected = true;
 
       var caught: boolean = false;

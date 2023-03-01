@@ -30,9 +30,7 @@ import {
 import { NewTextInteractor, TextEditInteractor } from './TextInteractors';
 import { NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor } from './LineInteractors';
 import { ShapeGroupHitTester, EHitTest } from './ShapeHitTester';
-import { ShapeRendererFactory } from './ShapeRenderer';
-import { SelectionRectangleRenderer } from "./RectangleRenderer"; 
-import { SelectionLineRenderer } from "./LineRenderer"; 
+import { ShapeRendererFactory } from './ShapeRenderer'; 
 
 import { RectangleHitTester } from "../src/RectangleHitTester";
 import { LineHitTester } from "../src/LineHitTester";
@@ -40,6 +38,17 @@ import { LineHitTester } from "../src/LineHitTester";
 // Hit testers are hooked up at runtime - have to manually pull them into the transpile set
 var rcht: RectangleHitTester = new RectangleHitTester(1, 1);
 var lht: LineHitTester = new LineHitTester(1, 1);
+
+import { TextShapeRenderer } from "./TextRenderer";
+import { SelectionRectangleRenderer, RectangleShapeRenderer } from "./RectangleRenderer";
+import { SelectionLineRenderer, LineShapeRenderer } from "./LineRenderer";
+
+// Rendereres are hooked up at runtime - have to manually pull them into the transpile set
+var srcr: SelectionRectangleRenderer = new SelectionRectangleRenderer();
+var slr: SelectionLineRenderer = new SelectionLineRenderer();
+var rcr: RectangleShapeRenderer = new RectangleShapeRenderer();
+var lr: LineShapeRenderer = new LineShapeRenderer();
+var tr: TextShapeRenderer = new TextShapeRenderer();
 
 import { CanvasTextEdit } from "./CanvasTextEdit";
 
@@ -322,6 +331,9 @@ export const Canvas = (props: ICanvasProps) => {
 
             // then shapes
             drawShapes(ctx, canvasState.shapes);
+
+            ctx.font = "26px sans-serif";
+            ctx.fillText("Hello", 100, 100, 100);
 
          }).then(() => {
 
