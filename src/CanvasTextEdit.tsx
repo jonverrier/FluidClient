@@ -120,7 +120,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
                <Tooltip withArrow content="Ok" relationship="label" key="1">
                   <ToolbarButton aria-label="Ok" icon={<CheckmarkSquare24Regular />}
                      onClick={() => { handleToolSelect(EUIActions.Ok) }}
-                     disabled={!enableOk(props.initialText)} />
+                     disabled={!enableOk(value)} />
                </Tooltip>
                <Tooltip withArrow content="Cancel" relationship="label" key="2">
                   <ToolbarButton aria-label="Cancel" icon={<DismissSquare24Regular />}

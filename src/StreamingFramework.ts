@@ -47,7 +47,7 @@ export abstract class MDynamicStreamable extends MStreamable {
 // Signature for the factory function 
 type FactoryFunctionFor<MDynamicStreamable> = () => MDynamicStreamable;
 
-var firstFactory: DynamicStreamableFactory = null;
+var firstDynamicStreamableFactory: DynamicStreamableFactory = null;
 
 export class DynamicStreamableFactory {
 
@@ -60,10 +60,10 @@ export class DynamicStreamableFactory {
       this._factoryMethod = factoryMethod_;
       this._nextFactory = null;
 
-      if (firstFactory === null) {
-         firstFactory = this;
+      if (firstDynamicStreamableFactory === null) {
+         firstDynamicStreamableFactory = this;
       } else {
-         var nextFactory: DynamicStreamableFactory = firstFactory;
+         var nextFactory: DynamicStreamableFactory = firstDynamicStreamableFactory;
 
          while (nextFactory._nextFactory) {
             nextFactory = nextFactory._nextFactory;
@@ -73,7 +73,7 @@ export class DynamicStreamableFactory {
    }
 
    static create(className: string): MDynamicStreamable {
-      var nextFactory: DynamicStreamableFactory = firstFactory;
+      var nextFactory: DynamicStreamableFactory = firstDynamicStreamableFactory;
 
       while (nextFactory) {
          if (nextFactory._className === className) {

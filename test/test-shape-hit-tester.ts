@@ -5,17 +5,32 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { GPoint } from '../src/GeometryPoint';
-import { GLine } from '../src/GeometryLine';
 import { GRect } from '../src/GeometryRectangle';
 
 import { Pen, PenColour, PenStyle } from "../src/Pen";
 import { Shape } from '../src/Shape';
-import { Rectangle } from '../src/Rectangle';
-import { Line } from '../src/Line';
+import { Rectangle, SelectionRectangle } from '../src/Rectangle';
+import { Line, SelectionLine } from '../src/Line';
+import { TextShape } from '../src/Text';
 import { ShapeGroupHitTester, ShapeHitTester, ShapeHitTesterFactory } from '../src/ShapeHitTester';
 import { IShapeInteractor } from '../src/ShapeInteractor';
+import { RectangleHitTester } from "../src/RectangleHitTester";
+import { LineHitTester } from "../src/LineHitTester";
 
+// Hit testers are hooked up at runtime - have to manually pull them into the transpile set
+var rcht: RectangleHitTester = new RectangleHitTester(1, 1);
+var lht: LineHitTester = new LineHitTester(1, 1);
 
+describe("ShapeHitTesterFactory", function () {
+
+   it("Needs to create Shape, Rectangle, SelectionRectangle, Line, SelectionLine, Text", function () {
+
+      expect(ShapeHitTesterFactory.create(Shape.shapeID(), 1, 1)).to.not.equal(null);
+      expect(ShapeHitTesterFactory.create(Rectangle.rectangleID(), 1, 1)).to.not.equal(null);
+      expect(ShapeHitTesterFactory.create(Line.lineID(), 1, 1)).to.not.equal(null);
+      expect(ShapeHitTesterFactory.create(TextShape.textID(), 1, 1)).to.not.equal(null);
+   });
+});
 
 describe("ShapeGroupHitTester", function () {
 
@@ -57,19 +72,6 @@ describe("ShapeGroupHitTester", function () {
 
       expect(controller.hitTest(shapeRect2.topMiddle).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
 
-   });
-
-   it("Needs to create ShapeHitTester from class name", function () {
-
-      var hitTester: ShapeHitTester = ShapeHitTesterFactory.create(Rectangle.rectangleID(), 4, 2);
-
-      expect(hitTester).to.not.equal(null);
-
-
-      // TODO - this is a woraround, remove once streaming framework supports dynamic creation
-      hitTester = ShapeHitTesterFactory.create(Shape.shapeID(), 4, 2);
-
-      expect(hitTester).to.not.equal(null);
    });
 
    it("Needs to not create ShapeHitTester from invalid class name", function () {

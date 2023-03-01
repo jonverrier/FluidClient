@@ -16,6 +16,7 @@ import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } fr
 import { Pen, PenColour, PenStyle } from "./Pen";
 import { Shape} from './Shape';
 import { Rectangle, SelectionRectangle } from './Rectangle';
+import { TextShape } from './Text';
 import { Line } from './Line';
 import { CaucusOf } from './Caucus';
 import { EUIActions, ECanvasMode } from './CanvasModes';
@@ -32,6 +33,13 @@ import { ShapeGroupHitTester, EHitTest } from './ShapeHitTester';
 import { ShapeRendererFactory } from './ShapeRenderer';
 import { SelectionRectangleRenderer } from "./RectangleRenderer"; 
 import { SelectionLineRenderer } from "./LineRenderer"; 
+
+import { RectangleHitTester } from "../src/RectangleHitTester";
+import { LineHitTester } from "../src/LineHitTester";
+
+// Hit testers are hooked up at runtime - have to manually pull them into the transpile set
+var rcht: RectangleHitTester = new RectangleHitTester(1, 1);
+var lht: LineHitTester = new LineHitTester(1, 1);
 
 import { CanvasTextEdit } from "./CanvasTextEdit";
 
@@ -525,17 +533,19 @@ export const Canvas = (props: ICanvasProps) => {
             break;
 
          case ECanvasMode.Text:
-            /*
             clearSelection();
 
-            //TODO - new Text shape goes here
-            // Create new shape - selected
-            let text = new Rectangle(data.eventData, new Pen(PenColour.Black, PenStyle.Solid), true);
+            // Create new Textedit interactor once the location has been picked 
+            let interactor = new TextEditInteractor(data.eventData);
 
-            // set the version in Caucus first, which pushes to other clients, then reset our state to match
-            props.shapeCaucus.add(text.id, text);
-            canvasState.shapes.set(text.id, text);
-            */
+            // Force re-render with the new interactor, but with re-size finished. 
+            setCanvasState({
+               width: canvasState.width, height: canvasState.height,
+               shapes: canvasState.shapes,
+               lastHit: lastHit,
+               shapeInteractor: interactor,
+               resizeShapeId: null
+            });
             break;
 
          case ECanvasMode.Rectangle:
@@ -729,7 +739,11 @@ export const Canvas = (props: ICanvasProps) => {
    function onTextEditSelect(tool: EUIActions, text: string) {
 
       if (tool === EUIActions.Ok) {
-         // TODO - create test shape here
+         let text = new TextShape("", canvasState.shapeInteractor.rectangle, new Pen(PenColour.Black, PenStyle.Solid), true);
+
+         // set the version in Caucus first, which pushes to other clients, then reset our state to match
+         props.shapeCaucus.add(text.id, text);
+         canvasState.shapes.set(text.id, text);
       }
 
       setCanvasState({
@@ -748,14 +762,13 @@ export const Canvas = (props: ICanvasProps) => {
       rc = new GRect (canvasState.shapeInteractor.rectangle);
       var pt: GPoint = getCanvasOffsetFromId(canvasId);
       rc.y = rc.y + pt.y;
-      //rc.x += pt.x;
    }
 
    return (
       <div>
          <div className={cursorStylesFromModeAndLastHit(props.mode, canvasState.lastHit)}>
             {canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI() ?
-               <CanvasTextEdit onToolSelect={onTextEditSelect} initialText={"Hello in text area"} boundary={rc} /> :
+               <CanvasTextEdit onToolSelect={onTextEditSelect} initialText={""} boundary={rc} /> :
                <div></div>
             }
             <canvas

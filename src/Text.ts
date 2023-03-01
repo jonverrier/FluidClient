@@ -7,12 +7,12 @@ import { Shape, ShapeFactory } from './Shape';
 
 const textID: string = "Text";
 
-export class Text extends Shape {
+export class TextShape extends Shape {
 
    private _text: string;
 
    /**
-    * Create a Text object
+    * Create a TextShape object
     * @param text_ - the text to display* 
     * @param boundingRectangle_ - boundingRectangle
     * @param pen_ - pen
@@ -21,13 +21,13 @@ export class Text extends Shape {
    public constructor(text_: string, boundingRectangle_: GRect, pen_: Pen, isSelected_: boolean)
 
    /**
-    * Create a Text object
+    * Create a TextShape object
     * @param text_ - object to copy 
     */
-   public constructor(text_: Text)
+   public constructor(text_: TextShape)
 
    /**
-    * Create an empty Text object - required for particiation in serialisation framework
+    * Create an empty TextShape object - required for particiation in serialisation framework
     */
    constructor();
 
@@ -73,7 +73,7 @@ export class Text extends Shape {
     * NB must use field values, not identity bcs if objects are streamed to/from JSON, identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: Text): boolean {
+   equals(rhs: TextShape): boolean {
 
       return (this._text === rhs._text &&
          super.equals(rhs));
@@ -83,7 +83,7 @@ export class Text extends Shape {
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: Text): Text {
+   assign(rhs: TextShape): TextShape {
 
       super.assign(rhs); 
       this._text = rhs._text;
@@ -92,10 +92,10 @@ export class Text extends Shape {
    }
 
    static createDynamicInstance(): MDynamicStreamable {
-      return new Text();
+      return new TextShape();
    }
 
-   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(textID, Text.createDynamicInstance);
+   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(textID, TextShape.createDynamicInstance);
 
    streamOut(): string {
 
@@ -115,14 +115,15 @@ export class Text extends Shape {
       this._pen = pen;
       this._isSelected = obj.isSelected;
    }
+
    static textID(): string {
       return textID;
    }
 
-   static createInstance(): Text {
-      return new Text();
+   static createInstance(): TextShape {
+      return new TextShape();
    }
 
    static _factoryForText: ShapeFactory = new ShapeFactory(textID,
-      Text.createInstance);
+      TextShape.createInstance);
 }

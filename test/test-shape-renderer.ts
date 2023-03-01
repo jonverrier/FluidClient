@@ -9,6 +9,7 @@ import { Pen, PenColour, PenStyle } from "../src/Pen";
 import { Shape } from '../src/Shape';
 import { Rectangle, SelectionRectangle } from '../src/Rectangle';
 import { Line, SelectionLine } from '../src/Line';
+import { TextShape } from '../src/Text';
 import { ShapeRenderer, ShapeRendererFactory } from '../src/ShapeRenderer';
 import { RectangleShapeRenderer, SelectionRectangleRenderer } from "../src/RectangleRenderer"; 
 import { SelectionLineRenderer, LineShapeRenderer } from "../src/LineRenderer"; 
@@ -35,6 +36,19 @@ class MockCtx {
 }
 
 // import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+
+describe("ShapeRendererFactory", function () {
+
+   it("Needs to create Shape, Rectangle, SelectionRectangle, Line, SelectionLine, Text", function () {
+
+      expect(ShapeRendererFactory.create(Shape.shapeID())).to.not.equal(null);
+      expect(ShapeRendererFactory.create(Rectangle.rectangleID())).to.not.equal(null);
+      expect(ShapeRendererFactory.create(SelectionRectangle.selectionRectangleID())).to.not.equal(null);
+      expect(ShapeRendererFactory.create(Line.lineID())).to.not.equal(null);
+      expect(ShapeRendererFactory.create(SelectionLine.selectionLineID())).to.not.equal(null);
+      expect(ShapeRendererFactory.create(TextShape.textID())).to.not.equal(null);
+   });
+});
 
 describe("ShapeRenderer", function () {
 

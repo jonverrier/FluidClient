@@ -10,7 +10,7 @@ import { MDynamicStreamable } from '../src/StreamingFramework';
 import { Shape, ShapeFactory } from '../src/Shape';
 import { Rectangle, SelectionRectangle } from '../src/Rectangle';
 import { Line, SelectionLine } from '../src/Line';
-import { Text } from '../src/Text';
+import { TextShape } from '../src/Text';
 
 describe("Shape", function () {
 
@@ -386,17 +386,17 @@ describe("SelectionLine", function () {
 
 });
 
-describe("Text", function () {
+describe("TextShape", function () {
 
-   it("Needs to create, test & assign Text", function () {
+   it("Needs to create, test & assign TextShape", function () {
 
       var rect: GRect = new GRect(1, 2, 300, 400);
       var text: string = "Sample text";
 
-      var shape1: Text = new Text(text, rect, new Pen(PenColour.Black, PenStyle.Solid), false);
-      var shape2: Text = new Text(text, rect, new Pen(PenColour.Black, PenStyle.Solid), true);
-      var shape3: Text = new Text(shape1);
-      var shape4: Text = new Text();
+      var shape1: TextShape = new TextShape(text, rect, new Pen(PenColour.Black, PenStyle.Solid), false);
+      var shape2: TextShape = new TextShape(text, rect, new Pen(PenColour.Black, PenStyle.Solid), true);
+      var shape3: TextShape = new TextShape(shape1);
+      var shape4: TextShape = new TextShape();
 
       expect(shape1.equals(shape1)).to.equal(true);
       expect(shape1.equals(shape2)).to.equal(false);
@@ -433,16 +433,16 @@ describe("Text", function () {
       expect(caught).to.equal(true);
    });
 
-   it("Needs to convert Text to and from JSON()", function () {
+   it("Needs to convert TextShape to and from JSON()", function () {
 
       var rect: GRect = new GRect(1, 2, 3, 4);
       var text: string = "Sample text";
 
-      var shape1: Text = new Text(text, rect, new Pen(PenColour.Black, PenStyle.Solid), false);
+      var shape1: TextShape = new TextShape(text, rect, new Pen(PenColour.Black, PenStyle.Solid), false);
 
       var stream: string = shape1.streamOut();
 
-      var shape2: Text = new Text();
+      var shape2: TextShape = new TextShape();
 
       expect(shape1.equals(shape2)).to.equal(false);
 
@@ -451,20 +451,20 @@ describe("Text", function () {
       expect(shape1.equals(shape2)).to.equal(true);
    });
 
-   it("Needs to dynamically create Text to and from JSON()", function () {
+   it("Needs to dynamically create TextShape to and from JSON()", function () {
 
       var rect: GRect = new GRect(1, 2, 3, 4);
       var text: string = "Sample text";
 
-      var shape1: Text = new Text(text, rect, new Pen(PenColour.Black, PenStyle.Solid), false);
+      var shape1: TextShape = new TextShape(text, rect, new Pen(PenColour.Black, PenStyle.Solid), false);
 
       var stream: string = shape1.flatten();
 
-      var shape2: Text = new Text();
+      var shape2: TextShape = new TextShape();
 
       expect(shape1.equals(shape2)).to.equal(false);
 
-      shape2 = MDynamicStreamable.resurrect(stream) as Text;
+      shape2 = MDynamicStreamable.resurrect(stream) as TextShape;
 
       expect(shape1.equals(shape2)).to.equal(true);
    });
@@ -480,7 +480,7 @@ describe("ShapeFactory", function () {
       expect(ShapeFactory.create(SelectionRectangle.selectionRectangleID())).to.not.equal(null);
       expect(ShapeFactory.create(Line.lineID())).to.not.equal(null);
       expect(ShapeFactory.create(SelectionLine.selectionLineID())).to.not.equal(null);
-      expect(ShapeFactory.create(Text.textID())).to.not.equal(null);
+      expect(ShapeFactory.create(TextShape.textID())).to.not.equal(null);
    });
 
    it("Needs to not create unknown shapes", function () {

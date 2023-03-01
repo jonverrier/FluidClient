@@ -1,6 +1,6 @@
 module.exports = {
    devtool: 'source-map',
-   entry: "./Src/AppEntry.tsx",
+   entry: "./src/AppEntry.tsx",
    mode: "development",
    target: 'web',
    output: {

@@ -4,6 +4,7 @@ import { Shape } from "./Shape";
 import { IShapeInteractor } from "./ShapeInteractor"; 
 import { ShapeRenderer, ShapeRendererFactory } from "./ShapeRenderer"; 
 import { Rectangle, SelectionRectangle } from "./Rectangle";
+import { TextShape } from './Text';
 
 /// <summary>
 /// SelectionRectangleRenderer - draws Rectangle shapes
@@ -59,10 +60,13 @@ export class RectangleShapeRenderer extends ShapeRenderer {
       return new RectangleShapeRenderer();
    }
 
-   // TODO - this is a workaround until Caucus can dynamically create the right subtype of shape
-   private static _factoryForShape: ShapeRendererFactory = new ShapeRendererFactory(Shape.shapeID(),
-      RectangleShapeRenderer.createInstance);
+   // TODO - workaround while getting Text to work 
+   private static _factoryForText: ShapeRendererFactory = new ShapeRendererFactory(TextShape.textID(),
+                                                                                   RectangleShapeRenderer.createInstance);
 
+   // Caucus may contain a 'Shape' element while going through handshake process - we write a null shape on joining to kick start it
+   private static _factoryForShape: ShapeRendererFactory = new ShapeRendererFactory(Shape.shapeID(),
+                                                                                    RectangleShapeRenderer.createInstance);
    private static _factoryForRectangle: ShapeRendererFactory = new ShapeRendererFactory(Rectangle.rectangleID(),
-      RectangleShapeRenderer.createInstance);
+                                                                                        RectangleShapeRenderer.createInstance);
 }

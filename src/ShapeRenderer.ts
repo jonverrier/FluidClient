@@ -8,7 +8,7 @@ import { Shape } from "./Shape";
 // Signature for the factory function 
 type FactoryFunctionFor<ShapeRenderer> = () => ShapeRenderer;
 
-var firstFactory: ShapeRendererFactory = null;
+var firstRenderFactory: ShapeRendererFactory = null;
 
 export class ShapeRendererFactory {
 
@@ -21,10 +21,10 @@ export class ShapeRendererFactory {
       this._factoryMethod = factoryMethod_;
       this._nextFactory = null;
 
-      if (firstFactory === null) {
-         firstFactory = this;
+      if (firstRenderFactory === null) {
+         firstRenderFactory = this;
       } else {
-         var nextFactory: ShapeRendererFactory = firstFactory;
+         var nextFactory: ShapeRendererFactory = firstRenderFactory;
 
          while (nextFactory._nextFactory) {
             nextFactory = nextFactory._nextFactory;
@@ -34,7 +34,7 @@ export class ShapeRendererFactory {
    }
 
    static create(className: string) : ShapeRenderer {
-      var nextFactory: ShapeRendererFactory = firstFactory;
+      var nextFactory: ShapeRendererFactory = firstRenderFactory;
 
       while (nextFactory) {
          if (nextFactory._className === className) {
