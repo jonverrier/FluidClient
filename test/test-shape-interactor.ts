@@ -8,7 +8,7 @@ import { GPoint } from '../src/GeometryPoint';
 import { GLine } from '../src/GeometryLine';
 import { GRect } from '../src/GeometryRectangle';
 
-import { IShapeInteractor } from '../src/ShapeInteractors';
+import { IShapeInteractor } from '../src/ShapeInteractor';
 import {
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
@@ -81,7 +81,7 @@ describe("RightRectangleInteractor", function () {
 
       var bounds: GRect = new GRect(50, 50, 300, 300);
       var initial: GRect = new GRect(50, 50, 200, 200);
-      var pt: GPoint = new GPoint(100, 100);
+      var pt: GPoint = new GPoint(150, 150);
 
       var interactor: IShapeInteractor = new RightRectangleInteractor(bounds, initial);
  
@@ -89,7 +89,7 @@ describe("RightRectangleInteractor", function () {
       interactor.interactionUpdate(pt);
       interactor.interactionEnd(pt);
 
-      expect(interactor.rectangle.dx === 50).to.equal(true);
+      expect(interactor.rectangle.dx === 100).to.equal(true);
       expect(interactor.rectangle.dy === initial.dy).to.equal(true);
       expect(interactor.rectangle.bottomLeft.equals(interactor.line.start)).to.equal(true);
       expect(interactor.rectangle.topRight.equals(interactor.line.end)).to.equal(true);
@@ -342,7 +342,7 @@ describe("TopLeftRectangleInteractor", function () {
    it("Needs to create TopLeftRectangleInteractor with click and drag", function () {
 
       var bounds: GRect = new GRect(50, 50, 300, 300);
-      var initial: GRect = new GRect(100, 100, 50, 50);
+      var initial: GRect = new GRect(100, 100, 100, 100);
       var final: GPoint = new GPoint(75, 200);
 
       var interactor: IShapeInteractor = new TopLeftRectangleInteractor(bounds, initial);
@@ -392,8 +392,8 @@ describe("TopRightRectangleInteractor", function () {
    it("Needs to create TopRightRectangleInteractor with click and drag", function () {
 
       var bounds: GRect = new GRect(50, 50, 300, 300);
-      var initial: GRect = new GRect(100, 100, 50, 50);
-      var final: GPoint = new GPoint(175, 200);
+      var initial: GRect = new GRect(100, 100, 100, 100);
+      var final: GPoint = new GPoint(225, 200);
 
       var interactor: IShapeInteractor = new TopRightRectangleInteractor(bounds, initial);
 
@@ -441,7 +441,7 @@ describe("TopRightRectangleInteractor", function () {
       it("Needs to create BottomLeftRectangleInteractor with click and drag", function () {
 
          var bounds: GRect = new GRect(50, 50, 300, 300);
-         var initial: GRect = new GRect(100, 100, 50, 50);
+         var initial: GRect = new GRect(100, 100, 100, 100);
          var final: GPoint = new GPoint(75, 75);
 
          var interactor: IShapeInteractor = new BottomLeftRectangleInteractor(bounds, initial);

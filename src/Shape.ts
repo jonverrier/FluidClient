@@ -150,7 +150,7 @@ export class Shape extends MDynamicStreamable {
    }
 
    set boundingRectangle(rect_: GRect)  {
-      this._boundingRectangle = rect_;
+      this._boundingRectangle = new GRect (rect_);
    }
    set pen(pen_: Pen) {
       this._pen = pen_;

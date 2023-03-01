@@ -19,7 +19,7 @@ import { Rectangle, SelectionRectangle } from './Rectangle';
 import { Line } from './Line';
 import { CaucusOf } from './Caucus';
 import { EUIActions, ECanvasMode } from './CanvasModes';
-import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractors';
+import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractor';
 import {
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
