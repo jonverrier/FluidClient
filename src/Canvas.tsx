@@ -728,6 +728,17 @@ export const Canvas = (props: ICanvasProps) => {
 
    function onTextEditSelect(tool: EUIActions, text: string) {
 
+      if (tool === EUIActions.Ok) {
+         // TODO - create test shape here
+      }
+
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: canvasState.shapes,
+         lastHit: EHitTest.None,
+         shapeInteractor: null,
+         resizeShapeId: null
+      });
    }
 
    // Calculate position for the text edit UI

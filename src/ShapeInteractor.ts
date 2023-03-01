@@ -11,7 +11,7 @@ export var shapeInteractionCompleteInterest = new Interest(shapeInteractionCompl
 var defaultDX: number = 96;
 var defaultDY: number = 48;
 
-var minimumDX: number = 48;
+var minimumDX: number = 88; // Minimum width for a toolbar with two buttons, as used in text shape
 var minimumDY: number = 48;
 
 interface IShapeMover {

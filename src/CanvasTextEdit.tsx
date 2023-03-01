@@ -33,6 +33,12 @@ const buttonBlockStyles = makeStyles({
       alignSelf: 'right',
       marginLeft: 'auto',
       marginRight: '0',
+      marginTop: '0',
+      marginBottom: '0',
+      paddingLeft: '0',
+      paddingRight: '0',
+      paddingTop: '0',
+      paddingBottom: '0',
       alignItems: 'center'
    },
 });
@@ -56,6 +62,15 @@ const textColumnStyles = makeStyles({
       width: '100%'
    },
    textarea: {
+      height: '100%',
+      marginLeft: '0',
+      marginRight: '0',
+      marginTop: '0',
+      marginBottom: '0',
+      paddingLeft: '0',
+      paddingRight: '0',
+      paddingTop: '0',
+      paddingBottom: '0'
    },
 });
 
@@ -124,9 +139,12 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
                value={value}
                onChange={onChange}
                style={{
-                  height: (props.boundary.dy).toString() + 'px'
+                  height: (props.boundary.dy + 40).toString() + 'px'
                }}
             />
+            { /*style={{
+                  height: (props.boundary.dy).toString() + 'px'
+               }} */}
          </div>
       </div>
    );
