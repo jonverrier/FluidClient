@@ -3,6 +3,7 @@
 import { GPoint } from "./GeometryPoint";
 import { GRect } from "./GeometryRectangle";
 import { GLine } from "./GeometryLine";
+import { PenColour, PenStyle, Pen } from './Pen';
 import { Shape } from "./Shape";
 
 // Signature for the factory function 
@@ -59,15 +60,58 @@ export abstract class ShapeRenderer {
 
    }
 
+   protected setPen(ctx: CanvasRenderingContext2D, pen: Pen): void {
+
+      switch (pen.colour) {
+         case PenColour.Border:
+            ctx.strokeStyle = "#393D47";
+            ctx.fillStyle = "#393D47";
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "yellow";
+            break
+
+         case PenColour.Black:
+         default:
+            ctx.strokeStyle = "#000000";
+            ctx.fillStyle = "#000000";
+            ctx.shadowBlur = undefined;
+            ctx.shadowColor = undefined;
+            break;
+      }
+
+      switch (pen.style) {
+         case PenStyle.None:
+            break;
+
+         case PenStyle.Dashed:
+            ctx.setLineDash([5, 5]);
+            break;
+
+         case PenStyle.Dotted:
+            ctx.setLineDash([1, 1]);
+            break;
+
+         case PenStyle.Solid:
+            ctx.setLineDash([]);
+         default:
+            break;
+      }
+   }
+
+   protected resetPen(ctx: CanvasRenderingContext2D): void {
+
+      ctx.strokeStyle = "#000000";
+      ctx.fillStyle = "#000000";
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = undefined;
+   }
+
    // Helper function as many derived classes will need it
    protected drawLine(ctx: CanvasRenderingContext2D,
-      shape: Shape, dashed: boolean): void {
+      shape: Shape): void {
 
-      ctx.save();
+      this.setPen(ctx, shape.pen);
 
-      ctx.strokeStyle = "#393D47";
-      if (dashed)
-         ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
       ctx.lineTo(shape.boundingRectangle.x + shape.boundingRectangle.dx,
@@ -75,19 +119,14 @@ export abstract class ShapeRenderer {
       ctx.closePath();
       ctx.stroke();
 
-      ctx.restore();
+      this.resetPen(ctx);
    }
 
    // Helper function as many derived classes will need it
    protected drawLineSelectionBorder(ctx: CanvasRenderingContext2D,
       shape: Shape, grabHandleDxy: number): void {
 
-      ctx.save();
-
-      ctx.strokeStyle = "#393D47";
-      ctx.fillStyle = "#393D47";
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = "yellow";
+      this.setPen(ctx, shape.pen);
 
       ctx.beginPath();
       ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
@@ -109,36 +148,28 @@ export abstract class ShapeRenderer {
          ctx.stroke();
       });
 
-      ctx.restore();
+      this.resetPen(ctx);
    }
 
    // Helper function as many derived classes will need it
    protected drawBorder(ctx: CanvasRenderingContext2D,
-      shape: Shape, dashed: boolean): void {
+      shape: Shape): void {
 
-      ctx.save();
+      this.setPen(ctx, shape.pen);
 
-      ctx.strokeStyle = "#393D47";
-      if (dashed)
-         ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
       ctx.closePath();
       ctx.stroke();
 
-      ctx.restore();
+      this.resetPen(ctx);
    }
 
    // Helper function as many derived classes will need it
    protected drawSelectionBorder(ctx: CanvasRenderingContext2D,
       shape: Shape, grabHandleDxy: number): void {
 
-      ctx.save();
-
-      ctx.strokeStyle = "#393D47";
-      ctx.fillStyle = "#393D47";
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = "yellow";
+      this.setPen(ctx, shape.pen);
 
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
@@ -155,7 +186,7 @@ export abstract class ShapeRenderer {
          ctx.stroke();
       });
 
-      ctx.restore();
+      this.resetPen(ctx);
    }
 
    // to be overriden by derived classes. 

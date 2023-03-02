@@ -18,30 +18,47 @@ export class TextShapeRenderer extends ShapeRenderer {
       super();
    }
 
+   // http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+   wrapText(context: CanvasRenderingContext2D, text: string,
+      x: number, y: number, maxWidth: number, lineHeight: number): void {
+
+      var cars = text.split("\n");
+
+      for (var ii = 0; ii < cars.length; ii++) {
+
+         var line = "";
+         var words = cars[ii].split(" ");
+
+         for (var n = 0; n < words.length; n++) {
+            var testLine = line + words[n] + " ";
+            var metrics = context.measureText(testLine);
+            var testWidth = metrics.width;
+
+            if (testWidth > maxWidth) {
+               context.fillText(line, x, y);
+               line = words[n] + " ";
+               y += lineHeight;
+            }
+            else {
+               line = testLine;
+            }
+         }
+      }
+
+      context.fillText(line, x, y);
+      y += lineHeight;
+   }
+
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
       var textShape: TextShape = shape as TextShape;
 
-      ctx.save();
-      //ctx.textAlign = 'center';
-      //ctx.textBaseline = 'middle';
-      ctx.strokeStyle = "#393D47";
-      ctx.fillStyle = "#393D47";
-      ctx.font = "26px sans-serif";
+      this.setPen(ctx, shape. pen);
 
-      //ctx.beginPath();
-      //ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
-      //ctx.clip();
-
-      //ctx.beginPath();
-      ctx.fillText(textShape.text,
-         textShape.boundingRectangle.x,
-         textShape.boundingRectangle.y,
-         textShape.boundingRectangle.dx);
-      //ctx.fill();
-
-      ctx.restore();
+      this.wrapText(ctx, textShape.text,
+         textShape.boundingRectangle.x, textShape.boundingRectangle.y, textShape.boundingRectangle.dx,
+         (ctx as any).lineHeight); // The canvas puts this on as an extra variable
 
       if (shape.isSelected) {
          this.drawSelectionBorder(ctx, shape, IShapeInteractor.defaultGrabHandleDxDy());

@@ -28,17 +28,23 @@ class MockCtx {
    save() { };
    restore() { };
    beginPath() { };
+   closePath() { };
    fillRect(x: number, y: number, dx: number, dy: number) { };
    rect(x: number, y: number, dx: number, dy: number) { };
    stroke() { };
    setLineDash(arr: number[]) { };
    moveTo(x: number, y: number) { };
    lineTo(x: number, y: number) { };
-   textAlign: string; 
+   textAlign: string;
    textBaseline: string;
+   font: string;
    clip() { }
    fillText(textShape: string, x: number, y: number, dx: number) { };
    fill() { };
+   measureText(text: string): any {
+      return { metrics: { width: 5 } };
+   }
+   lineHeight: number; // The Canvas puts this on as an extra variable
 }
 
 // import { HTMLCanvasElement } from '@playcanvas/canvas-mock';

@@ -51,6 +51,7 @@ var lr: LineShapeRenderer = new LineShapeRenderer();
 var tr: TextShapeRenderer = new TextShapeRenderer();
 
 import { CanvasTextEdit } from "./CanvasTextEdit";
+import { FontMetrics, fontMetrics } from "./CanvasFontMetrics";
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -326,14 +327,18 @@ export const Canvas = (props: ICanvasProps) => {
          const canvasObj = ref.current;
          const ctx = canvasObj.getContext('2d');
 
+         let element = getCanvasElementFromId(canvasId);
+         let fm = fontMetrics(element); 
+         ctx.textAlign = 'left';
+         ctx.textBaseline = 'top';
+         ctx.font = fm.font;
+         ctx.lineHeight = fm.lineHeight;
+
          // draw background first
          drawBackground(ctx).then(() => {
 
             // then shapes
             drawShapes(ctx, canvasState.shapes);
-
-            ctx.font = "26px sans-serif";
-            ctx.fillText("Hello", 100, 100, 100);
 
          }).then(() => {
 
@@ -467,6 +472,11 @@ export const Canvas = (props: ICanvasProps) => {
                   return cursorDefaultClasses.root;
             }
       }
+   }
+
+   function getCanvasElementFromId(id: string): HTMLElement {
+
+      return document.getElementById(id);
    }
 
    function getCanvasFromId (id: string): HTMLCanvasElement {
@@ -751,11 +761,11 @@ export const Canvas = (props: ICanvasProps) => {
    function onTextEditSelect(tool: EUIActions, text: string) {
 
       if (tool === EUIActions.Ok) {
-         let text = new TextShape("", canvasState.shapeInteractor.rectangle, new Pen(PenColour.Black, PenStyle.Solid), true);
+         let shape = new TextShape(text, canvasState.shapeInteractor.rectangle, new Pen(PenColour.Black, PenStyle.Solid), true);
 
          // set the version in Caucus first, which pushes to other clients, then reset our state to match
-         props.shapeCaucus.add(text.id, text);
-         canvasState.shapes.set(text.id, text);
+         props.shapeCaucus.add(shape.id, shape);
+         canvasState.shapes.set(shape.id, shape);
       }
 
       setCanvasState({

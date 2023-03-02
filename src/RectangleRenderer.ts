@@ -22,7 +22,7 @@ export class SelectionRectangleRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawBorder(ctx, shape, true);
+      this.drawBorder(ctx, shape);
    }
 
    static createInstance(): RectangleShapeRenderer {
@@ -49,7 +49,7 @@ export class RectangleShapeRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawBorder(ctx, shape, false);
+      this.drawBorder(ctx, shape);
 
       if (shape.isSelected) {
          this.drawSelectionBorder(ctx, shape, IShapeInteractor.defaultGrabHandleDxDy());

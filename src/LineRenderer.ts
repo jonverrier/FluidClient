@@ -21,7 +21,7 @@ export class SelectionLineRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawLine(ctx, shape, true);
+      this.drawLine(ctx, shape);
    }
 
    static createInstance(): SelectionLineRenderer {
@@ -48,7 +48,7 @@ export class LineShapeRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawLine(ctx, shape, false);
+      this.drawLine(ctx, shape);
 
       if (shape.isSelected) {
          this.drawLineSelectionBorder(ctx, shape, IShapeInteractor.defaultGrabHandleDxDy());
