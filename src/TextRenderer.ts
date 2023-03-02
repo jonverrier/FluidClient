@@ -58,7 +58,7 @@ export class TextShapeRenderer extends ShapeRenderer {
       var metrics = context.measureText(line);
       var testWidth = metrics.width;
       if (drawText)
-         context.fillText(line, x + (maxWidth - testWidth) / 2, y);
+         context.fillText(line, x + (maxWidth + spaceWidth - testWidth) / 2, y);
       dy += lineHeight;
 
       return dy;
