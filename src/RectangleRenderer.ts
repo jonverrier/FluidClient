@@ -1,9 +1,10 @@
 // Copyright (c) 2023 TXPCo Ltd
 
 import { Shape } from "./Shape";
-import { IShapeInteractor } from "./CanvasInteractors"; 
+import { IShapeInteractor } from "./ShapeInteractor"; 
 import { ShapeRenderer, ShapeRendererFactory } from "./ShapeRenderer"; 
 import { Rectangle, SelectionRectangle } from "./Rectangle";
+import { TextShape } from './Text';
 
 /// <summary>
 /// SelectionRectangleRenderer - draws Rectangle shapes
@@ -21,7 +22,7 @@ export class SelectionRectangleRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawBorder(ctx, shape, true);
+      this.drawBorder(ctx, shape);
    }
 
    static createInstance(): RectangleShapeRenderer {
@@ -48,7 +49,7 @@ export class RectangleShapeRenderer extends ShapeRenderer {
    draw(ctx: CanvasRenderingContext2D,
       shape: Shape): void {
 
-      this.drawBorder(ctx, shape, false);
+      this.drawBorder(ctx, shape);
 
       if (shape.isSelected) {
          this.drawSelectionBorder(ctx, shape, IShapeInteractor.defaultGrabHandleDxDy());
@@ -59,10 +60,9 @@ export class RectangleShapeRenderer extends ShapeRenderer {
       return new RectangleShapeRenderer();
    }
 
-   // TODO - this is a workaround until Caucus can dynamically create the right subtype of shape
+   // Caucus may contain a 'Shape' element while going through handshake process - we write a null shape on joining to kick start it
    private static _factoryForShape: ShapeRendererFactory = new ShapeRendererFactory(Shape.shapeID(),
-      RectangleShapeRenderer.createInstance);
-
+                                                                                    RectangleShapeRenderer.createInstance);
    private static _factoryForRectangle: ShapeRendererFactory = new ShapeRendererFactory(Rectangle.rectangleID(),
-      RectangleShapeRenderer.createInstance);
+                                                                                        RectangleShapeRenderer.createInstance);
 }

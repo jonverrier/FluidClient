@@ -1,5 +1,6 @@
 'use strict';
 // Copyright TXPCo ltd, 2021
+import { MDynamicStreamable } from '../src/StreamingFramework';
 import { Persona} from '../src/Persona';
 
 import { expect } from 'chai';
@@ -202,10 +203,23 @@ describe("Persona", function () {
 
    it("Needs to convert to and from JSON()", function () {
 
-      var stream: string = persona1.streamToJSON();
+      var stream: string = persona1.streamOut();
 
       var personaNew: Persona = new Persona(persona1.id, persona1.name, persona1.thumbnailB64, persona1.lastSeenAt);
-      personaNew.streamFromJSON(stream);
+      personaNew.streamIn(stream);
+
+      expect(persona1.equals(personaNew)).to.equal(true);
+   });
+
+   it("Needs to dynamically create Persona to and from JSON()", function () {
+
+      var stream: string = persona1.flatten();
+
+      var personaNew: Persona = new Persona();
+
+      expect(persona1.equals(personaNew)).to.equal(false);
+
+      personaNew = MDynamicStreamable.resurrect(stream) as Persona;
 
       expect(persona1.equals(personaNew)).to.equal(true);
    });

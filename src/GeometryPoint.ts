@@ -3,9 +3,9 @@
 import Flatten from '@flatten-js/core'
 
 import { InvalidParameterError } from './Errors';
-import { MSerialisable } from "./SerialisationFramework";
+import { MStreamable } from "./StreamingFramework";
 
-export class GPoint extends MSerialisable {
+export class GPoint extends MStreamable {
 
    private _pt: Flatten.Point;
 
@@ -93,12 +93,12 @@ export class GPoint extends MSerialisable {
       return this;
    }
 
-   streamToJSON(): string {
+   streamOut(): string {
 
       return JSON.stringify({ x: this._pt.x, y: this._pt.y });
    }
 
-   streamFromJSON(stream: string): void {
+   streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 

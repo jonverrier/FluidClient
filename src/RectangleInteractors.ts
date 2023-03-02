@@ -1,63 +1,21 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GPoint, GRect } from './Geometry';
-import { Interest, NotificationFor, Notifier } from './NotificationFramework';
+import { GPoint } from './GeometryPoint';
+import { GLine } from './GeometryLine';
+import { GRect } from './GeometryRectangle';
+import { NotificationFor } from './NotificationFramework';
+import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractor';
 
-interface IShapeMover {
 
-   interactionStart(pt: GPoint): boolean;
-   interactionUpdate(pt: GPoint): boolean;
-   interactionEnd(pt: GPoint): boolean;
-   rectangle: GRect;
-}
-
-export abstract class IShapeInteractor extends Notifier implements IShapeMover {
-
-   abstract interactionStart(pt: GPoint): boolean;
-   abstract interactionUpdate(pt: GPoint): boolean;
-   abstract interactionEnd(pt: GPoint): boolean;
-   abstract rectangle: GRect;
-
-   // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
-   // Not a property of rectangles
-   static defaultGrabHandleDxDy(): number {
-      return 16;
-   }
-   // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
-   static defaultHitTestTolerance(): number {
-      return 2;
-   }
-   static defaultDx(): number {
-      return defaultDX;
-   }
-   static defaultDy(): number {
-      return defaultDY;
-   }
-   static minimumDx(): number {
-      return minimumDX;
-   }
-   static minimumDy(): number {
-      return minimumDY;
-   }
-}
-
-export var shapeInteractionComplete: string = "ShapeInteractionComplete";
-export var shapeInteractionCompleteInterest = new Interest(shapeInteractionComplete);
-
-var defaultDX: number = 96;
-var defaultDY: number = 48;
-
-var minimumDX: number = 48;
-var minimumDY: number = 48;
 
 // Interactor that lets the user draw a rectangle from mouse down to mouse up
-export class FreeRectangleInteractor extends IShapeInteractor  {
+export class NewRectangleInteractor extends IShapeInteractor  {
 
    private _rectangle: GRect;
    private _bounds: GRect;
 
    /**
-    * Create a FreeRectangleInteractor object
+    * Create a NewRectangleInteractor object
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
     */
    public constructor(bounds_: GRect) {
@@ -68,28 +26,22 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
       this._rectangle = new GRect();
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
       var newRect: GRect = new GRect(pt.x, pt.y, 0, 0);
       this._rectangle = this._bounds.clipRectangle(newRect);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
       var newRect: GRect = new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y);
       this._rectangle = this._bounds.clipRectangle(newRect);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
-      var newRect: GRect = GRect.normaliseRectangle (new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
-      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+   interactionEnd(pt: GPoint): void {
+      var newRect: GRect = GRect.normaliseRectangle(new GRect(this._rectangle.x, this._rectangle.y, pt.x - this._rectangle.x, pt.y - this._rectangle.y));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, IShapeInteractor.minimumDx(), IShapeInteractor.minimumDy()));
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    /**
@@ -97,6 +49,9 @@ export class FreeRectangleInteractor extends IShapeInteractor  {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
 
 }
@@ -127,21 +82,17 @@ export class RightRectangleInteractor extends IShapeInteractor {
       return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing (pt: GPoint): void {
@@ -151,7 +102,7 @@ export class RightRectangleInteractor extends IShapeInteractor {
          pt.x - (this._rectangle.x),
          this._rectangle.dy));
 
-      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, IShapeInteractor.minimumDx(), IShapeInteractor.minimumDy()));
    }
 
    /**
@@ -159,6 +110,9 @@ export class RightRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
 }
 
@@ -181,28 +135,22 @@ export class LeftRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -212,7 +160,7 @@ export class LeftRectangleInteractor extends IShapeInteractor {
          this._rectangle.dx - (pt.x - this._rectangle.x),
          this._rectangle.dy));
 
-      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, IShapeInteractor.minimumDx(), IShapeInteractor.minimumDy()));
    }
 
    /**
@@ -220,6 +168,9 @@ export class LeftRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
 }
 
@@ -242,28 +193,22 @@ export class TopRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -273,7 +218,7 @@ export class TopRectangleInteractor extends IShapeInteractor {
          this._rectangle.dx,
          (pt.y - this._rectangle.y)));
 
-      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, IShapeInteractor.minimumDx(), IShapeInteractor.minimumDy()));
    }
 
    /**
@@ -281,6 +226,9 @@ export class TopRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
 }
 
@@ -304,28 +252,22 @@ export class BottomRectangleInteractor extends IShapeInteractor {
       this._rectangle = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -335,7 +277,7 @@ export class BottomRectangleInteractor extends IShapeInteractor {
          this._rectangle.dx,
          this._rectangle.dy - (pt.y - this._rectangle.y)));
 
-      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, minimumDX, minimumDY));
+      this._rectangle = this._bounds.clipRectangle(GRect.ensureViableSize(newRect, IShapeInteractor.minimumDx(), IShapeInteractor.minimumDy()));
    }
 
    /**
@@ -343,6 +285,9 @@ export class BottomRectangleInteractor extends IShapeInteractor {
    */
    get rectangle(): GRect {
       return this._rectangle;
+   }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
    }
 }
 
@@ -370,28 +315,22 @@ export class RectangleMoveInteractor extends IShapeInteractor {
       this._initialRect = new GRect(initial_);
    }
 
-   interactionStart(pt: GPoint): boolean {
+   interactionStart(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
-
-      return false; // No need for further call
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this.commonMouseProcessing(pt);
 
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._rectangle));
-
-      return false; // No need for further call
    }
 
    private commonMouseProcessing(pt: GPoint): void {
@@ -412,13 +351,16 @@ export class RectangleMoveInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._rectangle;
    }
+   get line(): GLine {
+      return new GLine(this._rectangle.bottomLeft, this._rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle from top left corner
-// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+// Uses a NewRectangleInteractor, but pins the opposite corner first -> desired resize effect.
 export class TopLeftRectangleInteractor extends IShapeInteractor {
 
-   private _freeRectInteractor: FreeRectangleInteractor;
+   private _freeRectInteractor: NewRectangleInteractor;
 
    /**
     * Create a TopLeftRectangleInteractor object
@@ -429,26 +371,23 @@ export class TopLeftRectangleInteractor extends IShapeInteractor {
 
       super();
 
-      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor = new NewRectangleInteractor(bounds_);
       this._freeRectInteractor.interactionStart(initial_.bottomRight);
    }
 
-   interactionStart(pt: GPoint): boolean {
-
-      return false; // No need for further call
+   interactionStart(pt: GPoint): void {
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
    }
 
    /**
@@ -457,13 +396,16 @@ export class TopLeftRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
    }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle from top left corner
-// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+// Uses a NewRectangleInteractor, but pins the opposite corner first -> desired resize effect.
 export class TopRightRectangleInteractor extends IShapeInteractor {
 
-   private _freeRectInteractor: FreeRectangleInteractor;
+   private _freeRectInteractor: NewRectangleInteractor;
 
    /**
     * Create a TopLeftRectangleInteractor object
@@ -474,7 +416,7 @@ export class TopRightRectangleInteractor extends IShapeInteractor {
 
       super();
 
-      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor = new NewRectangleInteractor(bounds_);
       this._freeRectInteractor.interactionStart(initial_.bottomLeft);
    }
 
@@ -483,17 +425,16 @@ export class TopRightRectangleInteractor extends IShapeInteractor {
       return false; // No need for further call
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
-      return this._freeRectInteractor.interactionUpdate(pt);
+      this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
    }
 
    /**
@@ -502,13 +443,16 @@ export class TopRightRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
    }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle from top left corner
-// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+// Uses a NewRectangleInteractor, but pins the opposite corner first -> desired resize effect.
 export class BottomLeftRectangleInteractor extends IShapeInteractor {
 
-   private _freeRectInteractor: FreeRectangleInteractor;
+   private _freeRectInteractor: NewRectangleInteractor;
 
    /**
     * Create a BottomLeftRectangleInteractor object
@@ -519,26 +463,24 @@ export class BottomLeftRectangleInteractor extends IShapeInteractor {
 
       super();
 
-      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor = new NewRectangleInteractor(bounds_);
       this._freeRectInteractor.interactionStart(initial_.topRight);
    }
 
-   interactionStart(pt: GPoint): boolean {
-
-      return false; // No need for further call
+   interactionStart(pt: GPoint): void {
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
+
    }
 
    /**
@@ -547,13 +489,16 @@ export class BottomLeftRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
    }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
+   }
 }
 
 // Interactor that lets the user resize a rectangle from top left corner
-// Uses a FreeRectangleInteractor, but pins the opposite corner first -> desired resize effect.
+// Uses a NewRectangleInteractor, but pins the opposite corner first -> desired resize effect.
 export class BottomRightRectangleInteractor extends IShapeInteractor {
 
-   private _freeRectInteractor: FreeRectangleInteractor;
+   private _freeRectInteractor: NewRectangleInteractor;
 
    /**
     * Create a BottomRightRectangleInteractor object
@@ -564,26 +509,23 @@ export class BottomRightRectangleInteractor extends IShapeInteractor {
 
       super();
 
-      this._freeRectInteractor = new FreeRectangleInteractor(bounds_);
+      this._freeRectInteractor = new NewRectangleInteractor(bounds_);
       this._freeRectInteractor.interactionStart(initial_.topLeft);
    }
 
-   interactionStart(pt: GPoint): boolean {
-
-      return false; // No need for further call
+   interactionStart(pt: GPoint): void {
    }
 
-   interactionUpdate(pt: GPoint): boolean {
+   interactionUpdate(pt: GPoint): void {
 
       return this._freeRectInteractor.interactionUpdate(pt);
    }
 
-   interactionEnd(pt: GPoint): boolean {
+   interactionEnd(pt: GPoint): void {
 
       this._freeRectInteractor.interactionEnd(pt);
       this.notifyObservers(shapeInteractionCompleteInterest,
          new NotificationFor<GRect>(shapeInteractionCompleteInterest, this._freeRectInteractor.rectangle));
-      return false;
    }
 
    /**
@@ -592,4 +534,8 @@ export class BottomRightRectangleInteractor extends IShapeInteractor {
    get rectangle(): GRect {
       return this._freeRectInteractor.rectangle;
    }
+   get line(): GLine {
+      return new GLine(this.rectangle.bottomLeft, this.rectangle.topRight);
+   }
 }
+

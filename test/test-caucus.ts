@@ -3,9 +3,8 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 import { Persona } from '../src/Persona';
-import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from '../src/NotificationFramework';
+import { Interest, NotificationFor } from '../src/NotificationFramework';
 import { FluidConnection } from '../src/FluidConnection';
-import { uuid } from '../src/Uuid';
 
 var myId: string = "1234";
 var myName: string = "Jon";

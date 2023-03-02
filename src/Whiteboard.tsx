@@ -30,7 +30,7 @@ import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } fr
 import { CaucusOf } from './Caucus';
 import { Canvas } from './Canvas';
 import { CanvasTools } from './CanvasTools';
-import { CanvasMode } from './CanvasModes';
+import { ECanvasMode } from './CanvasModes';
 
 const headerStyles = makeStyles({
    root: {
@@ -148,7 +148,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       alertMessage: null,
       connecting: false,
       canSignOut: false,
-      mode: CanvasMode.Select,
+      mode: ECanvasMode.Select,
       participants: new Map<string, Persona>
    });
 
@@ -191,7 +191,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       })
    };
 
-   const setCanvasMode= (mode_: CanvasMode) => {
+   const setCanvasMode= (mode_: ECanvasMode) => {
       setUiState((prevState) => {
          const data = {
             ...prevState,
@@ -343,7 +343,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
       return uiState.canSignOut;
    }
 
-   function onToolSelect(mode_: CanvasMode): void {
+   function onToolSelect(mode_: ECanvasMode): void {
 
       setCanvasMode(mode_);
    }

@@ -1,13 +1,15 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GRect } from "./Geometry";
+import { GPoint } from "./GeometryPoint";
+import { GRect } from "./GeometryRectangle";
+import { GLine } from "./GeometryLine";
+import { PenColour, PenStyle, Pen } from './Pen';
 import { Shape } from "./Shape";
-import { IShapeInteractor } from "./CanvasInteractors"; 
 
 // Signature for the factory function 
 type FactoryFunctionFor<ShapeRenderer> = () => ShapeRenderer;
 
-var firstFactory: ShapeRendererFactory = null;
+var firstRenderFactory: ShapeRendererFactory = null;
 
 export class ShapeRendererFactory {
 
@@ -20,10 +22,10 @@ export class ShapeRendererFactory {
       this._factoryMethod = factoryMethod_;
       this._nextFactory = null;
 
-      if (firstFactory === null) {
-         firstFactory = this;
+      if (firstRenderFactory === null) {
+         firstRenderFactory = this;
       } else {
-         var nextFactory: ShapeRendererFactory = firstFactory;
+         var nextFactory: ShapeRendererFactory = firstRenderFactory;
 
          while (nextFactory._nextFactory) {
             nextFactory = nextFactory._nextFactory;
@@ -33,7 +35,7 @@ export class ShapeRendererFactory {
    }
 
    static create(className: string) : ShapeRenderer {
-      var nextFactory: ShapeRendererFactory = firstFactory;
+      var nextFactory: ShapeRendererFactory = firstRenderFactory;
 
       while (nextFactory) {
          if (nextFactory._className === className) {
@@ -58,35 +60,120 @@ export abstract class ShapeRenderer {
 
    }
 
+   protected setPen(ctx: CanvasRenderingContext2D, pen: Pen): void {
+
+      switch (pen.colour) {
+         case PenColour.Border:
+            ctx.strokeStyle = "#393D47";
+            ctx.fillStyle = "#393D47";
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "yellow";
+            break
+
+         case PenColour.Black:
+         default:
+            ctx.strokeStyle = "#000000";
+            ctx.fillStyle = "#000000";
+            ctx.shadowBlur = undefined;
+            ctx.shadowColor = undefined;
+            break;
+      }
+
+      switch (pen.style) {
+         case PenStyle.None:
+            break;
+
+         case PenStyle.Dashed:
+            ctx.setLineDash([5, 5]);
+            break;
+
+         case PenStyle.Dotted:
+            ctx.setLineDash([1, 1]);
+            break;
+
+         case PenStyle.Solid:
+            ctx.setLineDash([]);
+         default:
+            break;
+      }
+   }
+
+   protected resetPen(ctx: CanvasRenderingContext2D): void {
+
+      ctx.strokeStyle = "#000000";
+      ctx.fillStyle = "#000000";
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = undefined;
+   }
+
    // Helper function as many derived classes will need it
-   protected drawBorder(ctx: CanvasRenderingContext2D,
-      shape: Shape, dashed: boolean): void {
+   protected drawLine(ctx: CanvasRenderingContext2D,
+      shape: Shape): void {
 
-      ctx.save();
+      this.setPen(ctx, shape.pen);
 
-      ctx.strokeStyle = "#393D47";
-      if (dashed)
-         ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+      ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
+      ctx.lineTo(shape.boundingRectangle.x + shape.boundingRectangle.dx,
+         shape.boundingRectangle.y + shape.boundingRectangle.dy);
+      ctx.closePath();
       ctx.stroke();
 
-      ctx.restore();
+      this.resetPen(ctx);
+   }
+
+   // Helper function as many derived classes will need it
+   protected drawLineSelectionBorder(ctx: CanvasRenderingContext2D,
+      shape: Shape, grabHandleDxy: number): void {
+
+      this.setPen(ctx, shape.pen);
+
+      ctx.beginPath();
+      ctx.moveTo(shape.boundingRectangle.x, shape.boundingRectangle.y);
+      ctx.lineTo(shape.boundingRectangle.x + shape.boundingRectangle.dx,
+         shape.boundingRectangle.y + shape.boundingRectangle.dy);
+      ctx.closePath();
+      ctx.stroke();
+
+      let handles = GLine.createGrabHandlesAround(new GLine(new GPoint(shape.boundingRectangle.x, shape.boundingRectangle.y),
+                                                            new GPoint(shape.boundingRectangle.x+shape.boundingRectangle.dx, 
+                                                                       shape.boundingRectangle.y+shape.boundingRectangle.dy)),
+                                                  grabHandleDxy, grabHandleDxy);
+
+      handles.forEach((handle: GRect) => {
+
+         ctx.beginPath();
+         ctx.fillRect(handle.x, handle.y, handle.dx, handle.dy);
+         ctx.closePath();
+         ctx.stroke();
+      });
+
+      this.resetPen(ctx);
+   }
+
+   // Helper function as many derived classes will need it
+   protected drawBorder(ctx: CanvasRenderingContext2D,
+      shape: Shape): void {
+
+      this.setPen(ctx, shape.pen);
+
+      ctx.beginPath();
+      ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+      ctx.closePath();
+      ctx.stroke();
+
+      this.resetPen(ctx);
    }
 
    // Helper function as many derived classes will need it
    protected drawSelectionBorder(ctx: CanvasRenderingContext2D,
       shape: Shape, grabHandleDxy: number): void {
 
-      ctx.save();
-
-      ctx.strokeStyle = "#393D47";
-      ctx.fillStyle = "#393D47";
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = "yellow";
+      this.setPen(ctx, shape.pen);
 
       ctx.beginPath();
       ctx.rect(shape.boundingRectangle.x, shape.boundingRectangle.y, shape.boundingRectangle.dx, shape.boundingRectangle.dy);
+      ctx.closePath();
       ctx.stroke();
 
       let handles = GRect.createGrabHandlesAround(shape.boundingRectangle, grabHandleDxy, grabHandleDxy);
@@ -95,10 +182,11 @@ export abstract class ShapeRenderer {
 
          ctx.beginPath();
          ctx.fillRect(handle.x, handle.y, handle.dx, handle.dy);
+         ctx.closePath();
          ctx.stroke();
       });
 
-      ctx.restore();
+      this.resetPen(ctx);
    }
 
    // to be overriden by derived classes. 

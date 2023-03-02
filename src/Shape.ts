@@ -2,8 +2,8 @@
 
 import { InvalidParameterError } from './Errors';
 import { uuid } from './Uuid';
-import { MSerialisable } from "./SerialisationFramework";
-import { GRect } from "./Geometry";
+import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
+import { GRect } from './GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "./Pen";
 
 const nullShapeUuid: string = "374cb6a8-b229-4cde-843f-c530df79dca6";
@@ -52,7 +52,7 @@ export class ShapeFactory {
    }
 }
 
-export class Shape extends MSerialisable {
+export class Shape extends MDynamicStreamable {
 
    _id: string;
    _boundingRectangle: GRect;
@@ -150,7 +150,7 @@ export class Shape extends MSerialisable {
    }
 
    set boundingRectangle(rect_: GRect)  {
-      this._boundingRectangle = rect_;
+      this._boundingRectangle = new GRect (rect_);
    }
    set pen(pen_: Pen) {
       this._pen = pen_;
@@ -186,20 +186,31 @@ export class Shape extends MSerialisable {
       return this;
    }
 
-   streamToJSON(): string {
-
-      return JSON.stringify({ shapeID: this.shapeID(), id: this._id, boundingRectangle: this._boundingRectangle, pen: this._pen.streamToJSON(), isSelected: this._isSelected });
+   /**
+    * Dynamic creation for Streaming framework
+    */
+   className() : string {
+   
+      return shapeID;
    }
 
-   streamFromJSON(stream: string): void {
+   static createDynamicInstance(): MDynamicStreamable {
+      return new Shape();
+   }
+
+   static _dynamicShapeStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(shapeID, Shape.createDynamicInstance);
+
+   streamOut(): string {
+
+      return JSON.stringify({ id: this._id, boundingRectangle: this._boundingRectangle, pen: this._pen.streamOut(), isSelected: this._isSelected });
+   }
+
+   streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 
       let pen = new Pen();
-      pen.streamFromJSON(obj.pen);
-
-      // Dynamically create subtype based on shapeID
-      let shape: Shape = ShapeFactory.create(obj.shapeId);
+      pen.streamIn(obj.pen);
 
       this._id = obj.id;
       this._boundingRectangle = new GRect(obj.boundingRectangle);
@@ -213,10 +224,6 @@ export class Shape extends MSerialisable {
 
    static shapeID(): string {
       return shapeID;
-   }
-
-   static factoryFn(): Shape {
-      return new Shape();
    }
 
    isNull(): boolean {

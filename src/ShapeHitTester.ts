@@ -1,15 +1,15 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GPoint, GRect } from './Geometry';
+import { GPoint } from './GeometryPoint';
 import { Shape } from './Shape';
-import { Rectangle } from './Rectangle';
 
 export enum EHitTest
 {
    None = "None",
    Left = "Left", Right = "Right", Top = "Top", Bottom = "Bottom",
    TopLeft = "TopLeft", TopRight = "TopRight", BottomLeft = "BottomLeft", BottomRight = "BottomRight", 
-   Border = "Border"
+   Border = "Border",
+   Start = "Start", End = "End", Line="Line"
 }
 
 // Result of a hit test
@@ -102,7 +102,7 @@ export abstract class ShapeHitTester {
 // Signature for the factory function 
 type FactoryFunctionFor<ShapeHitTester> = (grabHandleDxDy_: number, tolerance_: number) => ShapeHitTester;
 
-var firstFactory: ShapeHitTesterFactory = null;
+var firstHitTestFactory: ShapeHitTesterFactory = null;
 
 export class ShapeHitTesterFactory {
 
@@ -115,10 +115,10 @@ export class ShapeHitTesterFactory {
       this._factoryMethod = factoryMethod_;
       this._nextFactory = null;
 
-      if (firstFactory === null) {
-         firstFactory = this;
+      if (firstHitTestFactory === null) {
+         firstHitTestFactory = this;
       } else {
-         var nextFactory: ShapeHitTesterFactory = firstFactory;
+         var nextFactory: ShapeHitTesterFactory = firstHitTestFactory;
 
          while (nextFactory._nextFactory) {
             nextFactory = nextFactory._nextFactory;
@@ -131,7 +131,7 @@ export class ShapeHitTesterFactory {
       grabHandleDxDy_: number,
       tolerance_: number): ShapeHitTester {
 
-      var nextFactory: ShapeHitTesterFactory = firstFactory;
+      var nextFactory: ShapeHitTesterFactory = firstHitTestFactory;
 
       while (nextFactory) {
          if (nextFactory._className === className) {
@@ -143,92 +143,3 @@ export class ShapeHitTesterFactory {
    }
 }
 
-/// <summary>
-/// RectangleHitTester - common super class for shape renderers
-/// <summary>
-export class RectangleHitTester extends ShapeHitTester {
-
-   /**
-    * Create a RectangleHitTester object 
-    * @param grabHandleDxDy_ - size of the grab hadles if it is selected
-    * @param tolerance_ - how close it needs to be * 
-    */
-   constructor(grabHandleDxDy_: number,
-      tolerance_: number) {
-
-      super(grabHandleDxDy_,
-         tolerance_);
-
-   }
-
-   // to be overriden by derived classes. 
-   hitTest(shape: Shape, pt: GPoint): HitTestResult {
-
-      var testResult: HitTestResult = ShapeGroupHitTester.noHit();
-
-      // first check the bounding box. If within, do more detailed tests, else skip them
-      var rc: GRect;
-      if (shape.isSelected)
-         rc = GRect.inflate(shape.boundingRectangle, this.grabHandleDxDy / 2);
-      else
-         rc = shape.boundingRectangle;
-
-      if (rc.includes(pt)) {
-
-         // Test all grab handles, then all borders
-         if (shape.isSelected) {
-            if (shape.boundingRectangle.isOnLeftGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.Left, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnRightGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.Right, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnTopGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.Top, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnBottomGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.Bottom, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnTopLeftGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.TopLeft, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnTopRightGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.TopRight, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnBottomLeftGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.BottomLeft, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnBottomRightGrabHandle(pt, this.grabHandleDxDy)) {
-               testResult = { hitTest: EHitTest.BottomRight, hitShape: shape };
-            }
-            else
-            if (shape.boundingRectangle.isOnBorder(pt)) {
-               testResult = { hitTest: EHitTest.Border, hitShape: shape };
-            }
-         }
-         else
-         // Only test the border if not selected
-         if (shape.boundingRectangle.isOnBorder(pt, this.tolerance)) {
-            testResult = { hitTest: EHitTest.Border, hitShape: shape };
-         }
-      }
-
-      return testResult;
-   }
-
-   static createInstance(grabHandleDxDy_: number, tolerance_: number): ShapeHitTester {
-      return new RectangleHitTester(grabHandleDxDy_, tolerance_);
-   }
-
-   static _factoryForRectangle: ShapeHitTesterFactory = new ShapeHitTesterFactory(Rectangle.rectangleID(), RectangleHitTester.createInstance);
-
-   // TODO - this is a workaround until Caucus can dynamically create the right subtype of shape
-   static _factoryForShape: ShapeHitTesterFactory = new ShapeHitTesterFactory(Shape.shapeID(), RectangleHitTester.createInstance);
-}

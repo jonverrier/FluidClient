@@ -4,7 +4,9 @@
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
-import { GPoint, GRect } from '../src/Geometry';
+import { GPoint } from '../src/GeometryPoint';
+import { GRect } from '../src/GeometryRectangle';
+import { GLine } from '../src/GeometryLine';
 
 const defaultGrabHandleDxy = 8;
 
@@ -45,13 +47,13 @@ describe("Geometry", function () {
 
       var point1: GPoint = new GPoint(1, 2);
 
-      var stream: string = point1.streamToJSON();
+      var stream: string = point1.streamOut();
 
       var point2: GPoint = new GPoint(); 
 
       expect(point1.equals(point2)).to.equal(false);
 
-      point2.streamFromJSON(stream);
+      point2.streamIn(stream);
 
       expect(point1.equals(point2)).to.equal(true);
    });
@@ -108,13 +110,13 @@ describe("Geometry", function () {
 
       var rect1: GRect = new GRect(1, 2, 3, 4);
 
-      var stream: string = rect1.streamToJSON();
+      var stream: string = rect1.streamOut();
 
       var rect2: GRect = new GRect();
 
       expect(rect1.equals(rect2)).to.equal(false);
 
-      rect2.streamFromJSON(stream);
+      rect2.streamIn(stream);
 
       expect(rect1.equals(rect2)).to.equal(true);
    });
@@ -226,20 +228,20 @@ describe("Geometry", function () {
 
       var rc = new GRect(loLeft, hiRight);
 
-      expect(rc.isOnTopBorder(hiRight)).to.equal(true);
-      expect(rc.isOnLeftBorder(loLeft)).to.equal(true);
-      expect(rc.isOnRightBorder(hiRight)).to.equal(true);
-      expect(rc.isOnBottomBorder(loLeft)).to.equal(true);
-      expect(rc.isOnBorder(hiRight)).to.equal(true);
-      expect(rc.isOnBorder(loLeft)).to.equal(true);
-      expect(rc.isOnBorder(hiRight)).to.equal(true);
-      expect(rc.isOnBorder(loLeft)).to.equal(true);
+      expect(rc.isOnTopBorder(hiRight, 1)).to.equal(true);
+      expect(rc.isOnLeftBorder(loLeft, 1)).to.equal(true);
+      expect(rc.isOnRightBorder(hiRight, 1)).to.equal(true);
+      expect(rc.isOnBottomBorder(loLeft, 1)).to.equal(true);
+      expect(rc.isOnBorder(hiRight, 1)).to.equal(true);
+      expect(rc.isOnBorder(loLeft, 1)).to.equal(true);
+      expect(rc.isOnBorder(hiRight, 1)).to.equal(true);
+      expect(rc.isOnBorder(loLeft, 1)).to.equal(true);
 
-      expect(rc.isOnTopBorder(loLeft)).to.equal(false);
-      expect(rc.isOnLeftBorder(hiRight)).to.equal(false);
-      expect(rc.isOnRightBorder(loLeft)).to.equal(false);
-      expect(rc.isOnBottomBorder(hiRight)).to.equal(false);
-      expect(rc.isOnBorder(new GPoint(0,0))).to.equal(false);
+      expect(rc.isOnTopBorder(loLeft, 1)).to.equal(false);
+      expect(rc.isOnLeftBorder(hiRight, 1)).to.equal(false);
+      expect(rc.isOnRightBorder(loLeft, 1)).to.equal(false);
+      expect(rc.isOnBottomBorder(hiRight, 1)).to.equal(false);
+      expect(rc.isOnBorder(new GPoint(0,0), 1)).to.equal(false);
    });
 
    it("Needs to test side grab handle intersections", function () {
@@ -291,6 +293,86 @@ describe("Geometry", function () {
       expect(rc.isOnTopRightGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
       expect(rc.isOnBottomRightGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
       expect(rc.isOnBottomLeftGrabHandle(hiRight, defaultGrabHandleDxy)).to.equal(false);
+   });
+
+   it("Needs to create, test & assign GLine", function () {
+
+      let bottomLeft = new GPoint(1, 3);
+      let topRight = new GPoint(2, 4);
+
+      var line1: GLine = new GLine(1, 2, 5, 6);
+      var line2: GLine = new GLine(bottomLeft, topRight);
+      var line3: GLine = new GLine(line1);
+      var line4: GLine = new GLine();
+
+      expect(line1.equals(line1)).to.equal(true);
+      expect(line1.equals(line2)).to.equal(false);
+      expect(line1.equals(line3)).to.equal(true);
+      expect(line1.equals(line4)).to.equal(false);
+      expect(line1.start.x === 1).to.equal(true);
+      expect(line1.start.y === 2).to.equal(true);
+      expect(line1.end.x === 5).to.equal(true);
+      expect(line1.end.y === 6).to.equal(true);
+      expect(line1.boundingRectangle.x).to.equal(1);
+      expect(line1.boundingRectangle.y).to.equal(2);
+      expect(line1.boundingRectangle.dx).to.equal(4);
+      expect(line1.boundingRectangle.dy).to.equal(4);
+
+      line2.assign(line1);
+      expect(line1.equals(line2)).to.equal(true);
+
+      var caught: boolean = false;
+      try {
+         var line5: GLine = new GLine(null as GLine);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).to.equal(true);;
+   });
+
+   it("Needs to convert GLine to and from JSON()", function () {
+
+      var line1: GLine = new GLine(1, 2, 3, 4);
+
+      var stream: string = line1.streamOut();
+
+      var line2: GLine = new GLine();
+
+      expect(line1.equals(line2)).to.equal(false);
+
+      line2.streamIn(stream);
+
+      expect(line1.equals(line2)).to.equal(true);
+   });
+
+   it("Needs to create grab handles on GLine", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy,
+         10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy);
+
+      var line = new GLine(loLeft, hiRight);
+
+      expect(GLine.createGrabHandlesAround(line, 4, 4).length === 2).to.equal(true);
+   });
+
+   it("Needs GLine to test border intersections", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy,
+         10 + GRect.minimumRelativeSizeForMidHandles() * defaultGrabHandleDxy);
+
+      var line = new GLine(loLeft, hiRight);
+
+      expect(line.isOnLine(hiRight, 1)).to.equal(true);
+      expect(line.isOnLine(loLeft, 1)).to.equal(true);
+      expect(line.isOnStartGrabHandle(loLeft, 1)).to.equal(true);
+      expect(line.isOnEndGrabHandle(hiRight, 1)).to.equal(true);
+
+      var ptMad = new GPoint(1000, 1000);
+      expect(line.isOnLine(ptMad, 1)).to.equal(false);
+      expect(line.isOnStartGrabHandle(ptMad, 1)).to.equal(false);
+      expect(line.isOnEndGrabHandle(ptMad, 1)).to.equal(false);
    });
 });
 

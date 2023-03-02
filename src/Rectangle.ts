@@ -1,7 +1,8 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GRect } from "./Geometry";
+import { GRect } from './GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "./Pen";
+import { MDynamicStreamable, DynamicStreamableFactory } from './StreamingFramework';
 import { Shape, ShapeFactory } from './Shape';
 
 const selectionRectangleID: string = "SelectionRectangle";
@@ -53,7 +54,8 @@ export class SelectionRectangle extends Shape {
       return new SelectionRectangle();
    }
 
-   static _factoryForSelectionRectangle : ShapeFactory = new ShapeFactory(selectionRectangleID, Shape.createInstance);
+   static _factoryForSelectionRectangle: ShapeFactory = new ShapeFactory(selectionRectangleID,
+                                                                         SelectionRectangle.createInstance);
 }
 
 export class Rectangle extends Shape {
@@ -97,6 +99,25 @@ export class Rectangle extends Shape {
       return rectangleID;
    }
 
+   /**
+    * Dynamic creation for Streaming framework
+    */
+   className(): string {
+
+      return rectangleID;
+   }
+
+   static createDynamicInstance(): MDynamicStreamable {
+      return new Rectangle();
+   }
+
+   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(rectangleID, Rectangle.createDynamicInstance);
+
+   streamOut(): string {
+
+      return JSON.stringify({ shapeID: this.shapeID(), id: this._id, boundingRectangle: this._boundingRectangle, pen: this._pen.streamOut(), isSelected: this._isSelected });
+   }
+
    static rectangleID(): string {
       return rectangleID;
    }
@@ -105,5 +126,6 @@ export class Rectangle extends Shape {
       return new Rectangle();
    }
 
-   static _factoryForRectangle: ShapeFactory = new ShapeFactory(rectangleID, Rectangle.createInstance);
+   static _factoryForRectangle: ShapeFactory = new ShapeFactory(rectangleID,
+                                                                Rectangle.createInstance);
 }
