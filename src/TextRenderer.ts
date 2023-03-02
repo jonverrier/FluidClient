@@ -23,29 +23,36 @@ export class TextShapeRenderer extends ShapeRenderer {
       x: number, y: number, maxWidth: number, lineHeight: number): void {
 
       var cars = text.split("\n");
+      var spaceWidth = context.measureText(" ").width;
 
       for (var ii = 0; ii < cars.length; ii++) {
 
          var line = "";
          var words = cars[ii].split(" ");
+         var lineWidth = 0;
 
          for (var n = 0; n < words.length; n++) {
             var testLine = line + words[n] + " ";
-            var metrics = context.measureText(testLine);
-            var testWidth = metrics.width;
+            var testWidth = context.measureText(testLine).width;
 
-            if (testWidth > maxWidth) {
-               context.fillText(line, x, y);
+            // Print the txt if we have incrementally exceeded maxWidth, 
+            // or if we only have one word so we have to any way. 
+            if ((testWidth > maxWidth) || ((testWidth > maxWidth) && n === 0)) {
+               context.fillText(line, x + (maxWidth - lineWidth) / 2, y);
                line = words[n] + " ";
                y += lineHeight;
+               lineWidth = (testWidth - lineWidth) - spaceWidth / 2;
             }
             else {
                line = testLine;
+               lineWidth = testWidth - spaceWidth / 2;
             }
          }
       }
 
-      context.fillText(line, x, y);
+      var metrics = context.measureText(line);
+      var testWidth = metrics.width;
+      context.fillText(line, x + (maxWidth - testWidth) / 2, y);
       y += lineHeight;
    }
 
