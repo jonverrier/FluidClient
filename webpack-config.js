@@ -1,7 +1,7 @@
 module.exports = {
    devtool: 'source-map',
    entry: "./src/AppEntry.tsx",
-   mode: "development",
+   mode: "production",
    target: 'web',
    output: {
       filename: "fluidwhiteboard.min.js",
