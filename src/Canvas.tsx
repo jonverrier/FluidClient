@@ -305,12 +305,6 @@ export const Canvas = (props: ICanvasProps) => {
    var changedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberChangedInterest);
    var removedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberRemovedInterest);
 
-   var shapeInteractionCmplRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this));
-   var shapeInteractionCmplInterest = new ObserverInterest(shapeInteractionCmplRouter, shapeInteractionCompleteInterest);
-
-   var shapeInteractionAbndRouter: NotificationRouter = new NotificationRouter(onShapeInteractionAbandoned.bind(this));
-   var shapeInteractionAbndInterest = new ObserverInterest(shapeInteractionAbndRouter, shapeInteractionAbandonedInterest);
-
    function useCanvas(ref: React.MutableRefObject<any>,
       shapes_: Map<string, Shape>,
       lastHit_: EHitTest): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
@@ -402,6 +396,101 @@ export const Canvas = (props: ICanvasProps) => {
          shapeInteractor: canvasState.shapeInteractor,
          resizeShapeId: canvasState.resizeShapeId
       });
+   }
+
+   // const handleCanvasKeyPress =
+   // User presses escape - terminate the interaction
+   function onShapeInteractionAbandoned (interest: Interest, data: Notification): void {
+
+      if (resizeShapeId) {
+         // Force re-render with no interactor, re-size finished. 
+         setCanvasState({
+            width: canvasState.width, height: canvasState.height,
+            shapes: canvasState.shapes,
+            lastHit: EHitTest.None,
+            shapeInteractor: null,
+            resizeShapeId: null
+         });
+      }
+   }
+
+   // This function does not directly reset React state
+   // That is left for the interactionStart, Update, and End functions
+   function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
+
+      function clearSelection(): void {
+         // Clear previous selections
+         canvasState.shapes.forEach((shape: Shape, key: string) => {
+            shape.isSelected = false;
+            props.shapeCaucus.amend(shape.id, shape);
+         });
+      }
+
+      switch (props.mode) {
+         case ECanvasMode.Line:
+            clearSelection();
+
+            // Create new shape - selected
+            let line = new Line(data.eventData, new Pen(PenColour.Black, PenStyle.Solid), true);
+
+            // set the version in Caucus first, which pushes to other clients, then reset our state to match
+            props.shapeCaucus.add(line.id, line);
+            canvasState.shapes.set(line.id, line);
+            break;
+
+         case ECanvasMode.Text:
+            clearSelection();
+
+            // Create new Textedit interactor once the location has been picked 
+            let interactor = new TextEditInteractor(data.eventData);
+
+            // Force re-render with the new interactor, but with re-size finished. 
+            setCanvasState({
+               width: canvasState.width, height: canvasState.height,
+               shapes: canvasState.shapes,
+               lastHit: lastHit,
+               shapeInteractor: interactor,
+               resizeShapeId: null
+            });
+            break;
+
+         case ECanvasMode.Rectangle:
+            clearSelection();
+
+            // Create new shape - selected
+            let rectangle = new Rectangle(data.eventData, new Pen(PenColour.Black, PenStyle.Solid), true);
+
+            // set the version in Caucus first, which pushes to other clients, then reset our state to match
+            props.shapeCaucus.add(rectangle.id, rectangle);
+            canvasState.shapes.set(rectangle.id, rectangle);
+            break;
+
+         case ECanvasMode.Select:
+         default:
+            if (resizeShapeId) {
+
+               // If we are here, User clicked on a border, or a grab handle
+               // Set the new size & then push to Caucus
+               let shape = canvasState.shapes.get(resizeShapeId);
+               shape.boundingRectangle = data.eventData;
+               props.shapeCaucus.amend(resizeShapeId, shape);
+               resizeShapeId = null;
+            }
+            else {
+               // Else select items within the selection area and de-select others
+               canvasState.shapes.forEach((shape: Shape, key: string) => {
+                  if (data.eventData.fullyIncludes(shape.boundingRectangle)) {
+                     shape.isSelected = true;
+                  }
+                  else {
+                     shape.isSelected = false;
+                  }
+                  // set the version in Caucus, which pushes to other clients
+                  props.shapeCaucus.amend(shape.id, shape);
+               });
+            }
+            break;
+      }
    }
 
    const [canvasState, setCanvasState] = useCanvas(canvasRef,
@@ -533,103 +622,6 @@ export const Canvas = (props: ICanvasProps) => {
       let y = event.changedTouches[event.changedTouches.length - 1].clientY - rect.top;
 
       return new GPoint(x, y);
-   }
-
-
-   // User presses escape - terminate the interaction
-   function onShapeInteractionAbandoned(interest: Interest, data: Notification): void {
-
-      if (canvasState.shapeInteractor) {
-         // Force re-render with the no interactor, re-size finished. 
-         setCanvasState({
-            width: canvasState.width, height: canvasState.height,
-            shapes: canvasState.shapes,
-            lastHit: EHitTest.None,
-            shapeInteractor: null,
-            resizeShapeId: null
-         });
-      }
-   }
-
-
-   // This function does not directly reset React state
-   // That is left for the interactionStart, Update, and End functions
-   function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
-
-      function clearSelection(): void {
-         // Clear previous selections
-         canvasState.shapes.forEach((shape: Shape, key: string) => {
-            shape.isSelected = false;
-            props.shapeCaucus.amend(shape.id, shape);
-         });
-      }
-
-
-      switch (props.mode) { 
-         case ECanvasMode.Line:
-            clearSelection();
-
-            // Create new shape - selected
-            let line = new Line(data.eventData, new Pen(PenColour.Black, PenStyle.Solid), true);
-
-            // set the version in Caucus first, which pushes to other clients, then reset our state to match
-            props.shapeCaucus.add(line.id, line);
-            canvasState.shapes.set(line.id, line);
-            break;
-
-         case ECanvasMode.Text:
-            clearSelection();
-
-            // Create new Textedit interactor once the location has been picked 
-            let interactor = new TextEditInteractor(data.eventData);
-
-            // Force re-render with the new interactor, but with re-size finished. 
-            setCanvasState({
-               width: canvasState.width, height: canvasState.height,
-               shapes: canvasState.shapes,
-               lastHit: lastHit,
-               shapeInteractor: interactor,
-               resizeShapeId: null
-            });
-            break;
-
-         case ECanvasMode.Rectangle:
-            clearSelection();
-
-            // Create new shape - selected
-            let rectangle = new Rectangle(data.eventData, new Pen (PenColour.Black, PenStyle.Solid), true);
-
-            // set the version in Caucus first, which pushes to other clients, then reset our state to match
-            props.shapeCaucus.add(rectangle.id, rectangle);
-            canvasState.shapes.set(rectangle.id, rectangle);
-            break;
-
-         case ECanvasMode.Select:
-         default:
-            if (resizeShapeId) {
-
-               // If we are here, User clicked on a border, or a grab handle
-               // Set the new size & then push to Caucus
-               let shape = canvasState.shapes.get(resizeShapeId);
-               shape.boundingRectangle = data.eventData;
-               props.shapeCaucus.amend(resizeShapeId, shape);
-               resizeShapeId = null;
-            }
-            else {
-               // Else select items within the selection area and de-select others
-               canvasState.shapes.forEach((shape: Shape, key: string) => {
-                  if (data.eventData.fullyIncludes(shape.boundingRectangle)) {
-                     shape.isSelected = true;
-                  }
-                  else {
-                     shape.isSelected = false;
-                  }
-                  // set the version in Caucus, which pushes to other clients
-                  props.shapeCaucus.amend(shape.id, shape);
-               });
-            }
-            break;
-      }
    }
 
    function interactionStart(coord: GPoint, bounds: GRect) : void {
@@ -789,10 +781,9 @@ export const Canvas = (props: ICanvasProps) => {
       interactionEnd(coord);
    }
 
-   const handleCanvasKeyPress = (event: KeyboardEvent): void => {
+   function handleCanvasKeyPress (event: KeyboardEvent): void {
 
       event.stopPropagation();
-
 
       switch (event.key) {
          case 'Escape':
@@ -825,6 +816,12 @@ export const Canvas = (props: ICanvasProps) => {
       });
    }
 
+   var shapeInteractionCmplRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete);
+   var shapeInteractionCmplInterest = new ObserverInterest(shapeInteractionCmplRouter, shapeInteractionCompleteInterest);
+
+   var shapeInteractionAbndRouter: NotificationRouter = new NotificationRouter(onShapeInteractionAbandoned);
+   var shapeInteractionAbndInterest = new ObserverInterest(shapeInteractionAbndRouter, shapeInteractionAbandonedInterest);
+
    // Calculate position for the text edit UI
    var rc: GRect;
 
@@ -842,9 +839,9 @@ export const Canvas = (props: ICanvasProps) => {
                <div></div>
             }
             <canvas
-               tabIndex={1}
+               tabIndex={1}                           // So the canvas gets keyboard message
                className="App-canvas"      
-               style = {{ touchAction: 'none' }}         
+               style = {{ touchAction: 'none' }}      // Stops scoll on touch on mobile/iPad   
                ref={canvasRef as any}
                width={canvasWidth as any}
                height={canvasHeight as any}
@@ -855,7 +852,7 @@ export const Canvas = (props: ICanvasProps) => {
                onTouchStart={handleCanvasTouchStart as any}
                onTouchMove={handleCanvasTouchMove as any}
                onTouchEnd={handleCanvasTouchEnd as any}
-               onKeyDown={handleCanvasKeyPress.bind(this) as any}
+               onKeyDown={handleCanvasKeyPress as any}
                />
          </div>
       </div>);

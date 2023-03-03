@@ -492,13 +492,13 @@ export class Notifier implements INotifier {
 
       //log.debug(tag.notification, "Notification:" + interest_.notificationId + ": " + JSON.stringify (notificationData_));
 
-      this._observerInterests.forEach((observerInterest) => {
+      for (var i = 0; i < this._observerInterests.length; i++) {
 
-         if (observerInterest.interest.equals (interest_)) {
+         if (this._observerInterests[i].interest.equals (interest_)) {
 
-            observerInterest.observer.notify(observerInterest.interest, notificationData_);
+            this._observerInterests[i].observer.notify(this._observerInterests[i].interest, notificationData_);
          }
-       });
+       }
     }
 
    // Add the supplied observer to the list of observers associated with
