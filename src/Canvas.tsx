@@ -233,7 +233,7 @@ export interface ICanvasProps {
    shapeCaucus: CaucusOf<Shape>;
 }
 
-// BUILD NOTE
+// DEVELOPMENT NOTE
 // Update this for every style of interaction
 function shapeInteractorFromMode(mode_: ECanvasMode,
    bounds_: GRect,
@@ -300,7 +300,7 @@ export const Canvas = (props: ICanvasProps) => {
 
    // Set up variables needed to hook into Notification Framework
    var caucusRouter: NotificationRouterFor<string>;
-   caucusRouter = new NotificationRouterFor<string>(onCaucusChange.bind(this));
+   caucusRouter = new NotificationRouterFor<string>(onCaucusChange);
    var addedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberAddedInterest);
    var changedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberChangedInterest);
    var removedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberRemovedInterest);
@@ -309,7 +309,7 @@ export const Canvas = (props: ICanvasProps) => {
       shapes_: Map<string, Shape>,
       lastHit_: EHitTest): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
 
-      const [canvasState, setCanvasState] = useState<CanvasState>(new CanvasState(canvasWidth, canvasHeight, shapes_, lastHit_));
+      const [localCanvasState, setLocalCanvasState] = useState<CanvasState>(new CanvasState(canvasWidth, canvasHeight, shapes_, lastHit_));
 
       useEffect(() => {
 
@@ -335,31 +335,31 @@ export const Canvas = (props: ICanvasProps) => {
          drawBackground(ctx).then(() => {
 
             // then shapes
-            drawShapes(ctx, canvasState.shapes);
+            drawShapes(ctx, localCanvasState.shapes);
 
          }).then(() => {
 
             // then draw selection 
-            if (canvasState.shapeInteractor) {
+            if (localCanvasState.shapeInteractor) {
                switch (props.mode) {
                   case ECanvasMode.Line:
-                     drawSelectionLine(ctx, canvasState.shapeInteractor.rectangle);
+                     drawSelectionLine(ctx, localCanvasState.shapeInteractor.rectangle);
                      break;
 
                   case ECanvasMode.Rectangle:
-                     drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+                     drawSelectionRect(ctx, localCanvasState.shapeInteractor.rectangle);
                      break;
 
                   case ECanvasMode.Text:
-                     drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+                     drawSelectionRect(ctx, localCanvasState.shapeInteractor.rectangle);
                      break;
 
                   case ECanvasMode.Select:
                   default:
                      if (lastHit === EHitTest.Start || lastHit === EHitTest.End || lastHit === EHitTest.Line) {
-                        drawSelectionLine(ctx, canvasState.shapeInteractor.rectangle);
+                        drawSelectionLine(ctx, localCanvasState.shapeInteractor.rectangle);
                      } else {
-                        drawSelectionRect(ctx, canvasState.shapeInteractor.rectangle);
+                        drawSelectionRect(ctx, localCanvasState.shapeInteractor.rectangle);
                      }
                      break;
                }
@@ -374,16 +374,24 @@ export const Canvas = (props: ICanvasProps) => {
                props.shapeCaucus.removeObserver(removedInterest);
             }
 
-            if (canvasState.shapeInteractor) {
+            if (localCanvasState.shapeInteractor) {
 
-               canvasState.shapeInteractor.removeObserver(shapeInteractionCmplInterest);
-               canvasState.shapeInteractor.removeObserver(shapeInteractionAbndInterest);
+               localCanvasState.shapeInteractor.removeObserver(shapeInteractionCmplInterest);
+               localCanvasState.shapeInteractor.removeObserver(shapeInteractionAbndInterest);
             }
          }
       });
 
-      return [canvasState, setCanvasState];
+      return [localCanvasState, setLocalCanvasState];
    }
+
+   // Declare state context before callback functions
+   const [canvasState, setCanvasState] = useCanvas(canvasRef,
+      props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>,
+      lastHit
+   );
+
+   var lastHit: EHitTest;
 
    function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
 
@@ -402,16 +410,13 @@ export const Canvas = (props: ICanvasProps) => {
    // User presses escape - terminate the interaction
    function onShapeInteractionAbandoned (interest: Interest, data: Notification): void {
 
-      if (resizeShapeId) {
-         // Force re-render with no interactor, re-size finished. 
-         setCanvasState({
-            width: canvasState.width, height: canvasState.height,
-            shapes: canvasState.shapes,
-            lastHit: EHitTest.None,
-            shapeInteractor: null,
-            resizeShapeId: null
-         });
-      }
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: canvasState.shapes,
+         lastHit: EHitTest.None,
+         shapeInteractor: null,
+         resizeShapeId: null
+      });
    }
 
    // This function does not directly reset React state
@@ -491,14 +496,7 @@ export const Canvas = (props: ICanvasProps) => {
             }
             break;
       }
-   }
-
-   const [canvasState, setCanvasState] = useCanvas(canvasRef,
-      props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>,
-      lastHit
-   );
-
-   var lastHit: EHitTest; 
+   } 
 
    // Dont reset the hit test if there is an interaction going on
    if (canvasState.shapeInteractor) {
@@ -510,6 +508,7 @@ export const Canvas = (props: ICanvasProps) => {
    let hitTestInteractor = new ShapeGroupHitTester(canvasState.shapes,
       IShapeInteractor.defaultGrabHandleDxDy(),
       IShapeInteractor.defaultHitTestTolerance());
+
    let resizeShapeId = canvasState.resizeShapeId;
    
    const cursorDefaultClasses = cursorDefaultStyles();
@@ -524,7 +523,7 @@ export const Canvas = (props: ICanvasProps) => {
    const cursorBottomLeftClasses = cursorBottomLeftStyles();
    const cursorBottomRightClasses = cursorBottomRightStyles();
 
-   // BUILD NOTE
+   // DEVELOPMENT NOTE
    // Update this for every style of interaction
    function cursorStylesFromModeAndLastHit(mode_: ECanvasMode, lastHit_: EHitTest): string {
       switch (mode_) {
@@ -846,13 +845,13 @@ export const Canvas = (props: ICanvasProps) => {
                width={canvasWidth as any}
                height={canvasHeight as any}
                id={canvasId}
-               onMouseDown={handleCanvasMouseDown}
-               onMouseMove={handleCanvasMouseMove}
-               onMouseUp={handleCanvasMouseUp}
-               onTouchStart={handleCanvasTouchStart as any}
-               onTouchMove={handleCanvasTouchMove as any}
-               onTouchEnd={handleCanvasTouchEnd as any}
-               onKeyDown={handleCanvasKeyPress as any}
+               onMouseDown={handleCanvasMouseDown.bind(canvasState)}
+               onMouseMove={handleCanvasMouseMove.bind(canvasState)}
+               onMouseUp={handleCanvasMouseUp.bind(canvasState)}
+               onTouchStart={handleCanvasTouchStart.bind(canvasState) as any}
+               onTouchMove={handleCanvasTouchMove.bind(canvasState) as any}
+               onTouchEnd={handleCanvasTouchEnd.bind(canvasState) as any}
+               onKeyDown={handleCanvasKeyPress.bind(canvasState) as any}
                />
          </div>
       </div>);
