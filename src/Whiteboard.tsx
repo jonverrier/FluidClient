@@ -73,6 +73,8 @@ const alertStyles = makeStyles({
    },
 });
 
+const outerDivId = "enclosingDivId";
+
 class NameKeyPair {
 
    public name: string;
@@ -370,6 +372,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    return (
       <FluentProvider theme={teamsLightTheme}>
+         <div id={outerDivId}>
          <div className={headerClasses.root}>  {/* Top row for controls to setup a sharing session */}
             <div className={leftColumnClasses.root}>
                <Tooltip withArrow content={uiState.sharePrompt} relationship="label" key="share">
@@ -420,8 +423,8 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
             : <div></div>}
          </div>
 
-         <Canvas mode={uiState.mode} shapeCaucus={props.shapeCaucus}></Canvas>
-
+         <Canvas mode={uiState.mode} shapeCaucus={props.shapeCaucus} outerDivId={outerDivId}></Canvas>
+         </div>
       </FluentProvider>
    );
 }

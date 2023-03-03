@@ -51,7 +51,7 @@ var lr: LineShapeRenderer = new LineShapeRenderer();
 var tr: TextShapeRenderer = new TextShapeRenderer();
 
 import { CanvasTextEdit } from "./CanvasTextEdit";
-import { FontMetrics, fontMetrics } from "./CanvasFontMetrics";
+import { fontMetrics } from "./CanvasFontMetrics";
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -231,6 +231,7 @@ export interface ICanvasProps {
 
    mode: ECanvasMode;
    shapeCaucus: CaucusOf<Shape>;
+   outerDivId: string;
 }
 
 // DEVELOPMENT NOTE
@@ -651,9 +652,9 @@ export const Canvas = (props: ICanvasProps) => {
       // Tell interactor to start
       shapeInteractor.interactionStart(coord);
 
-
-      // Put focus in the canvas for keyboard processing
-      getCanvasElementFromId(canvasId).focus();
+      // Put focus in the canvas for keyboard processing, do not scroll as it is visually disturbing
+      //var focusOptions = { preventScroll: true, focusVisible: false };
+      //getCanvasElementFromId(canvasId).focus(focusOptions);
 
       // Force re-render
       setCanvasState({
@@ -830,6 +831,10 @@ export const Canvas = (props: ICanvasProps) => {
       rc.y = rc.y + pt.y;
    }
 
+   if (document.getElementById(props.outerDivId)) {
+      document.getElementById(props.outerDivId).onkeydown = handleCanvasKeyPress.bind(canvasState);
+   }
+
    return (
       <div>
          <div className={cursorStylesFromModeAndLastHit(props.mode, canvasState.lastHit)}>
@@ -838,7 +843,7 @@ export const Canvas = (props: ICanvasProps) => {
                <div></div>
             }
             <canvas
-               tabIndex={1}                           // So the canvas gets keyboard message
+               /*tabIndex={1}                        // So the canvas gets keyboard message */
                className="App-canvas"      
                style = {{ touchAction: 'none' }}      // Stops scoll on touch on mobile/iPad   
                ref={canvasRef as any}
@@ -851,7 +856,6 @@ export const Canvas = (props: ICanvasProps) => {
                onTouchStart={handleCanvasTouchStart.bind(canvasState) as any}
                onTouchMove={handleCanvasTouchMove.bind(canvasState) as any}
                onTouchEnd={handleCanvasTouchEnd.bind(canvasState) as any}
-               onKeyDown={handleCanvasKeyPress.bind(canvasState) as any}
                />
          </div>
       </div>);
