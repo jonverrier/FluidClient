@@ -12,7 +12,7 @@ import {
 import { GPoint } from './GeometryPoint';
 import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
-import { Interest, NotificationFor, ObserverInterest, NotificationRouterFor } from './NotificationFramework';
+import { Interest, Notification, NotificationFor, ObserverInterest, NotificationRouter, NotificationRouterFor } from './NotificationFramework';
 import { Pen, PenColour, PenStyle } from "./Pen";
 import { Shape} from './Shape';
 import { Rectangle, SelectionRectangle } from './Rectangle';
@@ -20,7 +20,7 @@ import { TextShape } from './Text';
 import { Line } from './Line';
 import { CaucusOf } from './Caucus';
 import { EUIActions, ECanvasMode } from './CanvasModes';
-import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractor';
+import { IShapeInteractor, shapeInteractionCompleteInterest, shapeInteractionAbandonedInterest } from './ShapeInteractor';
 import {
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
@@ -305,8 +305,11 @@ export const Canvas = (props: ICanvasProps) => {
    var changedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberChangedInterest);
    var removedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberRemovedInterest);
 
-   var shapeInteractionRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this));
-   var shapeInteractionInterest = new ObserverInterest(shapeInteractionRouter, shapeInteractionCompleteInterest);
+   var shapeInteractionCmplRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionComplete.bind(this));
+   var shapeInteractionCmplInterest = new ObserverInterest(shapeInteractionCmplRouter, shapeInteractionCompleteInterest);
+
+   var shapeInteractionAbndRouter: NotificationRouter = new NotificationRouter(onShapeInteractionAbandoned.bind(this));
+   var shapeInteractionAbndInterest = new ObserverInterest(shapeInteractionAbndRouter, shapeInteractionAbandonedInterest);
 
    function useCanvas(ref: React.MutableRefObject<any>,
       shapes_: Map<string, Shape>,
@@ -377,8 +380,11 @@ export const Canvas = (props: ICanvasProps) => {
                props.shapeCaucus.removeObserver(removedInterest);
             }
 
-            if (canvasState.shapeInteractor)
-               canvasState.shapeInteractor.removeObserver(shapeInteractionInterest);
+            if (canvasState.shapeInteractor) {
+
+               canvasState.shapeInteractor.removeObserver(shapeInteractionCmplInterest);
+               canvasState.shapeInteractor.removeObserver(shapeInteractionAbndInterest);
+            }
          }
       });
 
@@ -529,6 +535,23 @@ export const Canvas = (props: ICanvasProps) => {
       return new GPoint(x, y);
    }
 
+
+   // User presses escape - terminate the interaction
+   function onShapeInteractionAbandoned(interest: Interest, data: Notification): void {
+
+      if (canvasState.shapeInteractor) {
+         // Force re-render with the no interactor, re-size finished. 
+         setCanvasState({
+            width: canvasState.width, height: canvasState.height,
+            shapes: canvasState.shapes,
+            lastHit: EHitTest.None,
+            shapeInteractor: null,
+            resizeShapeId: null
+         });
+      }
+   }
+
+
    // This function does not directly reset React state
    // That is left for the interactionStart, Update, and End functions
    function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
@@ -624,14 +647,22 @@ export const Canvas = (props: ICanvasProps) => {
          resizeShapeId = null;
       }
 
-      // Create the right interactor, and hook up to notifications of when the interaction is complete
+      // Create the right interactor
       let shapeInteractor = shapeInteractorFromMode(props.mode,
          bounds,
          resizeShape ? resizeShape.boundingRectangle : new GRect(),
          lastHit, coord);
 
-      shapeInteractor.addObserver(shapeInteractionInterest);
+      // Hook up observer functions
+      shapeInteractor.addObserver(shapeInteractionCmplInterest);
+      shapeInteractor.addObserver(shapeInteractionAbndInterest);
+
+      // Tell interactor to start
       shapeInteractor.interactionStart(coord);
+
+
+      // Put focus in the canvas for keyboard processing
+      getCanvasElementFromId(canvasId).focus();
 
       // Force re-render
       setCanvasState({
@@ -758,6 +789,23 @@ export const Canvas = (props: ICanvasProps) => {
       interactionEnd(coord);
    }
 
+   const handleCanvasKeyPress = (event: KeyboardEvent): void => {
+
+      event.stopPropagation();
+
+
+      switch (event.key) {
+         case 'Escape':
+            if (canvasState.shapeInteractor) {
+               canvasState.shapeInteractor.escape();
+            }
+            break;
+
+         default:
+            break;
+      }
+   }
+
    function onTextEditSelect(tool: EUIActions, text: string) {
 
       if (tool === EUIActions.Ok) {
@@ -794,6 +842,7 @@ export const Canvas = (props: ICanvasProps) => {
                <div></div>
             }
             <canvas
+               tabIndex={1}
                className="App-canvas"      
                style = {{ touchAction: 'none' }}         
                ref={canvasRef as any}
@@ -806,6 +855,7 @@ export const Canvas = (props: ICanvasProps) => {
                onTouchStart={handleCanvasTouchStart as any}
                onTouchMove={handleCanvasTouchMove as any}
                onTouchEnd={handleCanvasTouchEnd as any}
+               onKeyDown={handleCanvasKeyPress.bind(this) as any}
                />
          </div>
       </div>);

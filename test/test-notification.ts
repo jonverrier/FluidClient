@@ -12,6 +12,7 @@ import {
    ObserverInterest,
    Notifier,
    IObserver,
+   NotificationRouter,
    NotificationRouterFor
 } from '../src/NotificationFramework';
 
@@ -70,6 +71,29 @@ describe("NotificationFramework", function () {
    });
 
    it("Needs to create, test & assign Notification", function () {
+
+      var notificationId1: string = "Playing";
+      var notificationId2: string = "Paused";
+
+      var interest1: Interest = new Interest(notificationId1);
+      var interest2: Interest = new Interest(notificationId2);
+
+      var notification1: Notification = new Notification(interest1);
+      var notification2: Notification = new Notification(interest2);
+      var notification3: Notification = new Notification(notification1);
+      var notification4: Notification = new Notification();
+
+      expect(notification1.equals(notification1)).to.equal(true);
+      expect(notification1.equals(notification2)).to.equal(false);
+      expect(notification1.equals(notification3)).to.equal(true);
+      expect(notification1.equals(notification4)).to.equal(false);
+      expect(notification1.interest.equals(interest1)).to.equal(true);
+
+      notification2.assign(notification1);
+      expect(notification1.equals(notification2)).to.equal(true);
+   });
+
+   it("Need to create, test & assign Notification", function () {
 
       var notificationId1: string = "Playing";
       var notificationId2: string = "Paused";
@@ -198,16 +222,31 @@ describe("NotificationFramework", function () {
       expect(notifier.removeObserver(observerInterest2) === false).to.equal(true);
       notifier.removeAllObservers();
 
-      // Call sequence 3 - routed & with a payload
-      var observationRouter: NotificationRouterFor<number> = new NotificationRouterFor<number>(observerYes.notifyInt.bind(observerYes));
+      // Call sequence 3 - routed 
+      var observationRouter3: NotificationRouter = new NotificationRouter (observerYes.notify.bind(observerYes));
 
-      var observerInterest3: ObserverInterest = new ObserverInterest(observationRouter, interest1);
+      var observerInterest3: ObserverInterest = new ObserverInterest(observationRouter3, interest1);
       notifier.addObserver(observerInterest3);
 
-      var notificationForInt2: NotificationFor<number> = new NotificationFor<number>(interest1, 2);
-      notifier.notifyObservers(interest1, notificationForInt2);
-      expect(observerYes._lastNotification.equals(notificationForInt2) === true).to.equal(true);
+      var notification3: Notification = new Notification(interest1);
+      notifier.notifyObservers(interest1, notification3);
+      expect(observerYes._lastNotification.equals(notification3) === true).to.equal(true);
       expect((observerNo._lastNotification === null) === true).to.equal(true);
+
+      expect(notifier.removeObserver(observerInterest3) === true).to.equal(true);
+      notifier.removeAllObservers();
+
+      // Call sequence 4 - routed & with a payload
+      var observationRouter4: NotificationRouterFor<number> = new NotificationRouterFor<number>(observerYes.notifyInt.bind(observerYes));
+
+      var observerInterest4: ObserverInterest = new ObserverInterest(observationRouter4, interest1);
+      notifier.addObserver(observerInterest4);
+
+      var notification4: NotificationFor<number> = new NotificationFor<number>(interest1, 2);
+      notifier.notifyObservers(interest1, notification4);
+      expect(observerYes._lastNotification.equals(notification4) === true).to.equal(true);
+      expect((observerNo._lastNotification === null) === true).to.equal(true);
+      notifier.removeAllObservers();
    });
 });
 

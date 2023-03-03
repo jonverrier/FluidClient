@@ -3,10 +3,12 @@
 import { GPoint } from './GeometryPoint';
 import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
-import { Interest, Notifier } from './NotificationFramework';
+import { Interest, Notifier, Notification } from './NotificationFramework';
 
 export var shapeInteractionComplete: string = "ShapeInteractionComplete";
 export var shapeInteractionCompleteInterest = new Interest(shapeInteractionComplete);
+export var shapeInteractionAbandoned: string = "ShapeInteractionAbandoned";
+export var shapeInteractionAbandonedInterest = new Interest(shapeInteractionAbandoned);
 
 var defaultDX: number = 96;
 var defaultDY: number = 48;
@@ -19,6 +21,7 @@ interface IShapeMover {
    interactionStart(pt: GPoint): void;
    interactionUpdate(pt: GPoint): void;
    interactionEnd(pt: GPoint): void;
+   escape(): void;
    rectangle: GRect;
    line: GLine;
 }
@@ -31,6 +34,12 @@ export abstract class IShapeInteractor extends Notifier implements IShapeMover {
    abstract rectangle: GRect;
    abstract line: GLine;
    hasUI(): boolean { return false; }; // Override if interactor needs to provide JSX for UI
+
+   // default implementation ends interaction if user presses escape
+   escape(): void {
+      this.notifyObservers(shapeInteractionAbandonedInterest,
+         new Notification(shapeInteractionAbandonedInterest));
+   }
 
    // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
    // not a property of the actual shape. 

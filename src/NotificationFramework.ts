@@ -304,6 +304,86 @@ export class ObserverInterest {
 }
 
 /// <summary>
+/// NotificationRouter -  template to act as an intermediary, type-safe router that connects a specific function signature for the method that is called in a notification
+/// </summary>
+/// 
+type FunctionForNotification = (interest: Interest, data: Notification) => void;
+
+export class NotificationRouter implements IObserver {
+   private _function: FunctionForNotification;
+
+   /**
+    * Create empty NotificationRouterFor object
+    */
+   constructor();
+
+   /**
+    * Create a NotificationRouterFor object
+    * @param interest_ - the thing it is interested in 
+    */
+   constructor(_function: FunctionForNotification);
+
+   /**
+    * Create a NotificationRouter  object
+    * @param observerRouter - object to copy from - should work for JSON format and for real constructed objects
+    */
+   public constructor(observerRouter: NotificationRouter);
+
+   constructor(...arr: any[]) {
+      if (arr.length === 0) { // Construct empty
+         this._function = null;
+         return;
+      }
+      else {
+         if (this.isMyType(arr[0])) { // Copy constructor
+            this._function = arr[0]._function;
+         }
+         else { // Individual arguments
+            this._function = arr[0];
+         }
+      }
+   }
+
+   private isMyType(rhs: FunctionForNotification): boolean {
+      return rhs.hasOwnProperty('_function');
+   }
+
+   /**
+   * set of 'getters' for private variables
+   */
+   get function(): FunctionForNotification {
+      return this._function;
+   }
+
+   /**
+    * test for equality - checks all fields are the same. 
+    * Shallow compare
+    * @param rhs - the object to compare this one to.  
+    */
+   equals(rhs: NotificationRouter): boolean {
+
+      return (this._function === rhs._function);
+   }
+
+   /**
+    * assignment operator 
+    * @param rhs - the object to assign this one from.  
+    */
+   assign(rhs: NotificationRouter): NotificationRouter {
+      this._function = rhs._function;
+
+      return this;
+   }
+
+   notify(interest_: Interest, notification_: Notification): void {
+
+      // pass on to the required method
+      this._function(interest_, notification_);
+   }
+}
+
+
+/// <summary>
 /// NotificationRouterFor -  template to act as an intermediary, type-safe router that connects a specific function signature for the method that is called in a notification
 /// </summary>
 /// 

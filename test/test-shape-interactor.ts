@@ -7,8 +7,9 @@ import { describe, it } from 'mocha';
 import { GPoint } from '../src/GeometryPoint';
 import { GLine } from '../src/GeometryLine';
 import { GRect } from '../src/GeometryRectangle';
+import { Interest, ObserverInterest, NotificationRouterFor } from '../src/NotificationFramework';
 
-import { IShapeInteractor } from '../src/ShapeInteractor';
+import { IShapeInteractor, shapeInteractionAbandonedInterest } from '../src/ShapeInteractor';
 import {
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
@@ -19,10 +20,38 @@ import { NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInte
 
 describe("IShapeInteractor", function () {
 
+   var escape: boolean = false;
+
    it("Needs to provide defaultDXY values", function () {
 
       expect(IShapeInteractor.defaultDx() > 0).to.equal(true);
       expect(IShapeInteractor.defaultDy() > 0).to.equal(true);
+   });
+
+   it("Has no UI", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var interactor: IShapeInteractor = new NewRectangleInteractor(bounds);
+
+      expect(interactor.hasUI()).to.equal(false);
+   });
+
+   // User presses escape - terminate the interaction
+   function onShapeInteractionAbandoned(interest: Interest, data: Notification): void {
+      escape = true;
+   }
+
+   it("Needs to process escape", function () {
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var interactor: IShapeInteractor = new NewRectangleInteractor(bounds);
+
+      var shapeInteractionAbndRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionAbandoned.bind(this));
+      var shapeInteractionAbndInterest = new ObserverInterest(shapeInteractionAbndRouter, shapeInteractionAbandonedInterest);
+      interactor.addObserver(shapeInteractionAbndInterest);
+
+      expect(escape).to.equal(false);
+      interactor.escape();
+      expect(escape).to.equal(true);
    });
 });
 
