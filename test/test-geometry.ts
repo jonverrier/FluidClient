@@ -186,6 +186,20 @@ describe("Geometry", function () {
       expect(inflated.dy === 12).to.equal(true);
    });
 
+   it("Needs to correctly offset GRect", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(20, 20);
+
+      var normalised = GRect.normalisePoints(loLeft, hiRight);
+      var offset = GRect.offset(normalised, 1, 2);
+
+      expect(offset.x === 11).to.equal(true);
+      expect(offset.y === 12).to.equal(true);
+      expect(offset.dx === 10).to.equal(true);
+      expect(offset.dy === 10).to.equal(true);
+   });
+
    it("Needs to correctly clip a GPoint", function () {
 
       var loLeft: GPoint = new GPoint(10, 10);
@@ -293,6 +307,21 @@ describe("Geometry", function () {
       expect(rc.isOnTopRightGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
       expect(rc.isOnBottomRightGrabHandle(loLeft, defaultGrabHandleDxy)).to.equal(false);
       expect(rc.isOnBottomLeftGrabHandle(hiRight, defaultGrabHandleDxy)).to.equal(false);
+   });
+
+   it("Needs to accumulate bounding GRect", function () {
+
+      var loLeft: GPoint = new GPoint(10, 10);
+      var hiRight: GPoint = new GPoint(20, 20);
+
+      var normalised = GRect.normalisePoints(loLeft, hiRight);
+
+      var bounds = new GRect(0, 0, 0, 0);
+
+      var newBounds = GRect.accumulateBounds(bounds, normalised);
+
+      expect(newBounds.bottomLeft.equals(bounds.bottomLeft));
+      expect(newBounds.topRight.equals(normalised.topRight));
    });
 
    it("Needs to create, test & assign GLine", function () {

@@ -52,6 +52,7 @@ var tr: TextShapeRenderer = new TextShapeRenderer();
 
 import { CanvasTextEdit } from "./CanvasTextEdit";
 import { fontMetrics } from "./CanvasFontMetrics";
+import { KeyboardInteractor } from './ShapeKeyboardInteractor';
 
 // Scaling Constants for Canvas
 const canvasWidth = 1920; 
@@ -781,14 +782,58 @@ export const Canvas = (props: ICanvasProps) => {
       interactionEnd(coord);
    }
 
+   function bounds(): GRect {
+      return new GRect(0, 0, canvasState.width, canvasState.height);
+   }
+
+   function forceRefresh(): void {
+
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: canvasState.shapes,
+         lastHit: canvasState.lastHit,
+         shapeInteractor: canvasState.shapeInteractor,
+         resizeShapeId: canvasState.resizeShapeId
+      });
+   }
+
    function handleCanvasKeyPress (event: KeyboardEvent): void {
 
       event.stopPropagation();
+      event.preventDefault();
 
       switch (event.key) {
+         case "ArrowLeft":
+            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard.moveLeft(8);
+            forceRefresh();
+            break;
+         case "ArrowRight":
+            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard.moveRight(8);
+            forceRefresh();
+            break;
+         case "ArrowUp":
+            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard.moveDown(8); // HTML origin is top left, opposite sense to cartesian origin
+            forceRefresh();
+            break;
+         case "ArrowDown":
+            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard.moveUp(8); // HTML origin is top left, opposite sense to cartesian origin
+            forceRefresh();
+            break;
+
+         case 'Delete':
+            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard.delete();
+            forceRefresh();
+            break;
+
          case 'Escape':
             if (canvasState.shapeInteractor) {
                canvasState.shapeInteractor.escape();
+               forceRefresh();
             }
             break;
 

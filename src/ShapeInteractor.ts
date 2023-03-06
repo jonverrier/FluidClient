@@ -16,7 +16,7 @@ var defaultDY: number = 48;
 var minimumDX: number = 88; // Minimum width for a toolbar with two buttons, as used in text shape
 var minimumDY: number = 48;
 
-interface IShapeMover {
+interface IShapeInteractorBase {
 
    interactionStart(pt: GPoint): void;
    interactionUpdate(pt: GPoint): void;
@@ -26,7 +26,16 @@ interface IShapeMover {
    line: GLine;
 }
 
-export abstract class IShapeInteractor extends Notifier implements IShapeMover {
+export interface IShapeKeyboardInteractor {
+
+   delete(): void;
+   moveLeft(n: number): void;
+   moveRight(n: number): void;
+   moveUp(n: number): void;
+   moveDown(n: number): void;
+}
+
+export abstract class IShapeInteractor extends Notifier implements IShapeInteractorBase {
 
    abstract interactionStart(pt: GPoint): void;
    abstract interactionUpdate(pt: GPoint): void;

@@ -511,6 +511,19 @@ export class GRect extends MStreamable {
 
    }
 
+   static offset(rc: GRect, dx: number, dy: number): GRect {
+
+      return new GRect(rc.x + dx, rc.y + dy, rc.dx, rc.dy);
+   }
+
+   static accumulateBounds(bounds_: GRect, increment: GRect): GRect {
+
+      let merged = bounds_._rc.merge(increment._rc);
+
+      return new GRect(merged.xmin, merged.ymin, merged.xmax, merged.ymax);
+
+   }
+
    static minimumRelativeSizeForMidHandles (): number { 
       return GRect.minimumRelativeSizeForMidHandlesXY;
    }

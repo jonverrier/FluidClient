@@ -6,8 +6,6 @@ import { GRect } from './GeometryRectangle';
 import { NotificationFor } from './NotificationFramework';
 import { IShapeInteractor, shapeInteractionCompleteInterest } from './ShapeInteractor';
 
-
-
 // Interactor that lets the user draw a rectangle from mouse down to mouse up
 export class NewRectangleInteractor extends IShapeInteractor  {
 

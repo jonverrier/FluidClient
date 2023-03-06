@@ -372,58 +372,61 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
 
    return (
       <FluentProvider theme={teamsLightTheme}>
-         <div id={outerDivId}>
-         <div className={headerClasses.root}>  {/* Top row for controls to setup a sharing session */}
-            <div className={leftColumnClasses.root}>
-               <Tooltip withArrow content={uiState.sharePrompt} relationship="label" key="share">
-                  <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || uiState.connecting} onClick={onConnect} />
-               </Tooltip>
-               <Tooltip withArrow content={urlToShare()} relationship="label" key="copy">
-                  <Button icon={<Copy24Regular />} disabled={uiState.fluidId===null} onClick={onCopyConnectionString} />
-               </Tooltip>
-               <Tooltip withArrow content={"Sign out."} relationship="label" key="signout">
-                  <Button icon={<SignOut24Regular />} disabled={!(uiState.canSignOut)} onClick={onSignOut} />
-               </Tooltip>
-            </div>
-            <div className={rightColumnClasses.root}>
-               <Tooltip withArrow content={joinAsPrompt} relationship="label">
-                  <Input id={inputId} aria-label="Join As (Name/Initials)"
-                     value={uiState.joinAs}
-                     contentBefore={<Person24Regular />}
-                     placeholder="Join As..."
-                     onChange={onJoinAsChange}
-                     disabled={!(uiState.fluidId===null)}
-                  />
-               </Tooltip>
-               &nbsp;
-               <AvatarGroup size={24}>
-                  {inlineItems.map(nameKeyPair => (
-                     <Tooltip withArrow content={nameKeyPair.name} relationship="label" key={nameKeyPair.key}>
-                        <AvatarGroupItem name={nameKeyPair.name} key={nameKeyPair.key} />
-                     </Tooltip>
-                  ))}
-                  {overflowItems && (
-                     <AvatarGroupPopover>
-                        {overflowItems.map(nameKeyPair => (
+         <div> 
+            <div className={headerClasses.root}>  {/* Top row for controls to setup a sharing session */}
+               <div className={leftColumnClasses.root}>
+                  <Tooltip withArrow content={uiState.sharePrompt} relationship="label" key="share">
+                     <Button icon={<Share24Regular />} disabled={(!uiState.enableShare) || uiState.connecting} onClick={onConnect} />
+                  </Tooltip>
+                  <Tooltip withArrow content={urlToShare()} relationship="label" key="copy">
+                     <Button icon={<Copy24Regular />} disabled={uiState.fluidId===null} onClick={onCopyConnectionString} />
+                  </Tooltip>
+                  <Tooltip withArrow content={"Sign out."} relationship="label" key="signout">
+                     <Button icon={<SignOut24Regular />} disabled={!(uiState.canSignOut)} onClick={onSignOut} />
+                  </Tooltip>
+               </div>
+               <div className={rightColumnClasses.root}>
+                  <Tooltip withArrow content={joinAsPrompt} relationship="label">
+                     <Input id={inputId} aria-label="Join As (Name/Initials)"
+                        value={uiState.joinAs}
+                        contentBefore={<Person24Regular />}
+                       placeholder="Join As..."
+                        onChange={onJoinAsChange}
+                        disabled={!(uiState.fluidId===null)}
+                     />
+                  </Tooltip>
+                  &nbsp;
+                  <AvatarGroup size={24}>
+                     {inlineItems.map(nameKeyPair => (
+                        <Tooltip withArrow content={nameKeyPair.name} relationship="label" key={nameKeyPair.key}>
                            <AvatarGroupItem name={nameKeyPair.name} key={nameKeyPair.key} />
-                        ))}
-                     </AvatarGroupPopover>
-                  )}
-               </AvatarGroup>
+                        </Tooltip>
+                     ))}
+                     {overflowItems && (
+                        <AvatarGroupPopover>
+                           {overflowItems.map(nameKeyPair => (
+                              <AvatarGroupItem name={nameKeyPair.name} key={nameKeyPair.key} />
+                           ))}
+                        </AvatarGroupPopover>
+                     )}
+                  </AvatarGroup>
+               </div>
             </div>
-         </div>
 
-         <CanvasTools onToolSelect={onToolSelect} shapeCaucus={props.shapeCaucus}></CanvasTools>
+            <CanvasTools onToolSelect={onToolSelect} shapeCaucus={props.shapeCaucus}></CanvasTools>
 
-         <div className={alertClasses.root}>
-            {uiState.alertMessage
-               ? <Alert action={{
-                  icon: <DismissCircle24Regular onClick={hideAlert} />
-               }}>{uiState.alertMessage}</Alert>
-            : <div></div>}
-         </div>
+            <div className={alertClasses.root}>
+               {uiState.alertMessage
+                  ? <Alert action={{
+                     icon: <DismissCircle24Regular onClick={hideAlert} />
+                  }}>{uiState.alertMessage}</Alert>
+                  : <div></div>}
+            </div>
 
-         <Canvas mode={uiState.mode} shapeCaucus={props.shapeCaucus} outerDivId={outerDivId}></Canvas>
+            <div id={outerDivId} tabIndex={65535}>
+               <Canvas mode={uiState.mode} shapeCaucus={props.shapeCaucus} outerDivId={outerDivId}></Canvas>
+            </div>
+
          </div>
       </FluentProvider>
    );

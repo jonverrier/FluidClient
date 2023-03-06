@@ -9,6 +9,10 @@ import { GLine } from '../src/GeometryLine';
 import { GRect } from '../src/GeometryRectangle';
 import { Interest, ObserverInterest, NotificationRouterFor } from '../src/NotificationFramework';
 
+import { Pen, PenColour, PenStyle } from '../src/Pen';
+import { Shape } from '../src/Shape';
+import { Rectangle } from '../src/Rectangle';
+
 import { IShapeInteractor, shapeInteractionAbandonedInterest } from '../src/ShapeInteractor';
 import {
    NewRectangleInteractor,
@@ -17,6 +21,7 @@ import {
    RectangleMoveInteractor
 } from '../src/RectangleInteractors';
 import { NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor } from '../src/LineInteractors';
+import { KeyboardInteractor } from '../src/ShapeKeyboardInteractor';
 
 describe("IShapeInteractor", function () {
 
@@ -765,5 +770,71 @@ describe("LineMoveInteractor", function () {
       interactor.interactionEnd(pt);
 
       expect(interactor.line.end.equals(bounds.topRight)).to.equal(true);
+   });
+});
+
+describe("ShapeKeyboardInteractor", function () {
+
+   it("Needs to delete selected items", function () {
+
+      let bounds = new GRect(10, 10, 400, 400);
+      let shapeRect1 = new GRect(55, 55, 200, 200);
+      let shapeRect2 = new GRect(100, 100, 50, 50);
+      let shapes = new Map<string, Shape>();
+
+      var shape1: Shape = new Rectangle(shapeRect1, new Pen(PenColour.Black, PenStyle.Solid), true);
+      var shape2: Shape = new Rectangle(shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), false);
+      shapes.set(shape1.id, shape1);
+      shapes.set(shape2.id, shape2);
+
+      var interactor: KeyboardInteractor = new KeyboardInteractor(bounds, shapes);
+
+      expect(shapes.size === 2).to.equal(true);
+      interactor.delete();
+      expect(shapes.size === 1).to.equal(true);
+   });
+
+   it("Needs to move selected items left and right", function () {
+
+      let bounds = new GRect(10, 10, 400, 400);
+      let shapeRect1 = new GRect(55, 55, 200, 200);
+      let shapeRect2 = new GRect(100, 100, 50, 50);
+      let shapes = new Map<string, Shape>();
+
+      var shape1: Shape = new Rectangle(shapeRect1, new Pen(PenColour.Black, PenStyle.Solid), true);
+      var shape2: Shape = new Rectangle(shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), false);
+      shapes.set(shape1.id, shape1);
+      shapes.set(shape2.id, shape2);
+
+      var interactor: KeyboardInteractor = new KeyboardInteractor(bounds, shapes);
+
+      expect(shape1.boundingRectangle.x === 55).to.equal(true);
+      interactor.moveLeft(1);
+      expect(shape1.boundingRectangle.x === 54).to.equal(true);
+      expect(shape2.boundingRectangle.x === 100).to.equal(true);
+      interactor.moveRight(1);
+      expect(shape1.boundingRectangle.x === 55).to.equal(true);
+   });
+
+   it("Needs to move selected items up and down", function () {
+
+      let bounds = new GRect(10, 10, 400, 400);
+      let shapeRect1 = new GRect(55, 55, 200, 200);
+      let shapeRect2 = new GRect(100, 100, 50, 50);
+      let shapes = new Map<string, Shape>();
+
+      var shape1: Shape = new Rectangle(shapeRect1, new Pen(PenColour.Black, PenStyle.Solid), true);
+      var shape2: Shape = new Rectangle(shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), false);
+      shapes.set(shape1.id, shape1);
+      shapes.set(shape2.id, shape2);
+
+      var interactor: KeyboardInteractor = new KeyboardInteractor(bounds, shapes);
+
+      expect(shape1.boundingRectangle.y === 55).to.equal(true);
+      interactor.moveUp(1);
+      expect(shape1.boundingRectangle.y === 56).to.equal(true);
+      expect(shape2.boundingRectangle.y === 100).to.equal(true);
+      interactor.moveDown(1);
+      expect(shape1.boundingRectangle.y === 55).to.equal(true);
    });
 });
