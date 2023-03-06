@@ -799,46 +799,56 @@ export const Canvas = (props: ICanvasProps) => {
 
    function handleCanvasKeyPress (event: KeyboardEvent): void {
 
-      event.stopPropagation();
-      event.preventDefault();
+      var processed : boolean = false;
 
       switch (event.key) {
          case "ArrowLeft":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveLeft(8);
             forceRefresh();
+            processed = true;
             break;
          case "ArrowRight":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveRight(8);
             forceRefresh();
+            processed = true;
             break;
          case "ArrowUp":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveDown(8); // HTML origin is top left, opposite sense to cartesian origin
             forceRefresh();
+            processed = true;
             break;
          case "ArrowDown":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveUp(8); // HTML origin is top left, opposite sense to cartesian origin
             forceRefresh();
+            processed = true;
             break;
 
          case 'Delete':
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.delete();
             forceRefresh();
+            processed = true;
             break;
 
          case 'Escape':
             if (canvasState.shapeInteractor) {
                canvasState.shapeInteractor.escape();
                forceRefresh();
+               processed = true;
             }
             break;
 
          default:
             break;
+      }
+
+      if (processed) {
+         event.stopPropagation();
+         event.preventDefault();
       }
    }
 
@@ -876,8 +886,11 @@ export const Canvas = (props: ICanvasProps) => {
       rc.y = rc.y + pt.y;
    }
 
-   if (document.getElementById(props.outerDivId)) {
-      document.getElementById(props.outerDivId).onkeydown = handleCanvasKeyPress.bind(canvasState);
+   let outerDiv = document.getElementById(props.outerDivId);
+   if (outerDiv) {
+      let opts = { preventScroll: true, focusVisible: false };
+      outerDiv.onkeydown = handleCanvasKeyPress.bind(canvasState);
+      outerDiv.focus(opts);
    }
 
    return (

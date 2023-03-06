@@ -413,7 +413,9 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                </div>
             </div>
 
-            <CanvasTools onToolSelect={onToolSelect} shapeCaucus={props.shapeCaucus}></CanvasTools>
+            <div>
+               <CanvasTools onToolSelect={onToolSelect} shapeCaucus={props.shapeCaucus} ></CanvasTools>
+            </div>
 
             <div className={alertClasses.root}>
                {uiState.alertMessage
@@ -423,7 +425,7 @@ export const WhiteboardToolsHeader = (props: IWhiteboardToolsHeaderProps) => {
                   : <div></div>}
             </div>
 
-            <div id={outerDivId} tabIndex={65535}>
+            <div id={outerDivId} tabIndex={0} style={{ outline: 'none' }}>
                <Canvas mode={uiState.mode} shapeCaucus={props.shapeCaucus} outerDivId={outerDivId}></Canvas>
             </div>
 
