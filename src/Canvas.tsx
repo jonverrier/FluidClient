@@ -151,13 +151,13 @@ function drawBackground (ctx: CanvasRenderingContext2D): Promise<void> {
 };
 
 function drawShapes (ctx: CanvasRenderingContext2D,
-   shapes : Map<string, Rectangle>)
+   shapes_ : Map<string, Rectangle>)
    : Promise<void> {
    var promise: Promise<void>;
 
    promise = new Promise<void>((resolve, reject) => {
 
-      shapes.forEach((shape: Shape, key: string) => { 
+      shapes_.forEach((shape: Shape, key: string) => { 
 
          let renderer = ShapeRendererFactory.create(shape.shapeID());
 
@@ -300,13 +300,6 @@ export const Canvas = (props: ICanvasProps) => {
    const canvasRef = useRef(null);
    const canvasId = "innerCanvasId";
 
-   // Set up variables needed to hook into Notification Framework
-   var caucusRouter: NotificationRouterFor<string>;
-   caucusRouter = new NotificationRouterFor<string>(onCaucusChange);
-   var addedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberAddedInterest);
-   var changedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberChangedInterest);
-   var removedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberRemovedInterest);
-
    function useCanvas(ref: React.MutableRefObject<any>,
       shapes_: Map<string, Shape>,
       lastHit_: EHitTest): [CanvasState, React.Dispatch<React.SetStateAction<CanvasState>>] {
@@ -393,6 +386,13 @@ export const Canvas = (props: ICanvasProps) => {
       lastHit
    );
 
+   // Set up variables needed to hook into Notification Framework
+   var caucusRouter: NotificationRouterFor<string>;
+   caucusRouter = new NotificationRouterFor<string>(onCaucusChange.bind(canvasState));
+   var addedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberAddedInterest);
+   var changedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberChangedInterest);
+   var removedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberRemovedInterest);
+
    var lastHit: EHitTest;
 
    function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
@@ -424,14 +424,6 @@ export const Canvas = (props: ICanvasProps) => {
    // This function does not directly reset React state
    // That is left for the interactionStart, Update, and End functions
    function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
-
-      function clearSelection(): void {
-         // Clear previous selections
-         canvasState.shapes.forEach((shape: Shape, key: string) => {
-            shape.isSelected = false;
-            props.shapeCaucus.amend(shape.id, shape);
-         });
-      }
 
       switch (props.mode) {
          case ECanvasMode.Line:
@@ -568,6 +560,15 @@ export const Canvas = (props: ICanvasProps) => {
                   return cursorDefaultClasses.root;
             }
       }
+   }
+
+
+   function clearSelection(): void {
+      // Clear previous selections
+      canvasState.shapes.forEach((shape: Shape, key: string) => {
+         shape.isSelected = false;
+         props.shapeCaucus.amend(shape.id, shape);
+      });
    }
 
    function getCanvasElementFromId(id: string): HTMLElement {
@@ -797,29 +798,33 @@ export const Canvas = (props: ICanvasProps) => {
       });
    }
 
-   function handleCanvasKeyPress (event: KeyboardEvent): void {
+   const handleCanvasKeyPress = (event: KeyboardEvent): void => {
 
       var processed : boolean = false;
 
       switch (event.key) {
+
          case "ArrowLeft":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveLeft(8);
             forceRefresh();
             processed = true;
             break;
+
          case "ArrowRight":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveRight(8);
             forceRefresh();
             processed = true;
             break;
+
          case "ArrowUp":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveDown(8); // HTML origin is top left, opposite sense to cartesian origin
             forceRefresh();
             processed = true;
             break;
+
          case "ArrowDown":
             var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
             keyboard.moveUp(8); // HTML origin is top left, opposite sense to cartesian origin
@@ -840,6 +845,15 @@ export const Canvas = (props: ICanvasProps) => {
                forceRefresh();
                processed = true;
             }
+            break;
+
+         case 'Return':
+            if (canvasState.shapeInteractor) {
+               canvasState.shapeInteractor.confirm ();
+            }
+            clearSelection();
+            processed = true;
+            forceRefresh();
             break;
 
          default:
@@ -901,7 +915,6 @@ export const Canvas = (props: ICanvasProps) => {
                <div></div>
             }
             <canvas
-               /*tabIndex={1}                        // So the canvas gets keyboard message */
                className="App-canvas"      
                style = {{ touchAction: 'none' }}      // Stops scoll on touch on mobile/iPad   
                ref={canvasRef as any}

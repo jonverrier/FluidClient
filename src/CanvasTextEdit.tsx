@@ -17,6 +17,7 @@ import { Toolbar, ToolbarButton } from '@fluentui/react-components/unstable';
 import { GRect } from './GeometryRectangle';
 import { EUIActions } from './CanvasModes';
 
+const canvasTextAreaId = "canvasTextArea";
 
 const outerStyles = makeStyles({
    root: {
@@ -108,6 +109,12 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
       }
    };
 
+   let textAreaDiv = document.getElementById(canvasTextAreaId);
+   if (textAreaDiv) {
+      let opts = { preventScroll: true, focusVisible: false };
+      textAreaDiv.focus(opts);
+   }
+
    return (
       <div className={headerClasses.root} style={{
          top: (props.boundary.y).toString() + 'px',
@@ -116,7 +123,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
          height: props.boundary.dy.toString() + 'px'
       }}>  
          <div className={rightColumnClasses.root} >
-            <Toolbar >
+            <Toolbar size="small">
                <Tooltip withArrow content="Ok" relationship="label" key="1">
                   <ToolbarButton aria-label="Ok" icon={<CheckmarkSquare24Regular />}
                      onClick={() => { handleToolSelect(EUIActions.Ok) }}
@@ -130,8 +137,8 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
             </Toolbar>
          </div>
          <div className={textColumnClasses.root}>
-         <Textarea
-               id={"CanvasTextEdit"}
+            <Textarea
+               id={canvasTextAreaId}
                appearance="outline"
                placeholder="Type here..."
                textarea={{ className: textColumnClasses.textarea }}
@@ -142,9 +149,6 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
                   height: (props.boundary.dy + 40).toString() + 'px'
                }}
             />
-            { /*style={{
-                  height: (props.boundary.dy).toString() + 'px'
-               }} */}
          </div>
       </div>
    );

@@ -13,7 +13,7 @@ import { Pen, PenColour, PenStyle } from '../src/Pen';
 import { Shape } from '../src/Shape';
 import { Rectangle } from '../src/Rectangle';
 
-import { IShapeInteractor, shapeInteractionAbandonedInterest } from '../src/ShapeInteractor';
+import { IShapeInteractor, shapeInteractionAbandonedInterest, shapeInteractionCompleteInterest } from '../src/ShapeInteractor';
 import {
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
@@ -26,6 +26,7 @@ import { KeyboardInteractor } from '../src/ShapeKeyboardInteractor';
 describe("IShapeInteractor", function () {
 
    var escape: boolean = false;
+   var confirm: boolean = false;
 
    it("Needs to provide defaultDXY values", function () {
 
@@ -46,6 +47,11 @@ describe("IShapeInteractor", function () {
       escape = true;
    }
 
+   // User presses escape - terminate the interaction
+   function onShapeInteractionConfirm(interest: Interest, data: Notification): void {
+      confirm = true;
+   }
+
    it("Needs to process escape", function () {
       var bounds: GRect = new GRect(50, 50, 300, 300);
       var interactor: IShapeInteractor = new NewRectangleInteractor(bounds);
@@ -57,6 +63,19 @@ describe("IShapeInteractor", function () {
       expect(escape).to.equal(false);
       interactor.escape();
       expect(escape).to.equal(true);
+   });
+
+   it("Needs to process confirm", function () {
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var interactor: IShapeInteractor = new NewRectangleInteractor(bounds);
+
+      var shapeInteractionCmplRouter: NotificationRouterFor<GRect> = new NotificationRouterFor<GRect>(onShapeInteractionConfirm.bind(this));
+      var shapeInteractionCmplInterest = new ObserverInterest(shapeInteractionCmplRouter, shapeInteractionCompleteInterest);
+      interactor.addObserver(shapeInteractionCmplInterest);
+
+      expect(confirm).to.equal(false);
+      interactor.confirm();
+      expect(confirm).to.equal(true);
    });
 });
 
@@ -825,8 +844,10 @@ describe("ShapeKeyboardInteractor", function () {
 
       var shape1: Shape = new Rectangle(shapeRect1, new Pen(PenColour.Black, PenStyle.Solid), true);
       var shape2: Shape = new Rectangle(shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), false);
+      var shape3: Shape = new Rectangle(shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), true);
       shapes.set(shape1.id, shape1);
       shapes.set(shape2.id, shape2);
+      shapes.set(shape3.id, shape3);
 
       var interactor: KeyboardInteractor = new KeyboardInteractor(bounds, shapes);
 

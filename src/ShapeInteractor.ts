@@ -3,7 +3,7 @@
 import { GPoint } from './GeometryPoint';
 import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
-import { Interest, Notifier, Notification } from './NotificationFramework';
+import { Interest, Notifier, Notification, NotificationFor } from './NotificationFramework';
 
 export var shapeInteractionComplete: string = "ShapeInteractionComplete";
 export var shapeInteractionCompleteInterest = new Interest(shapeInteractionComplete);
@@ -48,6 +48,12 @@ export abstract class IShapeInteractor extends Notifier implements IShapeInterac
    escape(): void {
       this.notifyObservers(shapeInteractionAbandonedInterest,
          new Notification(shapeInteractionAbandonedInterest));
+   }
+
+   // default implementation confirms interaction if user presses return
+   confirm (): void {
+      this.notifyObservers(shapeInteractionCompleteInterest,
+         new NotificationFor<GRect>(shapeInteractionCompleteInterest, this.rectangle));
    }
 
    // Going to keep this in the interactor - may need to change handle size depending if we are in touch or mouse mode, which is an interaction thing,
