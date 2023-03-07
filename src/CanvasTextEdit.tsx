@@ -103,10 +103,28 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
 
    const [value, setValue] = React.useState(props.initialText);
 
-   const onChange: TextareaProps["onChange"] = (ev, data) => {
+   const onChange: TextareaProps["onChange"] = (ev: React.ChangeEvent<HTMLTextAreaElement>, data): void => {
       if (data.value.length <= 1024) {
          setValue(data.value);
       }
+   };
+
+   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+
+      const currentTarget = event.currentTarget;
+
+      // Check the newly focused element in the next tick of the event loop
+      setTimeout(() => {
+         // Check if the new activeElement is a child of the original container
+         if (!currentTarget.contains(document.activeElement)) {
+            externalBlur(event);
+         }
+      }, 0);
+   };
+
+   const externalBlur = (event: React.FocusEvent<HTMLDivElement>): void => {
+
+      props.onToolSelect(EUIActions.Ok, value);
    };
 
    let textAreaDiv = document.getElementById(canvasTextAreaId);
@@ -121,7 +139,9 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
          left: (props.boundary.x).toString() + 'px',
          width: props.boundary.dx.toString() + 'px',
          height: props.boundary.dy.toString() + 'px'
-      }}>  
+      }}
+         onBlur={handleBlur}>  
+
          <div className={rightColumnClasses.root} >
             <Toolbar size="small">
                <Tooltip withArrow content="Ok" relationship="label" key="1">

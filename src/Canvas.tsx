@@ -636,6 +636,12 @@ export const Canvas = (props: ICanvasProps) => {
 
    function interactionStart(coord: GPoint, bounds: GRect) : void {
 
+      // if there is a current interactor with a UI open, confirm it so the user does not lose work
+      // (if it was a bad confirm, they can go back and edit it)
+      if (canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()) {
+         canvasState.shapeInteractor.confirm();
+      }
+
       let hitTest = hitTestInteractor.hitTest(coord);
       let resizeShape: Shape = null;
 
