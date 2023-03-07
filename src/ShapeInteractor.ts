@@ -9,6 +9,8 @@ export var shapeInteractionComplete: string = "ShapeInteractionComplete";
 export var shapeInteractionCompleteInterest = new Interest(shapeInteractionComplete);
 export var shapeInteractionAbandoned: string = "ShapeInteractionAbandoned";
 export var shapeInteractionAbandonedInterest = new Interest(shapeInteractionAbandoned);
+export var shapeKeyboardInteractionComplete: string = "ShapeKeyboardInteractionComplete";
+export var shapeKeyboardInteractionCompleteInterest = new Interest(shapeKeyboardInteractionComplete);
 
 var defaultDX: number = 96;
 var defaultDY: number = 48;

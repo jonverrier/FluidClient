@@ -20,7 +20,13 @@ import { TextShape } from './Text';
 import { Line } from './Line';
 import { CaucusOf } from './Caucus';
 import { EUIActions, ECanvasMode } from './CanvasModes';
-import { IShapeInteractor, shapeInteractionCompleteInterest, shapeInteractionAbandonedInterest } from './ShapeInteractor';
+import {
+   IShapeInteractor,
+   shapeInteractionCompleteInterest,
+   shapeInteractionAbandonedInterest,
+   shapeKeyboardInteractionCompleteInterest
+} from './ShapeInteractor';
+
 import {
    NewRectangleInteractor,
    LeftRectangleInteractor, RightRectangleInteractor, TopRectangleInteractor, BottomRectangleInteractor,
@@ -43,7 +49,7 @@ import { TextShapeRenderer } from "./TextRenderer";
 import { SelectionRectangleRenderer, RectangleShapeRenderer } from "./RectangleRenderer";
 import { SelectionLineRenderer, LineShapeRenderer } from "./LineRenderer";
 
-// Rendereres are hooked up at runtime - have to manually pull them into the transpile set
+// Renderers are hooked up at runtime - have to manually pull them into the transpile set
 var srcr: SelectionRectangleRenderer = new SelectionRectangleRenderer();
 var slr: SelectionLineRenderer = new SelectionLineRenderer();
 var rcr: RectangleShapeRenderer = new RectangleShapeRenderer();
@@ -380,9 +386,12 @@ export const Canvas = (props: ICanvasProps) => {
       return [localCanvasState, setLocalCanvasState];
    }
 
+   const shapes = props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>;
+   var lastHit: EHitTest;
+
    // Declare state context before callback functions
    const [canvasState, setCanvasState] = useCanvas(canvasRef,
-      props.shapeCaucus ? props.shapeCaucus.current() : new Map<string, Shape>,
+      shapes,
       lastHit
    );
 
@@ -393,36 +402,35 @@ export const Canvas = (props: ICanvasProps) => {
    var changedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberChangedInterest);
    var removedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberRemovedInterest);
 
-   var lastHit: EHitTest;
-
    function onCaucusChange(interest_: Interest, id_: NotificationFor<string>): void {
-
-      let shapes = props.shapeCaucus.current();
 
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
-         shapes: shapes,
+         shapes: props.shapeCaucus.current(),
          lastHit: canvasState.lastHit,
          shapeInteractor: canvasState.shapeInteractor,
          resizeShapeId: canvasState.resizeShapeId
       });
    }
 
-   // const handleCanvasKeyPress =
    // User presses escape - terminate the interaction
    function onShapeInteractionAbandoned (interest: Interest, data: Notification): void {
 
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
-         shapes: canvasState.shapes,
+         shapes: shapes,
          lastHit: EHitTest.None,
          shapeInteractor: null,
          resizeShapeId: null
       });
    }
 
-   // This function does not directly reset React state
-   // That is left for the interactionStart, Update, and End functions
+   // User completes a keyboard interaction
+   function onShapeKeyboardInteractionComplete(interest: Interest, data: NotificationFor<Map<string, Shape>>) {
+
+      props.shapeCaucus.synchFrom(data.eventData);
+   }
+
    function onShapeInteractionComplete(interest: Interest, data: NotificationFor<GRect>) {
 
       switch (props.mode) {
@@ -446,7 +454,7 @@ export const Canvas = (props: ICanvasProps) => {
             // Force re-render with the new interactor, but with re-size finished. 
             setCanvasState({
                width: canvasState.width, height: canvasState.height,
-               shapes: canvasState.shapes,
+               shapes: shapes,
                lastHit: lastHit,
                shapeInteractor: interactor,
                resizeShapeId: null
@@ -654,10 +662,6 @@ export const Canvas = (props: ICanvasProps) => {
       // Tell interactor to start
       shapeInteractor.interactionStart(coord);
 
-      // Put focus in the canvas for keyboard processing, do not scroll as it is visually disturbing
-      //var focusOptions = { preventScroll: true, focusVisible: false };
-      //getCanvasElementFromId(canvasId).focus(focusOptions);
-
       // Force re-render
       setCanvasState({
          width: canvasState.width, height: canvasState.height,
@@ -716,6 +720,21 @@ export const Canvas = (props: ICanvasProps) => {
             resizeShapeId: canvasState.resizeShapeId
          });
       }
+   }
+
+   function makeBoundsRect(): GRect {
+      return new GRect(0, 0, canvasState.width, canvasState.height);
+   }
+
+   function forceRefresh(): void {
+
+      setCanvasState({
+         width: canvasState.width, height: canvasState.height,
+         shapes: canvasState.shapes,
+         lastHit: canvasState.lastHit,
+         shapeInteractor: canvasState.shapeInteractor,
+         resizeShapeId: canvasState.resizeShapeId
+      });
    }
 
    const handleCanvasMouseDown = (event: MouseEvent): void => {
@@ -783,60 +802,46 @@ export const Canvas = (props: ICanvasProps) => {
       interactionEnd(coord);
    }
 
-   function bounds(): GRect {
-      return new GRect(0, 0, canvasState.width, canvasState.height);
-   }
-
-   function forceRefresh(): void {
-
-      setCanvasState({
-         width: canvasState.width, height: canvasState.height,
-         shapes: canvasState.shapes,
-         lastHit: canvasState.lastHit,
-         shapeInteractor: canvasState.shapeInteractor,
-         resizeShapeId: canvasState.resizeShapeId
-      });
-   }
-
    const handleCanvasKeyPress = (event: KeyboardEvent): void => {
 
       var processed : boolean = false;
+      var keyboard: KeyboardInteractor = null;
 
       switch (event.key) {
 
          case "ArrowLeft":
-            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+            // Hook up observer functions
+            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
             keyboard.moveLeft(8);
-            forceRefresh();
-            processed = true;
             break;
 
          case "ArrowRight":
-            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+            // Hook up observer functions
+            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
             keyboard.moveRight(8);
-            forceRefresh();
-            processed = true;
             break;
 
          case "ArrowUp":
-            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+            // Hook up observer functions
+            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
             keyboard.moveDown(8); // HTML origin is top left, opposite sense to cartesian origin
-            forceRefresh();
-            processed = true;
             break;
 
          case "ArrowDown":
-            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+            // Hook up observer functions
+            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
             keyboard.moveUp(8); // HTML origin is top left, opposite sense to cartesian origin
-            forceRefresh();
-            processed = true;
             break;
 
          case 'Delete':
-            var keyboard = new KeyboardInteractor(bounds(), canvasState.shapes);
+            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+            // Hook up observer functions
+            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
             keyboard.delete();
-            forceRefresh();
-            processed = true;
             break;
 
          case 'Escape':
@@ -858,6 +863,13 @@ export const Canvas = (props: ICanvasProps) => {
 
          default:
             break;
+      }
+
+
+      if (keyboard) {
+         forceRefresh();
+         processed = true;
+         keyboard.removeObserver(shapeKeyboardInteractionCmplInterest);
       }
 
       if (processed) {
@@ -890,6 +902,9 @@ export const Canvas = (props: ICanvasProps) => {
 
    var shapeInteractionAbndRouter: NotificationRouter = new NotificationRouter(onShapeInteractionAbandoned);
    var shapeInteractionAbndInterest = new ObserverInterest(shapeInteractionAbndRouter, shapeInteractionAbandonedInterest);
+
+   var shapeKeyboardInteractionCmplRouter: NotificationRouterFor<Map<string, Shape>> = new NotificationRouterFor<Map<string, Shape>> (onShapeKeyboardInteractionComplete);
+   var shapeKeyboardInteractionCmplInterest = new ObserverInterest(shapeKeyboardInteractionCmplRouter, shapeKeyboardInteractionCompleteInterest);
 
    // Calculate position for the text edit UI
    var rc: GRect;

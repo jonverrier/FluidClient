@@ -13,7 +13,7 @@ var myThumbnail: string = "abcd";
 var myLastSeenAt = new Date();
 
 async function wait() {
-   await new Promise(resolve => setTimeout(resolve, 1000));
+   await new Promise(resolve => setTimeout(resolve, 500));
 }
 
 function onConnect(interest_: Interest, notification_: NotificationFor<string>) : void {

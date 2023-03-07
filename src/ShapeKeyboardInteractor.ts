@@ -1,13 +1,12 @@
 // Copyright (c) 2023 TXPCo Ltd
 
-import { GPoint } from './GeometryPoint';
-import { GLine } from './GeometryLine';
 import { GRect } from './GeometryRectangle';
-import { IShapeKeyboardInteractor } from './ShapeInteractor';
+import { IShapeKeyboardInteractor, shapeKeyboardInteractionCompleteInterest } from './ShapeInteractor';
 import { Shape } from './Shape';
+import { Notifier, NotificationFor } from './NotificationFramework';
 
 // Interactor that lets the user draw a rectangle from mouse down to mouse up
-export class KeyboardInteractor implements IShapeKeyboardInteractor {
+export class KeyboardInteractor extends Notifier implements IShapeKeyboardInteractor {
 
    private _bounds: GRect;
    private _shapes: Map<string, Shape>;
@@ -17,17 +16,25 @@ export class KeyboardInteractor implements IShapeKeyboardInteractor {
     * @param bounds_ - a GRect object defining the limits within which the shape can be created
     * @param shapes_ - map of a group of shapes on which to do the keyboard interation
     */
-   public constructor(bounds_: GRect, shapes_: Map<string, Shape> ) {
+   public constructor(bounds_: GRect, shapes_: Map<string, Shape>) {
+
+      super();
 
       this._bounds = new GRect(bounds_);
       this._shapes = shapes_;
+   }
+
+   // default implementation confirms interaction if user presses return
+   private confirm(): void {
+      this.notifyObservers(shapeKeyboardInteractionCompleteInterest,
+         new NotificationFor<Map<string, Shape>>(shapeKeyboardInteractionCompleteInterest, this._shapes));
    }
 
    delete(): void {
 
       var deleteSet: Array<string> = new Array<string>();
 
-      // accumulate a list of things to delete, dont delete as it messes up iteration
+      // accumulate a list of things to delete, dont delete as we go bcs it messes up iteration
       this._shapes.forEach((shape: Shape, key: string) => {
          if (shape.isSelected) {
             deleteSet.push(key);
@@ -38,6 +45,8 @@ export class KeyboardInteractor implements IShapeKeyboardInteractor {
       deleteSet.forEach((id: string, index: number) => {
          this._shapes.delete(id);
       });
+
+      this.confirm();
    }
 
    private accumulateSelectionCount (shapes: Map<string, Shape>) {
@@ -93,6 +102,8 @@ export class KeyboardInteractor implements IShapeKeyboardInteractor {
             }
          });
       }
+
+      this.confirm();
    }
 
    moveRight(n: number): void {
@@ -112,6 +123,7 @@ export class KeyboardInteractor implements IShapeKeyboardInteractor {
             }
          });
       }
+      this.confirm();
    }
 
    moveUp(n: number): void {
@@ -131,6 +143,7 @@ export class KeyboardInteractor implements IShapeKeyboardInteractor {
             }
          });
       }
+      this.confirm();
    }
 
    moveDown(n: number): void {
@@ -150,5 +163,6 @@ export class KeyboardInteractor implements IShapeKeyboardInteractor {
             }
          });
       }
+      this.confirm();
    }
 }

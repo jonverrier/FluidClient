@@ -97,4 +97,36 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
       return this._localCopy;
    }
+
+   synchFrom ( map: Map<string, AType>) : void {
+
+      var deleteSet: Array<string> = new Array<string>();
+
+      // accumulate a list of things to delete, dont delete as we go bcs it messes up iteration
+      this._shared.forEach((value: any, key: string) => {
+         if (!map.get (key)) {
+            deleteSet.push(key);
+         }
+      });
+
+      // delete them once we have completed iteration
+      deleteSet.forEach((id: string, index: number) => {
+         this._shared.delete(id);
+      });
+
+      // Now update items in the shared map that are different in the input map 
+      map.forEach((value: any, key: string) => {
+         let elementShared: string = this._shared.get(key);
+
+         let elementNew: string = value.flatten();
+
+         if (!elementShared) {
+            this.add (key, value);
+         }
+         else
+         if (elementShared !== elementNew) {
+            this.amend(key, value);
+         }
+      });
+   }
 }
