@@ -40,10 +40,12 @@ import { ShapeRendererFactory } from './ShapeRenderer';
 
 import { RectangleHitTester } from "../src/RectangleHitTester";
 import { LineHitTester } from "../src/LineHitTester";
+import { TextShapeHitTester } from "../src/TextHitTester";
 
 // Hit testers are hooked up at runtime - have to manually pull them into the transpile set
 var rcht: RectangleHitTester = new RectangleHitTester(1, 1);
 var lht: LineHitTester = new LineHitTester(1, 1);
+var tht: TextShapeHitTester = new TextShapeHitTester(1, 1);
 
 import { TextShapeRenderer } from "./TextRenderer";
 import { SelectionRectangleRenderer, RectangleShapeRenderer } from "./RectangleRenderer";
@@ -808,7 +810,7 @@ export const Canvas = (props: ICanvasProps) => {
       interactionEnd(coord);
    }
 
-   const handleCanvasKeyPress = (event: KeyboardEvent): void => {
+   const handleCanvasKeyDown = (event: KeyboardEvent): void => {
 
       var processed : boolean = false;
       var keyboard: KeyboardInteractor = null;
@@ -924,7 +926,7 @@ export const Canvas = (props: ICanvasProps) => {
    let outerDiv = document.getElementById(props.outerDivId);
    if (outerDiv) {
       let opts = { preventScroll: true, focusVisible: false };
-      outerDiv.onkeydown = handleCanvasKeyPress.bind(canvasState);
+      outerDiv.onkeydown = handleCanvasKeyDown.bind(canvasState);
       outerDiv.focus(opts);
    }
 

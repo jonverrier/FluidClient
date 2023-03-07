@@ -12,11 +12,11 @@ export var shapeInteractionAbandonedInterest = new Interest(shapeInteractionAban
 export var shapeKeyboardInteractionComplete: string = "ShapeKeyboardInteractionComplete";
 export var shapeKeyboardInteractionCompleteInterest = new Interest(shapeKeyboardInteractionComplete);
 
-var defaultDX: number = 96;
-var defaultDY: number = 48;
+var defaultDX: number = 128;
+var defaultDY: number = 64;
 
 var minimumDX: number = 88; // Minimum width for a toolbar with two buttons, as used in text shape
-var minimumDY: number = 48;
+var minimumDY: number = 64;
 
 interface IShapeInteractorBase {
 

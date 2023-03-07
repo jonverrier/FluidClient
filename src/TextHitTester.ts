@@ -6,14 +6,16 @@ import { Shape } from './Shape';
 import { Rectangle } from './Rectangle';
 import { EHitTest, HitTestResult, ShapeGroupHitTester, ShapeHitTester, ShapeHitTesterFactory } from './ShapeHitTester';
 
+import { TextShape } from './Text';
+
 /// <summary>
-/// RectangleHitTester - hit testing for Rectangle shape
+/// TextShapeHitTester - hit testing for Rectangle shape
 /// <summary>
-export class RectangleHitTester extends ShapeHitTester {
+export class TextShapeHitTester extends ShapeHitTester {
 
    /**
-    * Create a RectangleHitTester object 
-    * @param grabHandleDxDy_ - size of the grab hadles if it is selected
+    * Create a TextShapeHitTester object 
+    * @param grabHandleDxDy_ - size of the grab handles if it is selected
     * @param tolerance_ - how close it needs to be * 
     */
    constructor(grabHandleDxDy_: number,
@@ -75,8 +77,8 @@ export class RectangleHitTester extends ShapeHitTester {
             }
          }
          else
-         // Only test the border if not selected
-         if (shape.boundingRectangle.isOnBorder(pt, this.tolerance)) {
+         // Test inside the border if not selected
+         if (shape.boundingRectangle.includes (pt)) {
             testResult = { hitTest: EHitTest.Border, hitShape: shape };
          }
       }
@@ -85,13 +87,9 @@ export class RectangleHitTester extends ShapeHitTester {
    }
 
    static createInstance(grabHandleDxDy_: number, tolerance_: number): ShapeHitTester {
-      return new RectangleHitTester(grabHandleDxDy_, tolerance_);
+      return new TextShapeHitTester(grabHandleDxDy_, tolerance_);
    }
 
-   // Caucus may contain a 'Shape' element while going through handshake process - we write a null shape on joining to kick start it
-   static _factoryForShape: ShapeHitTesterFactory = new ShapeHitTesterFactory(Shape.shapeID(),
-                                                                              RectangleHitTester.createInstance);
-   static _factoryForRectangle: ShapeHitTesterFactory = new ShapeHitTesterFactory(Rectangle.rectangleID(),
-                                                                                  RectangleHitTester.createInstance);
+   static _factoryForText: ShapeHitTesterFactory = new ShapeHitTesterFactory(TextShape.textID(), TextShapeHitTester.createInstance);
 }
 

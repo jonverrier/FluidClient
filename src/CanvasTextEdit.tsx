@@ -86,12 +86,15 @@ export interface ICanvasTextEditProps {
 
 export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
 
+   var closed = false;
+
    const headerClasses = outerStyles();
    const rightColumnClasses = buttonBlockStyles();
    const textColumnClasses = textColumnStyles();
 
    const handleToolSelect = (action: EUIActions): void => {
       props.onToolSelect(action, value);
+      closed = true;
    };
 
    function enableOk(text: string): boolean {
@@ -116,7 +119,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
       // Check the newly focused element in the next tick of the event loop
       setTimeout(() => {
          // Check if the new activeElement is a child of the original container
-         if (!currentTarget.contains(document.activeElement)) {
+         if (!currentTarget.contains(document.activeElement) && (!closed)) {
             externalBlur(event);
          }
       }, 0);
@@ -134,13 +137,15 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
    }
 
    return (
-      <div className={headerClasses.root} style={{
-         top: (props.boundary.y).toString() + 'px',
-         left: (props.boundary.x).toString() + 'px',
-         width: props.boundary.dx.toString() + 'px',
-         height: props.boundary.dy.toString() + 'px'
-      }}
-         onBlur={handleBlur}>  
+      <div className={headerClasses.root}
+         style={{
+            top: (props.boundary.y).toString() + 'px',
+            left: (props.boundary.x).toString() + 'px',
+            width: props.boundary.dx.toString() + 'px',
+            height: props.boundary.dy.toString() + 'px'
+         }}
+         onBlur={handleBlur}
+      >  
 
          <div className={rightColumnClasses.root} >
             <Toolbar size="small">
@@ -167,7 +172,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
                onChange={onChange}
                style={{
                   height: (props.boundary.dy + 40).toString() + 'px'
-               }}
+               }}               
             />
          </div>
       </div>
