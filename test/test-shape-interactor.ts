@@ -235,7 +235,7 @@ describe("TopRectangleInteractor", function () {
 
    it("Needs to create TopRectangleInteractor with click and drag", function () {
 
-      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var bounds: GRect = new GRect(0, 0, 300, 300);
       var initial: GRect = new GRect(50, 50, 200, 200);
       var pt: GPoint = new GPoint(100, 100);
 

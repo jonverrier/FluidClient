@@ -9,17 +9,19 @@ import { GRect } from '../src/GeometryRectangle';
 
 import { Pen, PenColour, PenStyle } from "../src/Pen";
 import { Shape } from '../src/Shape';
-import { Rectangle, SelectionRectangle } from '../src/Rectangle';
-import { Line, SelectionLine } from '../src/Line';
+import { Rectangle } from '../src/Rectangle';
+import { Line } from '../src/Line';
 import { TextShape } from '../src/Text';
 import { ShapeGroupHitTester, ShapeHitTester, ShapeHitTesterFactory } from '../src/ShapeHitTester';
 import { IShapeInteractor } from '../src/ShapeInteractor';
 import { RectangleHitTester } from "../src/RectangleHitTester";
 import { LineHitTester } from "../src/LineHitTester";
+import { TextShapeHitTester } from "../src/TextHitTester";
 
 // Hit testers are hooked up at runtime - have to manually pull them into the transpile set
 var rcht: RectangleHitTester = new RectangleHitTester(1, 1);
 var lht: LineHitTester = new LineHitTester(1, 1);
+var tht: TextShapeHitTester = new TextShapeHitTester(1, 1);
 
 describe("ShapeHitTesterFactory", function () {
 
@@ -104,6 +106,38 @@ describe("ShapeGroupHitTester", function () {
       expect(controller.hitTest(inside).hitTest).to.equal(ShapeGroupHitTester.noHit().hitTest);
       expect(controller.hitTest(outside).hitTest).to.equal(ShapeGroupHitTester.noHit().hitTest);
       expect(controller.hitTest(crossingMid).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+
+      expect(controller.hitTest(shapeRect.bottomLeft).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(shapeRect.topRight).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+
+      // Add hit tests on unselected object
+      expect(controller.hitTest(shapeRect2.bottomLeft).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(shapeRect2.topRight).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+   });
+
+   it("Needs to create ShapeGroupHitTester and track to a click Text", function () {
+
+      let shapeRect = new GRect(50, 50, 50, 50);
+      let shapeRect2 = new GRect(70, 90, 50, 50);
+      let shapes = new Map<string, Shape>();
+
+      var shape1: Shape = new TextShape ("A", shapeRect, new Pen(PenColour.Black, PenStyle.Solid), true);
+      var shape2: Shape = new TextShape("B", shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), false);
+      shapes.set(shape2.id, shape2);
+      shapes.set(shape1.id, shape1);
+
+      var inside: GPoint = new GPoint(60, 80);
+      var outside: GPoint = new GPoint(300, 300);
+      var crossingMid: GPoint = new GPoint(75, 75);
+
+      var controller: ShapeGroupHitTester = new ShapeGroupHitTester(shapes,
+         IShapeInteractor.defaultGrabHandleDxDy(),
+         IShapeInteractor.defaultHitTestTolerance());
+
+      // Do real hit-testing
+      expect(controller.hitTest(inside).hitTest).to.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(outside).hitTest).to.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(crossingMid).hitTest).to.equal(ShapeGroupHitTester.noHit().hitTest);
 
       expect(controller.hitTest(shapeRect.bottomLeft).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
       expect(controller.hitTest(shapeRect.topRight).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
