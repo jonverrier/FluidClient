@@ -130,11 +130,14 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
       props.onToolSelect(EUIActions.Ok, value);
    };
 
-   let textAreaDiv = document.getElementById(canvasTextAreaId);
-   if (textAreaDiv) {
-      let opts = { preventScroll: true, focusVisible: false };
-      textAreaDiv.focus(opts);
-   }
+   // Move focus to text area in the next tick of the event loop
+   setTimeout(() => {
+      let textAreaDiv = document.getElementById(canvasTextAreaId);
+      if (textAreaDiv) {
+         let opts = { preventScroll: true, focusVisible: false };
+         textAreaDiv.focus(opts);
+      }
+   }, 0);
 
    return (
       <div className={headerClasses.root}

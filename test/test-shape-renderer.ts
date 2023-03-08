@@ -113,7 +113,7 @@ describe("ShapeRenderer", function () {
       var renderer: ShapeRenderer = new SelectionRectangleRenderer();
 
       const rect = new GRect(0, 0, 20, 20);
-      var shape: Shape = new SelectionRectangle(rect);
+      var shape: Shape = new SelectionRectangle(rect, PenColour.Border);
 
       var caught: boolean = false;
 
@@ -157,7 +157,7 @@ describe("ShapeRenderer", function () {
       var renderer: ShapeRenderer = new SelectionLineRenderer();
 
       const rect = new GRect(0, 0, 20, 20);
-      var shape: Shape = new SelectionRectangle(rect);
+      var shape: Shape = new SelectionRectangle(rect, PenColour.Border);
 
       var caught: boolean = false;
 
@@ -179,7 +179,7 @@ describe("ShapeRenderer", function () {
       var renderer: ShapeRenderer = new LineShapeRenderer();
 
       const rect = new GRect(0, 0, 20, 20);
-      var shape: Shape = new SelectionRectangle(rect);
+      var shape: Shape = new SelectionRectangle(rect, PenColour.Border);
       shape.isSelected = true;
 
       var caught: boolean = false;

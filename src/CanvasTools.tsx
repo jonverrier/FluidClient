@@ -104,7 +104,8 @@ export const CanvasTools = (props: ICanvasToolsProps) => {
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <Tooltip withArrow content="Rub things out." relationship="label" key="7">
-                     <ToolbarRadioButton aria-label="Rub things out" name="mode" value="Eraser" icon={<Eraser24Regular />}
+                  <ToolbarRadioButton aria-label="Rub things out" name="mode" value="Eraser" icon={<Eraser24Regular />}
+                     onClick={() => { handleToolSelect(ECanvasMode.Eraser) }} 
                      disabled={!enableTools(props.shapeCaucus)} />
                   </Tooltip>
                   <ToolbarDivider />

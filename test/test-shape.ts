@@ -188,7 +188,7 @@ describe("SelectionRectangle", function () {
 
       var rect: GRect = new GRect(1, 2, 3, 4);
 
-      var shape1: Rectangle = new SelectionRectangle(rect);
+      var shape1: Rectangle = new SelectionRectangle(rect, PenColour.Border);
       var shape2: Rectangle = new SelectionRectangle(shape1);
       var shape3: Rectangle = new SelectionRectangle();
 
@@ -229,7 +229,7 @@ describe("SelectionRectangle", function () {
 
       var rect: GRect = new GRect(1, 2, 3, 4);
 
-      var shape1: SelectionRectangle = new SelectionRectangle(rect);
+      var shape1: SelectionRectangle = new SelectionRectangle(rect, PenColour.Border);
 
       var stream: string = shape1.streamOut();
 

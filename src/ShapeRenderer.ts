@@ -63,6 +63,13 @@ export abstract class ShapeRenderer {
    protected setPen(ctx: CanvasRenderingContext2D, pen: Pen): void {
 
       switch (pen.colour) {
+         case PenColour.Red:
+            ctx.strokeStyle = "#FF0000";
+            ctx.fillStyle = "#FF0000";
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "yellow";
+            break
+
          case PenColour.Border:
             ctx.strokeStyle = "#393D47";
             ctx.fillStyle = "#393D47";

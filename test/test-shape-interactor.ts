@@ -22,6 +22,7 @@ import {
 } from '../src/RectangleInteractors';
 import { NewLineInteractor, LineStartInteractor, LineEndInteractor, LineMoveInteractor } from '../src/LineInteractors';
 import { KeyboardInteractor } from '../src/ShapeKeyboardInteractor';
+import { EraseInteractor } from '../src/EraseInteractors';
 
 describe("IShapeInteractor", function () {
 
@@ -857,5 +858,54 @@ describe("ShapeKeyboardInteractor", function () {
       expect(shape2.boundingRectangle.y === 100).to.equal(true);
       interactor.moveDown(1);
       expect(shape1.boundingRectangle.y === 55).to.equal(true);
+   });
+});
+
+describe("EraseInteractor", function () {
+
+   it("Needs to create EraseInteractor with click and drag", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var pt: GPoint = new GPoint(100, 100);
+
+      var interactor: IShapeInteractor = new EraseInteractor(bounds);
+
+      interactor.interactionStart(pt);
+      interactor.interactionUpdate(pt);
+      interactor.interactionEnd(pt);
+
+      expect(interactor.rectangle.dx === IShapeInteractor.minimumDx()).to.equal(true);
+      expect(interactor.rectangle.dy === IShapeInteractor.minimumDy()).to.equal(true);
+      expect(interactor.rectangle.bottomLeft.equals(interactor.line.start)).to.equal(true);
+      expect(interactor.rectangle.topRight.equals(interactor.line.end)).to.equal(true);
+   });
+
+   it("Needs to clip final GRect if necessary - lower left", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var pt: GPoint = new GPoint(49, 49);
+
+      var interactor: IShapeInteractor = new EraseInteractor(bounds);
+
+      interactor.interactionStart(pt);
+      interactor.interactionUpdate(pt);
+      interactor.interactionEnd(pt);
+
+      expect(interactor.rectangle.bottomLeft.equals(bounds.bottomLeft)).to.equal(true);
+   });
+
+   it("Needs to clip final GRect if necessary - upper right", function () {
+
+      var bounds: GRect = new GRect(50, 50, 300, 300);
+      var pt1: GPoint = new GPoint(251, 251);
+      var pt2: GPoint = new GPoint(351, 351);
+
+      var interactor: IShapeInteractor = new EraseInteractor(bounds);
+
+      interactor.interactionStart(pt1);
+      interactor.interactionUpdate(pt2);
+      interactor.interactionEnd(pt2);
+
+      expect(interactor.rectangle.topRight.equals(bounds.topRight)).to.equal(true);
    });
 });

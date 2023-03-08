@@ -51,6 +51,7 @@ describe("KeyValueStore", function () {
 
       store.setItem(key, item);
 
+      expect(store.hasItem(key)).to.equal(true);
       expect(store.getItem(key)).to.equal(item);
    });
 
@@ -62,6 +63,13 @@ describe("KeyValueStore", function () {
       store.removeItem(key);
 
       expect(store.getItem(key)).to.equal(null);
+   });
+
+   it("Needs to fail test if it does not have an item", function () {
+
+      var store: IKeyValueStore = localKeyValueStore();
+
+      expect(store.hasItem("MadeUp")).to.equal(false);
    });
 });
 

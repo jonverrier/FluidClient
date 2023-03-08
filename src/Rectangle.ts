@@ -1,5 +1,6 @@
 // Copyright (c) 2023 TXPCo Ltd
 
+import { InvalidParameterError } from './Errors';
 import { GRect } from './GeometryRectangle';
 import { Pen, PenColour, PenStyle } from "./Pen";
 import { MDynamicStreamable, DynamicStreamableFactory } from './StreamingFramework';
@@ -14,7 +15,7 @@ export class SelectionRectangle extends Shape {
     * Create a SelectionRectangle object
     * @param boundingRectangle_ - boundingRectangle
     */
-   public constructor(boundingRectangle_: GRect)
+   public constructor(boundingRectangle_: GRect, colour_: PenColour)
 
    /**
     * Create a Rectangle object
@@ -29,11 +30,15 @@ export class SelectionRectangle extends Shape {
 
    constructor(...arr: any[]) {
 
+      if (arr.length === 2) { // Construct from individual parameters
+         super(arr[0], new Pen(arr[1], PenStyle.Dashed), false);
+         return;
+      }
       if (arr.length === 1) { // Construct from individual parameters
          if (Shape.isMyType(arr[0]))
             super(arr[0]);
          else
-            super(arr[0], new Pen (PenColour.Border, PenStyle.Dashed), false);
+            throw new InvalidParameterError("Cannot construct SelectionRectangle from unknown type.");
          return;
       }
       else {

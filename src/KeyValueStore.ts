@@ -9,6 +9,8 @@ export class KeyValueStoreKeys {
 
 export interface IKeyValueStore {
 
+   hasItem(key: string): boolean;
+
    getItem(key: string) : string;
 
    setItem(key: string, value: string): void;
@@ -25,6 +27,11 @@ class LocalKeyValueStore implements IKeyValueStore {
 
    constructor() {
 
+   }
+
+   hasItem(key: string): boolean {
+
+      return window.localStorage.getItem(key) !== null;
    }
 
    getItem(key: string): string {
