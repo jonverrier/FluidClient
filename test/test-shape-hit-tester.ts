@@ -117,13 +117,11 @@ describe("ShapeGroupHitTester", function () {
 
    it("Needs to create ShapeGroupHitTester and track to a click Text", function () {
 
-      let shapeRect = new GRect(50, 50, 50, 50);
-      let shapeRect2 = new GRect(70, 90, 50, 50);
+      let shapeRect = new GRect(50, 50, 100, 100);
+      let shapeRect2 = new GRect(70, 90, 100, 100);
       let shapes = new Map<string, Shape>();
 
       var shape1: Shape = new TextShape ("A", shapeRect, new Pen(PenColour.Black, PenStyle.Solid), true);
-      var shape2: Shape = new TextShape("B", shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), false);
-      shapes.set(shape2.id, shape2);
       shapes.set(shape1.id, shape1);
 
       var inside: GPoint = new GPoint(60, 80);
@@ -139,10 +137,19 @@ describe("ShapeGroupHitTester", function () {
       expect(controller.hitTest(outside).hitTest).to.equal(ShapeGroupHitTester.noHit().hitTest);
       expect(controller.hitTest(crossingMid).hitTest).to.equal(ShapeGroupHitTester.noHit().hitTest);
 
+      expect(controller.hitTest(shapeRect.topMiddle).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(shapeRect.bottomMiddle).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(shapeRect.leftMiddle).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(shapeRect.rightMiddle).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+
+      expect(controller.hitTest(shapeRect.topLeft).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
       expect(controller.hitTest(shapeRect.bottomLeft).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
       expect(controller.hitTest(shapeRect.topRight).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
+      expect(controller.hitTest(shapeRect.bottomRight).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
 
       // Add hit tests on unselected object
+      var shape2: Shape = new TextShape("B", shapeRect2, new Pen(PenColour.Black, PenStyle.Solid), false);
+      shapes.set(shape2.id, shape2);
       expect(controller.hitTest(shapeRect2.bottomLeft).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
       expect(controller.hitTest(shapeRect2.topRight).hitTest).to.not.equal(ShapeGroupHitTester.noHit().hitTest);
    });

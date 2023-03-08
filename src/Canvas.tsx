@@ -1,7 +1,7 @@
 /*! Copyright TXPCo 2022 */
 
 // React
-import React, { MouseEvent, useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 // Fluent
 import {
@@ -276,6 +276,7 @@ function shapeInteractorFromMode(mode_: ECanvasMode,
    bounds_: GRect,
    initial_: GRect,
    hitTest_: EHitTest,
+   doubleHit: boolean,
    pt_: GPoint): IShapeInteractor {
 
    switch (mode_) {
@@ -322,6 +323,11 @@ function shapeInteractorFromMode(mode_: ECanvasMode,
             case EHitTest.End:
                return new LineEndInteractor(bounds_, new GLine(new GPoint(initial_.x, initial_.y),
                                                                new GPoint(initial_.x + initial_.dx, initial_.y + initial_.dy)));
+            case EHitTest.Body:
+               if (doubleHit)
+                  return new TextEditInteractor(initial_);
+               else
+                  return new RectangleMoveInteractor(bounds_, initial_, pt_);
 
             case EHitTest.None:
             default:
@@ -430,7 +436,7 @@ export const Canvas = (props: ICanvasProps) => {
 
    // Set up variables needed to hook into Notification Framework
    var caucusRouter: NotificationRouterFor<string>;
-   caucusRouter = new NotificationRouterFor<string>(onCaucusChange.bind(canvasState));
+   caucusRouter = new NotificationRouterFor<string>(onCaucusChange);
    var addedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberAddedInterest);
    var changedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberChangedInterest);
    var removedInterest: ObserverInterest = new ObserverInterest(caucusRouter, CaucusOf.caucusMemberRemovedInterest);
@@ -612,6 +618,7 @@ export const Canvas = (props: ICanvasProps) => {
                case EHitTest.BottomRight:
                   return cursorBottomRightClasses.root;
                case EHitTest.Border:
+               case EHitTest.Body:
                   return cursorBorderClasses.root;
                case EHitTest.Start:
                case EHitTest.End:
@@ -651,7 +658,7 @@ export const Canvas = (props: ICanvasProps) => {
       return new GPoint(rect.left, rect.top);
    }
 
-   function getCanvas(event: MouseEvent | TouchEvent): HTMLCanvasElement {
+   function getCanvas(event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>): HTMLCanvasElement {
 
       var target: HTMLCanvasElement = null;
 
@@ -661,7 +668,7 @@ export const Canvas = (props: ICanvasProps) => {
       return target;
    }
 
-   function getMousePosition(canvas: HTMLCanvasElement, event: MouseEvent): GPoint {
+   function getMousePosition(canvas: HTMLCanvasElement, event: React.MouseEvent<HTMLCanvasElement>): GPoint {
 
       let rect = canvas.getBoundingClientRect();
       let x = event.clientX - rect.left;
@@ -670,7 +677,7 @@ export const Canvas = (props: ICanvasProps) => {
       return new GPoint(x, y);
    }
 
-   function getFirstTouchPosition(canvas: HTMLCanvasElement, event: TouchEvent): GPoint {
+   function getFirstTouchPosition(canvas: HTMLCanvasElement, event: React.TouchEvent<HTMLCanvasElement>): GPoint {
 
       let rect = canvas.getBoundingClientRect();
       let x = event.changedTouches[0].clientX - rect.left;
@@ -679,13 +686,60 @@ export const Canvas = (props: ICanvasProps) => {
       return new GPoint(x, y);
    }
 
-   function getLastTouchPosition(canvas: HTMLCanvasElement, event: TouchEvent): GPoint {
+   function getLastTouchPosition(canvas: HTMLCanvasElement, event: React.TouchEvent<HTMLCanvasElement>): GPoint {
 
       let rect = canvas.getBoundingClientRect();
       let x = event.changedTouches[event.changedTouches.length - 1].clientX - rect.left;
       let y = event.changedTouches[event.changedTouches.length - 1].clientY - rect.top;
 
       return new GPoint(x, y);
+   }
+
+   function interaction (coord: GPoint, bounds: GRect): void {
+
+      // if there is a current interactor with a UI open, confirm it so the user does not lose work
+      // (if it was a bad confirm, they can go back and edit it)
+      if (canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()) {
+         canvasState.shapeInteractor.confirm();
+      }
+
+      let hitTest = hitTestInteractor.hitTest(coord);
+      let resizeShape: Shape = null;
+
+      if (hitTest.hitTest !== EHitTest.None) {
+         lastHit = hitTest.hitTest;
+         resizeShape = hitTest.hitShape;
+         resizeShapeId = resizeShape.id;
+      }
+      else {
+         lastHit = EHitTest.None;
+         resizeShapeId = null;
+      }
+
+      if (hitTest.hitTest === EHitTest.Body) {
+
+         // Create the right interactor
+         let shapeInteractor = shapeInteractorFromMode(props.mode,
+            bounds,
+            resizeShape ? resizeShape.boundingRectangle : new GRect(),
+            lastHit, true, coord);
+
+         // Hook up observer functions
+         shapeInteractor.addObserver(shapeInteractionCmplInterest);
+         shapeInteractor.addObserver(shapeInteractionAbndInterest);
+
+         // Tell interactor to start
+         shapeInteractor.interactionStart(coord);
+
+         // Force re-render
+         setCanvasState({
+            width: canvasState.width, height: canvasState.height,
+            shapes: canvasState.shapes,
+            lastHit: lastHit,
+            shapeInteractor: shapeInteractor,
+            resizeShapeId: resizeShapeId
+         });
+      }
    }
 
    function interactionStart(coord: GPoint, bounds: GRect) : void {
@@ -713,7 +767,7 @@ export const Canvas = (props: ICanvasProps) => {
       let shapeInteractor = shapeInteractorFromMode(props.mode,
          bounds,
          resizeShape ? resizeShape.boundingRectangle : new GRect(),
-         lastHit, coord);
+         lastHit, false, coord);
 
       // Hook up observer functions
       shapeInteractor.addObserver(shapeInteractionCmplInterest);
@@ -797,7 +851,25 @@ export const Canvas = (props: ICanvasProps) => {
       });
    }
 
-   const handleCanvasMouseDown = (event: MouseEvent): void => {
+   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>): void => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Only handle double click
+      if (event.detail === 2) {
+
+         let canvas = getCanvas(event);
+         var coord: GPoint = getMousePosition(canvas, event);
+
+         let clientRect = canvas.getBoundingClientRect();
+         let bounds = new GRect(0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+
+         interaction(coord, bounds);
+      }
+   };
+
+   const handleCanvasMouseDown = (event: React.MouseEvent<HTMLCanvasElement>): void => {
 
       event.preventDefault();
       event.stopPropagation();
@@ -811,7 +883,7 @@ export const Canvas = (props: ICanvasProps) => {
       interactionStart(coord, bounds);
    };
 
-   const handleCanvasMouseMove= (event: MouseEvent): void => {
+   const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>): void => {
 
       event.preventDefault();
       event.stopPropagation();
@@ -821,7 +893,7 @@ export const Canvas = (props: ICanvasProps) => {
       interactionUpdate(coord);
    };
 
-   const handleCanvasMouseUp = (event: MouseEvent): void => {
+   const handleCanvasMouseUp = (event: React.MouseEvent<HTMLCanvasElement>): void => {
 
       event.preventDefault();
       event.stopPropagation();
@@ -831,7 +903,7 @@ export const Canvas = (props: ICanvasProps) => {
       interactionEnd(coord);
    };
 
-   const handleCanvasTouchStart = (event: TouchEvent): void => {
+   const handleCanvasTouchStart = (event: React.TouchEvent<HTMLCanvasElement>): void => {
 
       event.stopPropagation();
 
@@ -844,7 +916,7 @@ export const Canvas = (props: ICanvasProps) => {
       interactionStart(coord, bounds);
    }
 
-   const handleCanvasTouchMove = (event: TouchEvent): void => {
+   const handleCanvasTouchMove = (event: React.TouchEvent<HTMLCanvasElement>): void => {
 
       event.stopPropagation();
 
@@ -853,7 +925,7 @@ export const Canvas = (props: ICanvasProps) => {
       interactionUpdate(coord);
    }
 
-   const handleCanvasTouchEnd = (event: TouchEvent): void => {
+   const handleCanvasTouchEnd = (event: React.TouchEvent<HTMLCanvasElement>): void => {
 
       event.stopPropagation();
 
@@ -941,11 +1013,23 @@ export const Canvas = (props: ICanvasProps) => {
    function onTextEditSelect(tool: EUIActions, text: string) {
 
       if (tool === EUIActions.Ok && text.length > 0) {
-         let shape = new TextShape(text, canvasState.shapeInteractor.rectangle, new Pen(PenColour.Black, PenStyle.Solid), true);
 
-         // set the version in Caucus first, which pushes to other clients, then reset our state to match
-         props.shapeCaucus.add(shape.id, shape);
-         canvasState.shapes.set(shape.id, shape);
+         if (resizeShapeId) {
+            // Copy text into stored shape
+            let shape = shapes.get(resizeShapeId);
+            (shape as TextShape).text = text;
+
+            // set the version in Caucus first, which pushes to other clients, then reset our state to match
+            props.shapeCaucus.amend(resizeShapeId, shape);
+            canvasState.shapes.set(resizeShapeId, shape);
+         }
+         else {
+            let shape = new TextShape(text, canvasState.shapeInteractor.rectangle, new Pen(PenColour.Black, PenStyle.Solid), true);
+
+            // set the version in Caucus first, which pushes to other clients, then reset our state to match
+            props.shapeCaucus.add(shape.id, shape);
+            canvasState.shapes.set(shape.id, shape);
+         }
       }
 
       setCanvasState({
@@ -967,18 +1051,22 @@ export const Canvas = (props: ICanvasProps) => {
    var shapeKeyboardInteractionCmplInterest = new ObserverInterest(shapeKeyboardInteractionCmplRouter, shapeKeyboardInteractionCompleteInterest);
 
    // Calculate position for the text edit UI
-   var rc: GRect;
+   var editRc: GRect;
+   var editText: string; 
 
    if (canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()) {
-      rc = new GRect (canvasState.shapeInteractor.rectangle);
+      editRc = new GRect (canvasState.shapeInteractor.rectangle);
       var pt: GPoint = getCanvasOffsetFromId(canvasId);
-      rc.y = rc.y + pt.y;
+      editRc.y = editRc.y + pt.y;
+
+      editText = resizeShapeId ? ((canvasState.shapes.get(resizeShapeId)) as TextShape).text
+                               : "";
    }
 
    let outerDiv = document.getElementById(props.outerDivId);
    if (outerDiv && (!(canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()))) {
       let opts = { preventScroll: true, focusVisible: false };
-      outerDiv.onkeydown = handleCanvasKeyDown.bind(canvasState);
+      outerDiv.onkeydown = handleCanvasKeyDown;
       outerDiv.focus(opts);
    }
 
@@ -986,7 +1074,7 @@ export const Canvas = (props: ICanvasProps) => {
       <div>
          <div className={cursorStylesFromModeAndLastHit(props.mode, canvasState.lastHit)}>
             {canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI() ?
-               <CanvasTextEdit onToolSelect={onTextEditSelect} initialText={""} boundary={rc} /> :
+               <CanvasTextEdit onToolSelect={onTextEditSelect} initialText={editText} boundary={editRc} /> :
                <div></div>
             }
             <canvas
@@ -996,12 +1084,13 @@ export const Canvas = (props: ICanvasProps) => {
                width={canvasWidth as any}
                height={canvasHeight as any}
                id={canvasId}
-               onMouseDown={handleCanvasMouseDown.bind(canvasState)}
-               onMouseMove={handleCanvasMouseMove.bind(canvasState)}
-               onMouseUp={handleCanvasMouseUp.bind(canvasState)}
-               onTouchStart={handleCanvasTouchStart.bind(canvasState) as any}
-               onTouchMove={handleCanvasTouchMove.bind(canvasState) as any}
-               onTouchEnd={handleCanvasTouchEnd.bind(canvasState) as any}
+               onClick={ handleClick}
+               onMouseDown={handleCanvasMouseDown}
+               onMouseMove={handleCanvasMouseMove}
+               onMouseUp={handleCanvasMouseUp}
+               onTouchStart={handleCanvasTouchStart}
+               onTouchMove={handleCanvasTouchMove}
+               onTouchEnd={handleCanvasTouchEnd}
                />
          </div>
       </div>);

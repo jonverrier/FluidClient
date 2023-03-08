@@ -79,7 +79,7 @@ export class TextShapeHitTester extends ShapeHitTester {
          else
          // Test inside the border if not selected
          if (shape.boundingRectangle.includes (pt)) {
-            testResult = { hitTest: EHitTest.Border, hitShape: shape };
+            testResult = { hitTest: EHitTest.Body, hitShape: shape };
          }
       }
 

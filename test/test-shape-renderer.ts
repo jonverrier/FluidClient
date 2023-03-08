@@ -150,6 +150,50 @@ describe("ShapeRenderer", function () {
       expect(caught === false).to.equal(true);
    });
 
+   it("Needs to draw in red", function () {
+
+      const ctx: any = new MockCtx();
+
+      var renderer: ShapeRenderer = new RectangleShapeRenderer();
+
+      const rect = new GRect(0, 0, 20, 20);
+      var shape: Shape = new Rectangle(rect, new Pen(PenColour.Red, PenStyle.Solid), true);
+
+      var caught: boolean = false;
+
+      try {
+         // TODO - this is a pretty dumb test - just check there are no exceptions
+         renderer.draw(ctx, shape)
+      }
+      catch (e) {
+         caught = true;
+      }
+
+      expect(caught === false).to.equal(true);
+   });
+
+   it("Needs to draw in None", function () {
+
+      const ctx: any = new MockCtx();
+
+      var renderer: ShapeRenderer = new RectangleShapeRenderer();
+
+      const rect = new GRect(0, 0, 20, 20);
+      var shape: Shape = new Rectangle(rect, new Pen(PenColour.Red, PenStyle.None), true);
+
+      var caught: boolean = false;
+
+      try {
+         // TODO - this is a pretty dumb test - just check there are no exceptions
+         renderer.draw(ctx, shape)
+      }
+      catch (e) {
+         caught = true;
+      }
+
+      expect(caught === false).to.equal(true);
+   });
+
    it("Needs to draw a SelectionLine", function () {
 
       const ctx: any = new MockCtx();

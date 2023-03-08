@@ -54,6 +54,9 @@ export class TextShape extends Shape {
    get text(): string {
       return this._text;
    }
+   set text (text_: string) {
+      this._text = text_;
+   }
 
    // Unique ID that is used to look up the associated renderer
    shapeID(): string {

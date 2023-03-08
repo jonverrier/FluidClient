@@ -139,7 +139,7 @@ describe("Rectangle", function () {
 
       var caught: boolean = false;
       try {
-         var shape5: Shape = new Shape(null as Shape);
+         var shape5: Rectangle = new Rectangle(null as Rectangle);
       } catch (e) {
          caught = true;
       }
@@ -467,6 +467,22 @@ describe("TextShape", function () {
       shape2 = MDynamicStreamable.resurrect(stream) as TextShape;
 
       expect(shape1.equals(shape2)).to.equal(true);
+   });
+
+   it("Needs to change text", function () {
+
+      var rect: GRect = new GRect(1, 2, 3, 4);
+      var text: string = "Sample text";
+
+      var shape1: TextShape = new TextShape(text, rect, new Pen(PenColour.Black, PenStyle.Solid), false)
+
+      expect(shape1.text === text).to.equal(true);
+
+      var newText = "New sample";
+      shape1.text = newText; 
+
+      expect(shape1.text === text).to.equal(false);
+      expect(shape1.text === newText).to.equal(true);
    });
 });
 

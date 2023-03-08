@@ -8,7 +8,7 @@ export enum EHitTest
    None = "None",
    Left = "Left", Right = "Right", Top = "Top", Bottom = "Bottom",
    TopLeft = "TopLeft", TopRight = "TopRight", BottomLeft = "BottomLeft", BottomRight = "BottomRight", 
-   Border = "Border",
+   Border = "Border", Body = "Body",
    Start = "Start", End = "End", Line="Line"
 }
 

@@ -127,7 +127,8 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
 
    const externalBlur = (event: React.FocusEvent<HTMLDivElement>): void => {
 
-      props.onToolSelect(EUIActions.Ok, value);
+      // TODO - cannot just feed this through else can create duplicates on canvas - need to re-think
+      // props.onToolSelect(EUIActions.Ok, value);
    };
 
    // Move focus to text area in the next tick of the event loop
