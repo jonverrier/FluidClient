@@ -60,7 +60,8 @@ const textColumnStyles = makeStyles({
       paddingRight: '0',
       paddingTop: '0',
       paddingBottom: '0',
-      width: '100%'
+      width: '100%',
+      verticalAlign: 'middle'
    },
    textarea: {
       height: '100%',
@@ -127,8 +128,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
 
    const externalBlur = (event: React.FocusEvent<HTMLDivElement>): void => {
 
-      // TODO - cannot just feed this through else can create duplicates on canvas - need to re-think
-      // props.onToolSelect(EUIActions.Ok, value);
+      props.onToolSelect(EUIActions.Ok, value);
    };
 
    // Move focus to text area in the next tick of the event loop

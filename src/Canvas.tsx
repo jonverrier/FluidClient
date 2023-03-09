@@ -249,8 +249,10 @@ class CanvasState {
    height: number;
    shapes: Map<string, Shape>;
    lastHit: EHitTest;
-   shapeInteractor: IShapeInteractor;
-   resizeShapeId: string
+   mouseInteractor: IShapeInteractor;
+   mouseShapeId: string;
+   textInteractor: TextEditInteractor;
+   textShapeId: string;
 
    constructor(width_: number, height_: number, shapes_: Map<string, Shape>, lastHit_: EHitTest) {
 
@@ -258,8 +260,10 @@ class CanvasState {
       this.height = height_;
       this.shapes = shapes_;
       this.lastHit = lastHit_;
-      this.resizeShapeId = null;
-      this.shapeInteractor = null;
+      this.mouseShapeId = null;
+      this.mouseInteractor = null;
+      this.textInteractor = null;
+      this.textShapeId = null;
    }
 }
 
@@ -379,27 +383,27 @@ export const Canvas = (props: ICanvasProps) => {
          }).then(() => {
 
             // then draw selection 
-            if (localCanvasState.shapeInteractor) {
+            if (localCanvasState.mouseInteractor) {
                switch (props.mode) {
                   case ECanvasMode.Line:
-                     drawSelectionLine(ctx, localCanvasState.shapeInteractor.rectangle, PenColour.Border);
+                     drawSelectionLine(ctx, localCanvasState.mouseInteractor.rectangle, PenColour.Border);
                      break;
 
                   case ECanvasMode.Eraser:
-                     drawSelectionRect(ctx, localCanvasState.shapeInteractor.rectangle, PenColour.Red);
+                     drawSelectionRect(ctx, localCanvasState.mouseInteractor.rectangle, PenColour.Red);
                      break;
 
                   case ECanvasMode.Rectangle:
                   case ECanvasMode.Text:
-                     drawSelectionRect(ctx, localCanvasState.shapeInteractor.rectangle, PenColour.Border);
+                     drawSelectionRect(ctx, localCanvasState.mouseInteractor.rectangle, PenColour.Border);
                      break;
 
                   case ECanvasMode.Select:
                   default:
                      if (lastHit === EHitTest.Start || lastHit === EHitTest.End || lastHit === EHitTest.Line) {
-                        drawSelectionLine(ctx, localCanvasState.shapeInteractor.rectangle, PenColour.Border);
+                        drawSelectionLine(ctx, localCanvasState.mouseInteractor.rectangle, PenColour.Border);
                      } else {
-                        drawSelectionRect(ctx, localCanvasState.shapeInteractor.rectangle, PenColour.Border);
+                        drawSelectionRect(ctx, localCanvasState.mouseInteractor.rectangle, PenColour.Border);
                      }
                      break;
                }
@@ -414,10 +418,10 @@ export const Canvas = (props: ICanvasProps) => {
                props.shapeCaucus.removeObserver(removedInterest);
             }
 
-            if (localCanvasState.shapeInteractor) {
+            if (localCanvasState.mouseInteractor) {
 
-               localCanvasState.shapeInteractor.removeObserver(shapeInteractionCmplInterest);
-               localCanvasState.shapeInteractor.removeObserver(shapeInteractionAbndInterest);
+               localCanvasState.mouseInteractor.removeObserver(shapeInteractionCmplInterest);
+               localCanvasState.mouseInteractor.removeObserver(shapeInteractionAbndInterest);
             }
          }
       });
@@ -447,8 +451,10 @@ export const Canvas = (props: ICanvasProps) => {
          width: canvasState.width, height: canvasState.height,
          shapes: props.shapeCaucus.current(),
          lastHit: canvasState.lastHit,
-         shapeInteractor: canvasState.shapeInteractor,
-         resizeShapeId: canvasState.resizeShapeId
+         mouseInteractor: canvasState.mouseInteractor,
+         mouseShapeId: canvasState.mouseShapeId,
+         textInteractor: canvasState.textInteractor,
+         textShapeId: canvasState.textShapeId
       });
    }
 
@@ -459,8 +465,10 @@ export const Canvas = (props: ICanvasProps) => {
          width: canvasState.width, height: canvasState.height,
          shapes: shapes,
          lastHit: EHitTest.None,
-         shapeInteractor: null,
-         resizeShapeId: null
+         mouseInteractor: null,
+         mouseShapeId: null,
+         textInteractor: null,
+         textShapeId: null
       });
    }
 
@@ -482,6 +490,7 @@ export const Canvas = (props: ICanvasProps) => {
             // set the version in Caucus first, which pushes to other clients, then reset our state to match
             props.shapeCaucus.add(line.id, line);
             canvasState.shapes.set(line.id, line);
+            forceRefresh();
             break;
 
          case ECanvasMode.Text:
@@ -495,8 +504,10 @@ export const Canvas = (props: ICanvasProps) => {
                width: canvasState.width, height: canvasState.height,
                shapes: shapes,
                lastHit: lastHit,
-               shapeInteractor: interactor,
-               resizeShapeId: null
+               mouseInteractor: null,
+               mouseShapeId: null,
+               textInteractor: interactor,
+               textShapeId: null
             });
             break;
 
@@ -509,6 +520,7 @@ export const Canvas = (props: ICanvasProps) => {
             // set the version in Caucus first, which pushes to other clients, then reset our state to match
             props.shapeCaucus.add(rectangle.id, rectangle);
             canvasState.shapes.set(rectangle.id, rectangle);
+            forceRefresh();
             break;
 
          case ECanvasMode.Eraser:
@@ -525,18 +537,30 @@ export const Canvas = (props: ICanvasProps) => {
                props.shapeCaucus.remove(id);
                canvasState.shapes.delete(id);
             });
+            forceRefresh();
             break;
 
          case ECanvasMode.Select:
          default:
-            if (resizeShapeId) {
+            if (mouseShapeId) {
 
                // If we are here, User clicked on a border, or a grab handle
                // Set the new size & then push to Caucus
-               let shape = canvasState.shapes.get(resizeShapeId);
+               let shape = canvasState.shapes.get(mouseShapeId);
                shape.boundingRectangle = data.eventData;
-               props.shapeCaucus.amend(resizeShapeId, shape);
-               resizeShapeId = null;
+               props.shapeCaucus.amend(mouseShapeId, shape);
+               mouseShapeId = null;
+
+               // Force re-render with the interactor finished 
+               setCanvasState({
+                  width: canvasState.width, height: canvasState.height,
+                  shapes: shapes,
+                  lastHit: lastHit,
+                  mouseInteractor: null,
+                  mouseShapeId: null,
+                  textInteractor: null,
+                  textShapeId: null
+               });
             }
             else {
                // Else select items within the selection area and de-select others
@@ -550,13 +574,14 @@ export const Canvas = (props: ICanvasProps) => {
                   // set the version in Caucus, which pushes to other clients
                   props.shapeCaucus.amend(shape.id, shape);
                });
+               forceRefresh();
             }
             break;
       }
    } 
 
    // Dont reset the hit test if there is an interaction going on
-   if (canvasState.shapeInteractor) {
+   if (canvasState.mouseInteractor) {
       lastHit = canvasState.lastHit;
    } else {
       lastHit = EHitTest.None;
@@ -566,7 +591,7 @@ export const Canvas = (props: ICanvasProps) => {
       IShapeInteractor.defaultGrabHandleDxDy(),
       IShapeInteractor.defaultHitTestTolerance());
 
-   let resizeShapeId = canvasState.resizeShapeId;
+   let mouseShapeId = canvasState.mouseShapeId;
    
    const cursorDefaultClasses = cursorDefaultStyles();
    const cursorDrawClasses = cursorDrawRectangleStyles();
@@ -699,21 +724,21 @@ export const Canvas = (props: ICanvasProps) => {
 
       // if there is a current interactor with a UI open, confirm it so the user does not lose work
       // (if it was a bad confirm, they can go back and edit it)
-      if (canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()) {
-         canvasState.shapeInteractor.confirm();
+      if (canvasState.textInteractor) {
+         canvasState.textInteractor.confirm();
       }
 
       let hitTest = hitTestInteractor.hitTest(coord);
-      let resizeShape: Shape = null;
+      let shape: Shape = null;
 
       if (hitTest.hitTest !== EHitTest.None) {
          lastHit = hitTest.hitTest;
-         resizeShape = hitTest.hitShape;
-         resizeShapeId = resizeShape.id;
+         shape = hitTest.hitShape;
+         mouseShapeId = shape.id;
       }
       else {
          lastHit = EHitTest.None;
-         resizeShapeId = null;
+         mouseShapeId = null;
       }
 
       if (hitTest.hitTest === EHitTest.Body) {
@@ -721,7 +746,7 @@ export const Canvas = (props: ICanvasProps) => {
          // Create the right interactor
          let shapeInteractor = shapeInteractorFromMode(props.mode,
             bounds,
-            resizeShape ? resizeShape.boundingRectangle : new GRect(),
+            shape ? shape.boundingRectangle : new GRect(),
             lastHit, true, coord);
 
          // Hook up observer functions
@@ -736,8 +761,10 @@ export const Canvas = (props: ICanvasProps) => {
             width: canvasState.width, height: canvasState.height,
             shapes: canvasState.shapes,
             lastHit: lastHit,
-            shapeInteractor: shapeInteractor,
-            resizeShapeId: resizeShapeId
+            mouseInteractor: null,
+            mouseShapeId: null,
+            textInteractor: (shapeInteractor as TextEditInteractor),
+            textShapeId: mouseShapeId
          });
       }
    }
@@ -746,8 +773,8 @@ export const Canvas = (props: ICanvasProps) => {
 
       // if there is a current interactor with a UI open, confirm it so the user does not lose work
       // (if it was a bad confirm, they can go back and edit it)
-      if (canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()) {
-         canvasState.shapeInteractor.confirm();
+      if (canvasState.mouseInteractor && canvasState.mouseInteractor.hasUI()) {
+         canvasState.mouseInteractor.confirm();
       }
 
       let hitTest = hitTestInteractor.hitTest(coord);
@@ -756,11 +783,11 @@ export const Canvas = (props: ICanvasProps) => {
       if (hitTest.hitTest !== EHitTest.None) {
          lastHit = hitTest.hitTest;
          resizeShape = hitTest.hitShape;
-         resizeShapeId = resizeShape.id;
+         mouseShapeId = resizeShape.id;
       }
       else {
          lastHit = EHitTest.None;
-         resizeShapeId = null;
+         mouseShapeId = null;
       }
 
       // Create the right interactor
@@ -781,41 +808,28 @@ export const Canvas = (props: ICanvasProps) => {
          width: canvasState.width, height: canvasState.height,
          shapes: canvasState.shapes,
          lastHit: lastHit,
-         shapeInteractor: shapeInteractor,
-         resizeShapeId: resizeShapeId
+         mouseInteractor: shapeInteractor,
+         mouseShapeId: mouseShapeId,
+         textInteractor: null,
+         textShapeId: null
       });
    }
 
    function interactionEnd(coord: GPoint): void {
 
-      let nextShapeInteractor: IShapeInteractor = null;
-
-      if (canvasState.shapeInteractor) {
-         canvasState.shapeInteractor.interactionEnd(coord);
-
-         if (props.mode === ECanvasMode.Text && (!canvasState.shapeInteractor.hasUI())) {
-            nextShapeInteractor = new TextEditInteractor(canvasState.shapeInteractor.rectangle);
-         }
-      }
-      else {
-         nextShapeInteractor = null;
+      if (canvasState.mouseInteractor) {
+         canvasState.mouseInteractor.interactionEnd(coord);
       }
 
-      setCanvasState({
-         width: canvasState.width, height: canvasState.height,
-         shapes: canvasState.shapes,
-         lastHit: EHitTest.None,
-         shapeInteractor: nextShapeInteractor,
-         resizeShapeId: resizeShapeId
-      });
+      // Do not force a refresh - the notification from interation end will have done one if necessary
    }
 
    function interactionUpdate(coord: GPoint): void {
 
-      if (canvasState.shapeInteractor) {
+      if (canvasState.mouseInteractor) {
 
          // if there is a current interactor, pass it the data
-         canvasState.shapeInteractor.interactionUpdate(coord);
+         canvasState.mouseInteractor.interactionUpdate(coord);
 
       } else {
          // otherwise do a new hit test
@@ -824,14 +838,16 @@ export const Canvas = (props: ICanvasProps) => {
       }
 
       // Force a re-render if there is an interaction going on, or the hit test has changed.
-      // This specifically filters out re-render when the user is just moving the mouse about. 
-      if (canvasState.shapeInteractor || (lastHit !== canvasState.lastHit)) {
+      // This specifically filters out re-render when the user is just moving the mouse about outside an interaction 
+      if (canvasState.mouseInteractor || (lastHit !== canvasState.lastHit)) {
          setCanvasState({
             width: canvasState.width, height: canvasState.height,
             shapes: canvasState.shapes,
             lastHit: lastHit,
-            shapeInteractor: canvasState.shapeInteractor,
-            resizeShapeId: canvasState.resizeShapeId
+            mouseInteractor: canvasState.mouseInteractor,
+            mouseShapeId: canvasState.mouseShapeId,
+            textInteractor: canvasState.textInteractor,
+            textShapeId: canvasState.textShapeId
          });
       }
    }
@@ -846,8 +862,10 @@ export const Canvas = (props: ICanvasProps) => {
          width: canvasState.width, height: canvasState.height,
          shapes: canvasState.shapes,
          lastHit: canvasState.lastHit,
-         shapeInteractor: canvasState.shapeInteractor,
-         resizeShapeId: canvasState.resizeShapeId
+         mouseInteractor: canvasState.mouseInteractor,
+         mouseShapeId: canvasState.mouseShapeId,
+         textInteractor: canvasState.textInteractor,
+         textShapeId: canvasState.textShapeId
       });
    }
 
@@ -977,16 +995,16 @@ export const Canvas = (props: ICanvasProps) => {
             break;
 
          case 'Escape':
-            if (canvasState.shapeInteractor) {
-               canvasState.shapeInteractor.escape();
+            if (canvasState.mouseInteractor) {
+               canvasState.mouseInteractor.escape();
                forceRefresh();
                processed = true;
             }
             break;
 
          case 'Return':
-            if (canvasState.shapeInteractor) {
-               canvasState.shapeInteractor.confirm ();
+            if (canvasState.mouseInteractor) {
+               canvasState.mouseInteractor.confirm ();
             }
             clearSelection();
             processed = true;
@@ -1014,17 +1032,17 @@ export const Canvas = (props: ICanvasProps) => {
 
       if (tool === EUIActions.Ok && text.length > 0) {
 
-         if (resizeShapeId) {
+         if (canvasState.textShapeId) {
             // Copy text into stored shape
-            let shape = shapes.get(resizeShapeId);
+            let shape = shapes.get(canvasState.textShapeId);
             (shape as TextShape).text = text;
 
             // set the version in Caucus first, which pushes to other clients, then reset our state to match
-            props.shapeCaucus.amend(resizeShapeId, shape);
-            canvasState.shapes.set(resizeShapeId, shape);
+            props.shapeCaucus.amend(canvasState.textShapeId, shape);
+            canvasState.shapes.set(canvasState.textShapeId, shape);
          }
          else {
-            let shape = new TextShape(text, canvasState.shapeInteractor.rectangle, new Pen(PenColour.Black, PenStyle.Solid), true);
+            let shape = new TextShape(text, canvasState.textInteractor.rectangle, new Pen(PenColour.Black, PenStyle.Solid), true);
 
             // set the version in Caucus first, which pushes to other clients, then reset our state to match
             props.shapeCaucus.add(shape.id, shape);
@@ -1036,8 +1054,10 @@ export const Canvas = (props: ICanvasProps) => {
          width: canvasState.width, height: canvasState.height,
          shapes: canvasState.shapes,
          lastHit: EHitTest.None,
-         shapeInteractor: null,
-         resizeShapeId: null
+         mouseInteractor: null,
+         mouseShapeId: null,
+         textInteractor: null,
+         textShapeId: null
       });
    }
 
@@ -1050,21 +1070,25 @@ export const Canvas = (props: ICanvasProps) => {
    var shapeKeyboardInteractionCmplRouter: NotificationRouterFor<Map<string, Shape>> = new NotificationRouterFor<Map<string, Shape>> (onShapeKeyboardInteractionComplete);
    var shapeKeyboardInteractionCmplInterest = new ObserverInterest(shapeKeyboardInteractionCmplRouter, shapeKeyboardInteractionCompleteInterest);
 
-   // Calculate position for the text edit UI
+   // Calculate position and text for the text edit UI
    var editRc: GRect;
-   var editText: string; 
+   var editText: string = ""; 
 
-   if (canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()) {
-      editRc = new GRect (canvasState.shapeInteractor.rectangle);
+   // Set the position from the rectangle on the interactor
+   if (canvasState.textInteractor) {
+      editRc = new GRect(canvasState.textInteractor.rectangle);
       var pt: GPoint = getCanvasOffsetFromId(canvasId);
       editRc.y = editRc.y + pt.y;
-
-      editText = resizeShapeId ? ((canvasState.shapes.get(resizeShapeId)) as TextShape).text
-                               : "";
    }
 
+   // Set the text from the shape, if there was one (can be a new Shape being created)
+   if (canvasState.textShapeId) {
+      editText = (canvasState.shapes.get(canvasState.textShapeId) as TextShape).text;
+   }
+
+   // Focus left in enclosing div unless there is a text interactor present
    let outerDiv = document.getElementById(props.outerDivId);
-   if (outerDiv && (!(canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI()))) {
+   if (outerDiv && (!(canvasState.textInteractor))) {
       let opts = { preventScroll: true, focusVisible: false };
       outerDiv.onkeydown = handleCanvasKeyDown;
       outerDiv.focus(opts);
@@ -1073,7 +1097,7 @@ export const Canvas = (props: ICanvasProps) => {
    return (
       <div>
          <div className={cursorStylesFromModeAndLastHit(props.mode, canvasState.lastHit)}>
-            {canvasState.shapeInteractor && canvasState.shapeInteractor.hasUI() ?
+            {canvasState.textInteractor  ?
                <CanvasTextEdit onToolSelect={onTextEditSelect} initialText={editText} boundary={editRc} /> :
                <div></div>
             }
