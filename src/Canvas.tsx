@@ -675,12 +675,16 @@ export const Canvas = (props: ICanvasProps) => {
       return document.getElementById(id) as HTMLCanvasElement;
    }
 
-   function getCanvasOffsetFromId (id: string): GPoint {
+   function getCanvasDocumentOffsetFromId (id: string): GPoint {
 
       let canvas = getCanvasFromId(id);
       let rect = canvas.getBoundingClientRect();
 
-      return new GPoint(rect.left, rect.top);
+      var pt = new GPoint(rect.left, rect.top);
+      pt.x += window.scrollX;
+      pt.y += window.scrollY;
+
+      return pt;
    }
 
    function getCanvas(event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>): HTMLCanvasElement {
@@ -1077,8 +1081,8 @@ export const Canvas = (props: ICanvasProps) => {
    // Set the position from the rectangle on the interactor
    if (canvasState.textInteractor) {
       editRc = new GRect(canvasState.textInteractor.rectangle);
-      var pt: GPoint = getCanvasOffsetFromId(canvasId);
-      editRc.y = editRc.y + pt.y;
+      var pt: GPoint = getCanvasDocumentOffsetFromId(canvasId);
+      editRc.y = editRc.y + pt.y; 
    }
 
    // Set the text from the shape, if there was one (can be a new Shape being created)

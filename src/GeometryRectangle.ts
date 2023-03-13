@@ -83,10 +83,14 @@ export class GRect extends MStreamable {
    }
 
    set x(x_: number) {
+      var dx = this.dx;
       this._rc.xmin = x_;
+      this._rc.xmax = x_ + dx;
    }
    set y(y_: number) {
+      var dy = this.dy;
       this._rc.ymin = y_;
+      this._rc.ymax = y_ + dy;
    }
 
    get dx(): number {

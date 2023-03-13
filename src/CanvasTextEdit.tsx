@@ -72,7 +72,8 @@ const textColumnStyles = makeStyles({
       paddingLeft: '0',
       paddingRight: '0',
       paddingTop: '0',
-      paddingBottom: '0'
+      paddingBottom: '0',
+      textAlign: 'center'
    },
 });
 
@@ -145,8 +146,8 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
          style={{
             top: (props.boundary.y).toString() + 'px',
             left: (props.boundary.x).toString() + 'px',
-            width: props.boundary.dx.toString() + 'px',
-            height: props.boundary.dy.toString() + 'px'
+            width: (props.boundary.dx).toString() + 'px',
+            height: (props.boundary.dy).toString() + 'px'
          }}
          onBlur={handleBlur}
       >  
@@ -175,7 +176,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
                value={value}
                onChange={onChange}
                style={{
-                  height: (props.boundary.dy + 40).toString() + 'px'
+                  height: (props.boundary.dy - 40).toString() + 'px'
                }}               
             />
          </div>
