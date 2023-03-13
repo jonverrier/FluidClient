@@ -73,7 +73,8 @@ const textColumnStyles = makeStyles({
       paddingRight: '0',
       paddingTop: '0',
       paddingBottom: '0',
-      textAlign: 'center'
+      textAlign: 'center',
+      verticalAlign: 'middle'
    },
 });
 
@@ -132,6 +133,34 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
       props.onToolSelect(EUIActions.Ok, value);
    };
 
+   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+
+      var processed: boolean = false;
+
+      switch (event.key) {
+
+         case 'Escape':
+            handleToolSelect(EUIActions.Cancel);
+            processed = true;
+            break;
+
+         case 'Enter':
+            if (event.ctrlKey) {
+               handleToolSelect(EUIActions.Ok);
+               processed = true;
+            }
+            break;
+
+         default:
+            break;
+      }
+
+      if (processed) {
+         event.stopPropagation();
+         event.preventDefault();
+      }
+   };
+
    // Move focus to text area in the next tick of the event loop
    setTimeout(() => {
       let textAreaDiv = document.getElementById(canvasTextAreaId);
@@ -151,8 +180,7 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
          }}
          onBlur={handleBlur}
       >  
-
-         <div className={rightColumnClasses.root} >
+         {/* <div className={rightColumnClasses.root} >
             <Toolbar size="small">
                <Tooltip withArrow content="Ok" relationship="label" key="1">
                   <ToolbarButton aria-label="Ok" icon={<CheckmarkSquare24Regular />}
@@ -164,8 +192,8 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
                      onClick={() => { handleToolSelect(EUIActions.Cancel) }}
                      disabled={false} />
                </Tooltip>
-            </Toolbar>
-         </div>
+            </Toolbar> 
+         </div> */}
          <div className={textColumnClasses.root}>
             <Textarea
                id={canvasTextAreaId}
@@ -176,8 +204,9 @@ export const CanvasTextEdit = (props: ICanvasTextEditProps) => {
                value={value}
                onChange={onChange}
                style={{
-                  height: (props.boundary.dy - 40).toString() + 'px'
-               }}               
+                  height: (props.boundary.dy).toString() + 'px'
+               }}            
+               onKeyDown={handleKeyDown}               
             />
          </div>
       </div>

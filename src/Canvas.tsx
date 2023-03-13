@@ -961,61 +961,69 @@ export const Canvas = (props: ICanvasProps) => {
       var processed : boolean = false;
       var keyboard: KeyboardInteractor = null;
 
-      switch (event.key) {
+      var currentActive = document.activeElement;
+      let outerDiv = document.getElementById(props.outerDivId);
 
-         case "ArrowLeft":
-            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
-            // Hook up observer functions
-            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
-            keyboard.moveLeft(8);
-            break;
+      if (outerDiv === currentActive) {
 
-         case "ArrowRight":
-            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
-            // Hook up observer functions
-            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
-            keyboard.moveRight(8);
-            break;
+         switch (event.key) {
 
-         case "ArrowUp":
-            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
-            // Hook up observer functions
-            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
-            keyboard.moveDown(8); // HTML origin is top left, opposite sense to cartesian origin
-            break;
+            case "ArrowLeft":
+               keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+               // Hook up observer functions
+               keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
+               keyboard.moveLeft(8);
+               break;
 
-         case "ArrowDown":
-            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
-            // Hook up observer functions
-            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
-            keyboard.moveUp(8); // HTML origin is top left, opposite sense to cartesian origin
-            break;
+            case "ArrowRight":
+               keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+               // Hook up observer functions
+               keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
+               keyboard.moveRight(8);
+               break;
 
-         case 'Delete':
-            keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
-            // Hook up observer functions
-            keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
-            keyboard.delete();
-            break;
+            case "ArrowUp":
+               keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+               // Hook up observer functions
+               keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
+               keyboard.moveDown(8); // HTML origin is top left, opposite sense to cartesian origin
+               break;
 
-         case 'Escape':
-            if (canvasState.mouseInteractor) {
-               canvasState.mouseInteractor.escape();
-               processed = true;
-            }
-            break;
+            case "ArrowDown":
+               keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+               // Hook up observer functions
+               keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
+               keyboard.moveUp(8); // HTML origin is top left, opposite sense to cartesian origin
+               break;
 
-         case 'Return':
-            if (canvasState.mouseInteractor) {
-               canvasState.mouseInteractor.confirm ();
-            }
-            clearSelection();
-            processed = true;
-            forceRefresh();
-            break;
+            case 'Delete':
+               keyboard = new KeyboardInteractor(makeBoundsRect(), canvasState.shapes);
+               // Hook up observer functions
+               keyboard.addObserver(shapeKeyboardInteractionCmplInterest);
+               keyboard.delete();
+               break;
 
-         default:
-            break;
+            case 'Escape':
+               if (canvasState.mouseInteractor) {
+                  canvasState.mouseInteractor.escape();
+                  processed = true;
+               }
+               break;
+
+            case 'Enter':
+               if (event.ctrlKey) {
+                  if (canvasState.mouseInteractor) {
+                     canvasState.mouseInteractor.confirm();
+                  }
+                  clearSelection();
+                  processed = true;
+                  forceRefresh();
+               }
+               break;
+
+            default:
+               break;
+         }
       }
 
 
