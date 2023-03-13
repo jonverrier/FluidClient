@@ -1001,7 +1001,6 @@ export const Canvas = (props: ICanvasProps) => {
          case 'Escape':
             if (canvasState.mouseInteractor) {
                canvasState.mouseInteractor.escape();
-               forceRefresh();
                processed = true;
             }
             break;
